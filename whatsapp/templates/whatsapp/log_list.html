@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}WhatsApp — история{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'whatsapp/whatsapp_light.css' %}">
+  <link rel="stylesheet" href="{% static 'whatsapp/whatsapp_light_extra.css' %}">
+{% endblock %}
+{% block content %}
+{% include "whatsapp/_subnav.html" %}
+<section class="section">
+  <h1 class="title is-4">История</h1>
+  {% if not configured %}
+    <div class="notification is-warning">Интеграция не настроена (нет токена/PHONE_NUMBER_ID в .env).</div>
+  {% endif %}
+  <form class="field has-addons" method="get">
+    <div class="control is-expanded">
+      <input class="input" type="text" name="q" value="{{ q }}" placeholder="Поиск по номеру...">
+    </div>
+    <div class="control">
+      <button class="button is-link">Искать</button>
+    </div>
+  </form>
+  <div class="box">
+    <div class="table-container">
+      <table class="table is-fullwidth is-striped">
+        <thead>
+          <tr class="{% if row.status == 'disabled' %}is-wa-disabled{% endif %}"><th>Время</th><th>Кому</th><th>Шаблон</th><th>Статус</th><th>WA ID</th><th>Ошибка</th></tr>
+        </thead>
+        <tbody>
+          {% for it in page.object_list %}
+            <tr class="{% if row.status == 'disabled' %}is-wa-disabled{% endif %}">
+              <td>{{ it.created_at }}</td>
+              <td>{{ it.to_number }}</td>
+              <td>{{ it.template }}</td>
+              <td>
+                {% if it.status == 'failed' %}<span class="tag is-danger">failed</span>
+                {% elif it.status == 'sent' %}<span class="tag is-link">sent</span>
+                {% elif it.status == 'delivered' %}<span class="tag is-info">delivered</span>
+                {% elif it.status == 'read' %}<span class="tag is-success">read</span>
+                {% else %}<span class="tag">{{ it.status }}</span>{% endif %}
+              </td>
+              <td class="has-text-grey">{{ it.wa_message_id }}</td>
+              <td class="has-text-grey">{{ it.error_text|default:"" }}</td>
+            </tr>
+          {% empty %}
+            <tr class="{% if row.status == 'disabled' %}is-wa-disabled{% endif %}"><td colspan="6" class="has-text-grey">Записей нет</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="has-text-grey">Страница {{ page.number }} из {{ page.paginator.num_pages }}</p>
+</section>
+{% endblock %}

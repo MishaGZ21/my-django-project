@@ -1,0 +1,185 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Лист закупа № {{ order.order_number|default:order.pk }}</title>
+  <style>
+    body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 12pt; color:#111; }
+    h1   { font-size: 18pt; margin: 0 0 10px 0; }
+    h2   { font-size: 14pt; margin: 14px 0 8px 0; }
+    .meta { margin: 0 0 14px 0; color:#444; }
+    table { width: 100%; border-collapse: collapse; margin: 8px 0 20px 0; }
+    th, td { border: 1px solid #999; padding: 6px 8px; vertical-align: top; }
+    th { background: #f3f4f6; text-align: left; }
+    .small { font-size: 10pt; color:#555; }
+	
+	.logo {
+      float: right;
+      /* Ограничители как в ReportLab-версии: ~50мм ширина, ~14мм высота */
+      max-width: 50mm;
+      max-height: 14mm;
+      height: auto;     /* сохраняем пропорции */
+      margin-left: 12px;
+    }
+  </style>
+</head>
+<body>
+  <img src="{% static 'img/logo.png' %}" alt="Логотип" class="logo">
+  <h1>Лист закупа № {{ order.order_number|default:order.pk }}</h1>
+  <p class="meta">
+    Заказ: {{ order }}<br>
+    {% if sheet.created_at %}Создан: {{ sheet.created_at|date:"d.m.Y H:i" }}{% endif %}
+  </p>
+  <div style="clear: both;"></div>
+  <h2>Материалы</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Группа</th>
+        <th>Наименование</th>
+        <th>Формат</th>
+        <th>ЛДСП (листов)</th>
+        <th>ПВХ (метров)</th>
+        <th>ПВХ ШИРОКАЯ (метров)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for n in 1|make_list %}{% endfor %}
+      {% comment %}
+        Django по-умолчанию не имеет range, поэтому перечислим группы вручную.
+      {% endcomment %}
+
+      {% if sheet.lds_name1 or sheet.lds_format1 or sheet.lds_color1 or sheet.pvc_color1 or sheet.pvc_wide_color1 %}
+      <tr>
+        <td>ЛДСП цвет 1</td>
+        <td>{{ sheet.lds_name1 }}</td>
+        <td>{{ sheet.lds_format1 }}</td>
+        <td>{{ sheet.lds_color1 }}</td>
+        <td>{{ sheet.pvc_color1 }}</td>
+        <td>{{ sheet.pvc_wide_color1 }}</td>
+      </tr>
+      {% endif %}
+
+      {% if sheet.lds_name2 or sheet.lds_format2 or sheet.lds_color2 or sheet.pvc_color2 or sheet.pvc_wide_color2 %}
+      <tr>
+        <td>ЛДСП цвет 2</td>
+        <td>{{ sheet.lds_name2 }}</td>
+        <td>{{ sheet.lds_format2 }}</td>
+        <td>{{ sheet.lds_color2 }}</td>
+        <td>{{ sheet.pvc_color2 }}</td>
+        <td>{{ sheet.pvc_wide_color2 }}</td>
+      </tr>
+      {% endif %}
+
+      {% if sheet.lds_name3 or sheet.lds_format3 or sheet.lds_color3 or sheet.pvc_color3 or sheet.pvc_wide_color3 %}
+      <tr>
+        <td>ЛДСП цвет 3</td>
+        <td>{{ sheet.lds_name3 }}</td>
+        <td>{{ sheet.lds_format3 }}</td>
+        <td>{{ sheet.lds_color3 }}</td>
+        <td>{{ sheet.pvc_color3 }}</td>
+        <td>{{ sheet.pvc_wide_color3 }}</td>
+      </tr>
+      {% endif %}
+
+      {% if sheet.lds_name4 or sheet.lds_format4 or sheet.lds_color4 or sheet.pvc_color4 or sheet.pvc_wide_color4 %}
+      <tr>
+        <td>ЛДСП цвет 4</td>
+        <td>{{ sheet.lds_name4 }}</td>
+        <td>{{ sheet.lds_format4 }}</td>
+        <td>{{ sheet.lds_color4 }}</td>
+        <td>{{ sheet.pvc_color4 }}</td>
+        <td>{{ sheet.pvc_wide_color4 }}</td>
+      </tr>
+      {% endif %}
+
+      {% if sheet.lds_name5 or sheet.lds_format5 or sheet.lds_color5 or sheet.pvc_color5 or sheet.pvc_wide_color5 %}
+      <tr>
+        <td>ЛДСП цвет 5</td>
+        <td>{{ sheet.lds_name5 }}</td>
+        <td>{{ sheet.lds_format5 }}</td>
+        <td>{{ sheet.lds_color5 }}</td>
+        <td>{{ sheet.pvc_color5 }}</td>
+        <td>{{ sheet.pvc_wide_color5 }}</td>
+      </tr>
+      {% endif %}
+
+      {% if sheet.lds_name6 or sheet.lds_format6 or sheet.lds_color6 or sheet.pvc_color6 or sheet.pvc_wide_color6 %}
+      <tr>
+        <td>ЛДСП цвет 6</td>
+        <td>{{ sheet.lds_name6 }}</td>
+        <td>{{ sheet.lds_format6 }}</td>
+        <td>{{ sheet.lds_color6 }}</td>
+        <td>{{ sheet.pvc_color6 }}</td>
+        <td>{{ sheet.pvc_wide_color6 }}</td>
+      </tr>
+      {% endif %}
+
+      {% if sheet.lds_name7 or sheet.lds_format7 or sheet.lds_color7 or sheet.pvc_color7 or sheet.pvc_wide_color7 %}
+      <tr>
+        <td>ЛДСП цвет 7</td>
+        <td>{{ sheet.lds_name7 }}</td>
+        <td>{{ sheet.lds_format7 }}</td>
+        <td>{{ sheet.lds_color7 }}</td>
+        <td>{{ sheet.pvc_color7 }}</td>
+        <td>{{ sheet.pvc_wide_color7 }}</td>
+      </tr>
+      {% endif %}
+
+      {% if sheet.lds_name8 or sheet.lds_format8 or sheet.lds_color8 or sheet.pvc_color8 or sheet.pvc_wide_color8 %}
+      <tr>
+        <td>ЛДСП цвет 8</td>
+        <td>{{ sheet.lds_name8 }}</td>
+        <td>{{ sheet.lds_format8 }}</td>
+        <td>{{ sheet.lds_color8 }}</td>
+        <td>{{ sheet.pvc_color8 }}</td>
+        <td>{{ sheet.pvc_wide_color8 }}</td>
+      </tr>
+      {% endif %}
+
+      {% if sheet.lds_name9 or sheet.lds_format9 or sheet.lds_color9 or sheet.pvc_color9 or sheet.pvc_wide_color9 %}
+      <tr>
+        <td>ЛДСП цвет 9</td>
+        <td>{{ sheet.lds_name9 }}</td>
+        <td>{{ sheet.lds_format9 }}</td>
+        <td>{{ sheet.lds_color9 }}</td>
+        <td>{{ sheet.pvc_color9 }}</td>
+        <td>{{ sheet.pvc_wide_color9 }}</td>
+      </tr>
+      {% endif %}
+
+      {% if sheet.lds_name10 or sheet.lds_format10 or sheet.lds_color10 or sheet.pvc_color10 or sheet.pvc_wide_color10 %}
+      <tr>
+        <td>ЛДСП цвет 10</td>
+        <td>{{ sheet.lds_name10 }}</td>
+        <td>{{ sheet.lds_format10 }}</td>
+        <td>{{ sheet.lds_color10 }}</td>
+        <td>{{ sheet.pvc_color10 }}</td>
+        <td>{{ sheet.pvc_wide_color10 }}</td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <h2>Прочее</h2>
+  <table>
+    <tbody>
+      <tr>
+        <th>Столешница (шт.)</th>
+        <td>{{ sheet.tabletop_count|default:"0" }}</td>
+      </tr>
+      <tr>
+        <th>Длина столешницы</th>
+        <td>{% if sheet.tabletop_length_3m %}3 м{% else %}4 м{% endif %}</td>
+      </tr>
+      <tr>
+        <th>ХДФ задняя стенка (листов)</th>
+        <td>{{ sheet.hdf_count|default:"0" }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="small">Сформировано для заказа № {{ order.order_number|default:order.pk }}.</p>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Бухгалтерия{% endblock %}
+
+{% block content %}
+<section class="section pt-4">
+  <div class="container">
+
+    <!-- Вкладки под верхним меню -->
+    <div class="tabs is-boxed is-small">
+      <ul>
+        <li class="{% if tab == 'reports' %}is-active{% endif %}">
+          <a href="{% url 'accounting' %}?tab=reports">Отчёты</a>
+        </li>
+        <li class="{% if tab == 'stats' %}is-active{% endif %}">
+          <a href="{% url 'accounting' %}?tab=stats">Статистика</a>
+        </li>
+        <li class="{% if tab == 'prices' %}is-active{% endif %}">
+          <a href="{% url 'accounting' %}?tab=prices">Цены</a>
+        </li>
+        <li class="{% if tab == 'schedule' %}is-active{% endif %}">
+          <a href="{% url 'accounting' %}?tab=schedule">График</a>
+        </li>
+		<li class="{% if tab == 'chart_settings' %}is-active{% endif %}">
+          <a href="{% url 'accounting' %}?tab=chart_settings">Настройки графиков</a>
+        </li>
+		<li class="{% if tab == 'holidays' %}is-active{% endif %}">
+          <a href="{% url 'accounting' %}?tab=holidays">Выходные</a>
+        </li>
+        <li class="{% if tab == 'other' %}is-active{% endif %}">
+          <a href="{% url 'accounting' %}?tab=other">Прочее</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Контент активной вкладки -->
+    <div class="box">
+      {% if tab == 'reports' %}
+        {% include "accounting/_reports.html" %}
+      {% elif tab == 'stats' %}
+        {% include "accounting/_stats.html" %}
+      {% elif tab == 'prices' %}
+        {% include "accounting/_prices.html" %}
+      {% elif tab == "schedule" %}
+        {% include "accounting/_schedule.html" %}
+      {% elif tab == "chart_settings" %}
+        {% include "accounting/_chart_settings.html" %}
+	  {% elif tab == "holidays" %}
+        {% include "accounting/_holidays.html" %}
+      {% elif tab == "other" %}
+        {% include "accounting/_other.html" %}
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+{% endblock %}

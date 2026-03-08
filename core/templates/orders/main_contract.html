@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Основной договор по заказу №{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title">Основной договор</h1>
+    <p class="subtitle">
+      по заказу № {{ order.order_number }} от {{ order.created_date|date:"d.m.Y" }}
+    </p>
+
+    <div class="box">
+      <p><strong>Клиент:</strong> {{ order.customer_name }} {{ order.last_name }}</p>
+      <p><strong>Телефон:</strong> {{ order.phone }}</p>
+      {% if order.iin %}
+        <p><strong>ИИН:</strong> {{ order.iin }}</p>
+      {% endif %}
+    </div>
+
+    <div class="content">
+      <h2>Текст договора (заглушка)</h2>
+      <p>
+        Здесь будет располагаться основной текст договора на оказание услуг по
+        изготовлению и установке корпусной мебели.
+      </p>
+      <p>
+        На данном этапе используется временный текст-заглушка. Как только вы дадите
+        окончательную редакцию договора, мы подставим сюда его полный текст и,
+        при необходимости, сделаем формирование PDF.
+      </p>
+      <p>
+        Заказ № {{ order.order_number }} считается принятым к производству после
+        подписания Бланка заказа и основного договора обеими сторонами.
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

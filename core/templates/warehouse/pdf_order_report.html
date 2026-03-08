@@ -1,0 +1,113 @@
+{% load static l10n %}
+<!doctype html>
+<html lang="ru">
+<head><meta charset="utf-8"></head>
+<body>
+
+  <div class="head">
+    <div>
+      <div class="brand">Журнал регистрации — приёмка на склад</div>
+      <div class="muted">Отчёт по заказу <span class="badge">№ {% localize off %}{{ order.order_number }}{% endlocalize %}</span></div>
+    </div>
+    <div class="muted">
+      Сформировано: {{ generated_at|date:"d.m.Y H:i" }}
+    </div>
+  </div>
+
+  <div>
+    <table>
+      <tr>
+        <td><b>Клиент</b></td>
+        <td>{{ order.customer_name }}</td>
+      </tr>
+      <tr>
+        <td><b>Телефон</b></td>
+        <td>{{ order.phone }}</td>
+      </tr>
+      {% if order.address %}
+      <tr>
+        <td><b>Адрес</b></td>
+        <td>{{ order.address }}</td>
+      </tr>
+      {% endif %}
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Итоги по заказу</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ЛДСП 2750×1830</th>
+          <th>ЛДСП 2800×2070</th>
+          <th>ЛДСП (итого)</th>
+          <th>ПВХ узкая, м</th>
+          <th>ПВХ широкая, м</th>
+          <th>ХДФ, лист.</th>
+          <th>Столеш., шт.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">{% localize on %}{{ totals.ldsp_2750|floatformat:"-2" }}{% endlocalize %}</td>
+          <td class="num">{% localize on %}{{ totals.ldsp_2800|floatformat:"-2" }}{% endlocalize %}</td>
+          <td class="num">{% localize on %}{{ totals.ldsp_total|floatformat:"-2" }}{% endlocalize %}</td>
+          <td class="num">{% localize on %}{{ totals.pvc_narrow_m|floatformat:"-2" }}{% endlocalize %}</td>
+          <td class="num">{% localize on %}{{ totals.pvc_wide_m|floatformat:"-2" }}{% endlocalize %}</td>
+          <td class="num">{% localize on %}{{ totals.hdf|floatformat:"-2" }}{% endlocalize %}</td>
+          <td class="num">{% localize on %}{{ totals.counter|floatformat:"-2" }}{% endlocalize %}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Завозы (принятые)</h2>
+
+    {% for r in receipts %}
+      <div class="group-title">Завоз № {{ forloop.counter }} — {{ r.received_at|date:"d.m.Y H:i" }}</div>
+      <table>
+        <thead>
+          <tr>
+            <th>ЛДСП 2750×1830</th>
+            <th>ЛДСП 2800×2070</th>
+            <th>ПВХ узк, м</th>
+            <th>ПВХ шир, м</th>
+            <th>ХДФ, лист.</th>
+            <th>Столеш., шт.</th>
+            <th>Статус</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="num">{% localize on %}{{ r.qty_ldsp_2750x1830|default_if_none:0|floatformat:"-2" }}{% endlocalize %}</td>
+            <td class="num">{% localize on %}{{ r.qty_ldsp_2800x2070|default_if_none:0|floatformat:"-2" }}{% endlocalize %}</td>
+            <td class="num">{% localize on %}{{ r.qty_pvc_narrow_m|default_if_none:0|floatformat:"-2" }}{% endlocalize %}</td>
+            <td class="num">{% localize on %}{{ r.qty_pvc_wide_m|default_if_none:0|floatformat:"-2" }}{% endlocalize %}</td>
+            <td class="num">{% localize on %}{{ r.qty_hdf_sheets|default_if_none:0|floatformat:"-2" }}{% endlocalize %}</td>
+            <td class="num">{% localize on %}{{ r.qty_countertop_pcs|default_if_none:0|floatformat:"-2" }}{% endlocalize %}</td>
+            <td>{{ r.get_status_display|default:r.status }}</td>
+          </tr>
+          <tr class="row-muted">
+            <td colspan="7">
+              <div class="sign-block">
+                {% if r.signature %}
+                  <img class="sign-img" src="{{ r.signature.url|add:':signature'|cut:':signature' }}" alt="Подпись водителя">
+                {% else %}
+                  <div class="muted">Подпись не приложена</div>
+                {% endif %}
+                <div class="sign-meta">
+                  <div><b>Водитель:</b> {{ r.driver_name|default:"—" }}</div>
+                  <div><b>Телефон:</b> {{ r.driver_phone|default:"—" }}</div>
+                  <div><b>Комментарий:</b> {{ r.comment|default:"—" }}</div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    {% endfor %}
+  </div>
+
+</body>
+</html>

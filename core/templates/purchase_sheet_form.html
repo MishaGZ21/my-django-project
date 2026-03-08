@@ -1,0 +1,922 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Лист закупа{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    {% if request.GET.saved %}
+      <div class="notification is-success is-light">
+        Лист закупа № {{ request.GET.saved }} сохранён.
+        {% if order %}<a class="button is-small is-success is-light" target="_blank" href="{% url 'purchase_sheet_pdf' order.pk %}">Распечатать PDF</a>{% endif %}
+      </div>
+    {% endif %}
+    {% if form_error %}<div class="notification is-danger is-light">{{ form_error }}</div>{% endif %}
+
+    <style>
+      .input-narrow{max-width:160px}
+      .group-header{display:flex;gap:10px;align-items:center;padding:8px 12px;margin:4px 0 12px;border:1px solid #e6e8ef;border-radius:12px;background:#f7f8fb}
+      .group-badge{width:30px;height:30px;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;background:linear-gradient(135deg,#4f46e5,#06b6d4)}
+      .group-title{font-weight:800}
+      .group-scope{display:flex;gap:10px;flex-wrap:wrap;margin:-4px 0 12px}
+      .group-scope .big-check{position:relative}
+      .group-scope .big-check input{position:absolute;inset:0;opacity:0}
+      .group-scope .big-check span{display:inline-block;padding:8px 14px;border:1px solid #e6e8ef;border-radius:9999px;background:#fff}
+      .group-scope .big-check input:checked+span{background:linear-gradient(135deg,#22c55e,#14b8a6);color:#fff;border-color:transparent}
+      .group-scope .help{width:100%;font-size:.9rem;color:#ef4444;display:none}
+      .group-scope.scope-error{border:1px dashed #ef4444;border-radius:10px;padding:6px 8px}
+      .buttons.has-addons.toggle label.button{cursor:pointer}
+      .buttons.has-addons.toggle label.button.is-selected{border-color:#2563eb;color:#2563eb;background:#eff6ff}
+      .ps-pair.is-hidden{display:none}
+    </style>
+
+    <h1 class="title is-4">Лист закупа</h1>
+
+    <form method="post" action="">
+      {% csrf_token %}
+	  {% if form.non_field_errors %}
+      <div class="notification is-danger is-light">
+        {{ form.non_field_errors }}
+      </div>
+      {% endif %}
+	  {% if just_saved %}
+      <div class="message is-success">
+        <div class="message-body is-flex is-justify-content-space-between is-align-items-center is-flex-wrap-wrap">
+          <span>Лист закупа сохранён.</span>
+          <div class="buttons">
+            <a href="{% url 'calculation_edit' order_id=order.id %}" class="button is-link is-medium">
+              Рассчитать стоимость
+            </a>
+            <a href="{% url 'purchase_sheet_pdf' pk=order.id %}" class="button is-info is-medium">
+              Скачать PDF
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div id="ps-pairs">
+
+        <div class="box ps-pair " id="pair-1" data-index="1">
+          <div class="group-header">
+            <span class="group-badge">1</span>
+            <span class="group-title">ЛДСП цвет 1</span>
+            <span class="is-flex-grow-1"></span>
+            <button type="button" class="button is-small is-warning is-light ps-clear-btn">Очистить</button>
+            <button type="button" class="button is-small is-danger is-light ps-hide-btn">Скрыть</button>
+          </div>
+
+          <div class="group-scope {% if form.errors.group1_facade or form.errors.group1_corpus %}scope-error{% endif %}">
+            <label class="big-check">
+              <input type="checkbox" name="group1_facade" value="1" {% if form.group1_facade.value %}checked{% endif %}>
+              <span>ФАСАДЫ</span>
+            </label>
+            <label class="big-check">
+              <input type="checkbox" name="group1_corpus" value="1" {% if form.group1_corpus.value %}checked{% endif %}>
+              <span>КОРПУС</span>
+            </label>
+            {% if form.errors.group1_facade or form.errors.group1_corpus %}
+              <p class="help is-danger">Укажите «ФАСАДЫ» или «КОРПУС».</p>
+            {% else %}
+              <p class="help">Выберите «ФАСАДЫ» или «КОРПУС».</p>
+            {% endif %}
+          </div>
+
+          <div class="columns is-multiline">
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 1 (Наименование)</label>
+              <input type="text" name="lds_name1" class="input" value="{{ form.lds_name1.value|default_if_none:'' }}">
+			  {% if form.errors.lds_name1 %}
+                <p class="help is-danger">{{ form.errors.lds_name1.0 }}</p>
+              {% endif %}
+
+			  
+            </div>
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 1 (Формат)</label>
+              {% with v=form.lds_format1.value %}
+              <div class="select is-fullwidth">
+                <select name="lds_format1">
+                  <option value="">— выберите формат —</option>
+                  <option value="2750x1830" {% if v == '2750x1830' %}selected{% endif %}>2750×1830</option>
+                  <option value="2800x2070" {% if v == '2800x2070' %}selected{% endif %}>2800×2070</option>
+                </select>
+              </div>
+			  {% if form.errors.lds_format1 %}
+                <p class="help is-danger">{{ form.errors.lds_format1.0 }}</p>
+              {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 1 (листов)</label>
+              <input type="number" min="0" step="1" name="lds_color1" class="input" value="{{ form.lds_color1.value|default_if_none:'' }}">
+              {% if form.errors.lds_color1 %}
+                <p class="help is-danger">{{ form.errors.lds_color1.0 }}</p>
+              {% endif %}
+
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ цвет 1 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_color1" class="input input-narrow" value="{{ form.pvc_color1.value|default_if_none:'' }}">
+              {% if form.errors.pvc_color1 %}
+                <p class="help is-danger">{{ form.errors.pvc_color1.0 }}</p>
+              {% endif %}
+			</div>
+            <div class="column is-3">
+              <label class="label">ПВХ ШИРОКАЯ цвет 1 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_wide_color1" class="input input-narrow" value="{{ form.pvc_wide_color1.value|default_if_none:'' }}">
+            </div>
+          </div>
+        </div>
+    
+        <div class="box ps-pair {% if not form.group2_facade.value and not form.group2_corpus.value and not form.lds_name2.value and not form.lds_format2.value and not form.lds_color2.value and not form.pvc_color2.value and not form.pvc_wide_color2.value %}is-hidden{% endif %}" id="pair-2" data-index="2">
+          <div class="group-header">
+            <span class="group-badge">2</span>
+            <span class="group-title">ЛДСП цвет 2</span>
+            <span class="is-flex-grow-1"></span>
+            <button type="button" class="button is-small is-warning is-light ps-clear-btn">Очистить</button>
+            <button type="button" class="button is-small is-danger is-light ps-hide-btn">Скрыть</button>
+          </div>
+
+          <div class="group-scope {% if form.errors.group2_facade or form.errors.group2_corpus %}scope-error{% endif %}">
+            <label class="big-check">
+              <input type="checkbox" name="group2_facade" value="1" {% if form.group2_facade.value %}checked{% endif %}>
+              <span>ФАСАДЫ</span>
+            </label>
+            <label class="big-check">
+              <input type="checkbox" name="group2_corpus" value="1" {% if form.group2_corpus.value %}checked{% endif %}>
+              <span>КОРПУС</span>
+            </label>
+            {% if form.errors.group2_facade or form.errors.group2_corpus %}
+              <p class="help is-danger">Укажите «ФАСАДЫ» или «КОРПУС».</p>
+            {% else %}
+              <p class="help">Выберите «ФАСАДЫ» или «КОРПУС».</p>
+            {% endif %}
+          </div>
+
+          <div class="columns is-multiline">
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 2 (Наименование)</label>
+              <input type="text" name="lds_name2" class="input" value="{{ form.lds_name2.value|default_if_none:'' }}">
+			  {% if form.errors.lds_name2 %}
+                <p class="help is-danger">{{ form.errors.lds_name2.0 }}</p>
+              {% endif %}
+            </div>
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 2 (Формат)</label>
+              {% with v=form.lds_format2.value %}
+              <div class="select is-fullwidth">
+                <select name="lds_format2">
+                  <option value="">— выберите формат —</option>
+                  <option value="2750x1830" {% if v == '2750x1830' %}selected{% endif %}>2750×1830</option>
+                  <option value="2800x2070" {% if v == '2800x2070' %}selected{% endif %}>2800×2070</option>
+                </select>
+              </div>
+			  {% if form.errors.lds_format2 %}
+                <p class="help is-danger">{{ form.errors.lds_format2.0 }}</p>
+              {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 2 (листов)</label>
+              <input type="number" min="0" step="1" name="lds_color2" class="input" value="{{ form.lds_color2.value|default_if_none:'' }}">
+              {% if form.errors.lds_color2 %}
+                <p class="help is-danger">{{ form.errors.lds_color2.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ цвет 2 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_color2" class="input input-narrow" value="{{ form.pvc_color2.value|default_if_none:'' }}">
+              {% if form.errors.pvc_color2 %}
+                <p class="help is-danger">{{ form.errors.pvc_color2.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ ШИРОКАЯ цвет 2 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_wide_color2" class="input input-narrow" value="{{ form.pvc_wide_color2.value|default_if_none:'' }}">
+            </div>
+          </div>
+        </div>
+    
+        <div class="box ps-pair {% if not form.group3_facade.value and not form.group3_corpus.value and not form.lds_name3.value and not form.lds_format3.value and not form.lds_color3.value and not form.pvc_color3.value and not form.pvc_wide_color3.value %}is-hidden{% endif %}" id="pair-3" data-index="3">
+          <div class="group-header">
+            <span class="group-badge">3</span>
+            <span class="group-title">ЛДСП цвет 3</span>
+            <span class="is-flex-grow-1"></span>
+            <button type="button" class="button is-small is-warning is-light ps-clear-btn">Очистить</button>
+            <button type="button" class="button is-small is-danger is-light ps-hide-btn">Скрыть</button>
+          </div>
+
+          <div class="group-scope {% if form.errors.group3_facade or form.errors.group3_corpus %}scope-error{% endif %}">
+
+            <label class="big-check">
+              <input type="checkbox" name="group3_facade" value="1" {% if form.group3_facade.value %}checked{% endif %}>
+              <span>ФАСАДЫ</span>
+            </label>
+            <label class="big-check">
+              <input type="checkbox" name="group3_corpus" value="1" {% if form.group3_corpus.value %}checked{% endif %}>
+              <span>КОРПУС</span>
+            </label>
+            {% if form.errors.group3_facade or form.errors.group3_corpus %}
+              <p class="help is-danger">Укажите «ФАСАДЫ» или «КОРПУС».</p>
+            {% else %}
+              <p class="help">Выберите «ФАСАДЫ» или «КОРПУС».</p>
+            {% endif %}
+          </div>
+
+          <div class="columns is-multiline">
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 3 (Наименование)</label>
+              <input type="text" name="lds_name3" class="input" value="{{ form.lds_name3.value|default_if_none:'' }}">
+			  {% if form.errors.lds_name3 %}
+                <p class="help is-danger">{{ form.errors.lds_name3.0 }}</p>
+              {% endif %}
+			</div>
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 3 (Формат)</label>
+              {% with v=form.lds_format3.value %}
+              <div class="select is-fullwidth">
+                <select name="lds_format3">
+                  <option value="">— выберите формат —</option>
+                  <option value="2750x1830" {% if v == '2750x1830' %}selected{% endif %}>2750×1830</option>
+                  <option value="2800x2070" {% if v == '2800x2070' %}selected{% endif %}>2800×2070</option>
+                </select>
+              </div>
+			  {% if form.errors.lds_format3 %}
+                <p class="help is-danger">{{ form.errors.lds_format3.0 }}</p>
+              {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 3 (листов)</label>
+              <input type="number" min="0" step="1" name="lds_color3" class="input" value="{{ form.lds_color3.value|default_if_none:'' }}">
+              {% if form.errors.lds_color3 %}
+                <p class="help is-danger">{{ form.errors.lds_color3.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ цвет 3 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_color3" class="input input-narrow" value="{{ form.pvc_color3.value|default_if_none:'' }}">
+              {% if form.errors.pvc_color3 %}
+                <p class="help is-danger">{{ form.errors.pvc_color3.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ ШИРОКАЯ цвет 3 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_wide_color3" class="input input-narrow" value="{{ form.pvc_wide_color3.value|default_if_none:'' }}">
+            </div>
+          </div>
+        </div>
+    
+        <div class="box ps-pair {% if not form.group4_facade.value and not form.group4_corpus.value and not form.lds_name4.value and not form.lds_format4.value and not form.lds_color4.value and not form.pvc_color4.value and not form.pvc_wide_color4.value %}is-hidden{% endif %}" id="pair-4" data-index="4">
+          <div class="group-header">
+            <span class="group-badge">4</span>
+            <span class="group-title">ЛДСП цвет 4</span>
+            <span class="is-flex-grow-1"></span>
+            <button type="button" class="button is-small is-warning is-light ps-clear-btn">Очистить</button>
+            <button type="button" class="button is-small is-danger is-light ps-hide-btn">Скрыть</button>
+          </div>
+
+          <div class="group-scope {% if form.errors.group4_facade or form.errors.group4_corpus %}scope-error{% endif %}">
+
+            <label class="big-check">
+              <input type="checkbox" name="group4_facade" value="1" {% if form.group4_facade.value %}checked{% endif %}>
+              <span>ФАСАДЫ</span>
+            </label>
+            <label class="big-check">
+              <input type="checkbox" name="group4_corpus" value="1" {% if form.group4_corpus.value %}checked{% endif %}>
+              <span>КОРПУС</span>
+            </label>
+            {% if form.errors.group4_facade or form.errors.group4_corpus %}
+              <p class="help is-danger">Укажите «ФАСАДЫ» или «КОРПУС».</p>
+            {% else %}
+              <p class="help">Выберите «ФАСАДЫ» или «КОРПУС».</p>
+            {% endif %}
+          </div>
+
+          <div class="columns is-multiline">
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 4 (Наименование)</label>
+              <input type="text" name="lds_name4" class="input" value="{{ form.lds_name4.value|default_if_none:'' }}">
+			  {% if form.errors.lds_name4 %}
+                <p class="help is-danger">{{ form.errors.lds_name4.0 }}</p>
+              {% endif %}
+			</div>
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 4 (Формат)</label>
+              {% with v=form.lds_format4.value %}
+              <div class="select is-fullwidth">
+                <select name="lds_format4">
+                  <option value="">— выберите формат —</option>
+                  <option value="2750x1830" {% if v == '2750x1830' %}selected{% endif %}>2750×1830</option>
+                  <option value="2800x2070" {% if v == '2800x2070' %}selected{% endif %}>2800×2070</option>
+                </select>
+              </div>
+			  {% if form.errors.lds_format4 %}
+                <p class="help is-danger">{{ form.errors.lds_format4.0 }}</p>
+              {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 4 (листов)</label>
+              <input type="number" min="0" step="1" name="lds_color4" class="input" value="{{ form.lds_color4.value|default_if_none:'' }}">
+              {% if form.errors.lds_color4 %}
+                <p class="help is-danger">{{ form.errors.lds_color4.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ цвет 4 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_color4" class="input input-narrow" value="{{ form.pvc_color4.value|default_if_none:'' }}">
+              {% if form.errors.pvc_color4 %}
+                <p class="help is-danger">{{ form.errors.pvc_color4.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ ШИРОКАЯ цвет 4 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_wide_color4" class="input input-narrow" value="{{ form.pvc_wide_color4.value|default_if_none:'' }}">
+            </div>
+          </div>
+        </div>
+    
+        <div class="box ps-pair {% if not form.group5_facade.value and not form.group5_corpus.value and not form.lds_name5.value and not form.lds_format5.value and not form.lds_color5.value and not form.pvc_color5.value and not form.pvc_wide_color5.value %}is-hidden{% endif %}" id="pair-5" data-index="5">
+          <div class="group-header">
+            <span class="group-badge">5</span>
+            <span class="group-title">ЛДСП цвет 5</span>
+            <span class="is-flex-grow-1"></span>
+            <button type="button" class="button is-small is-warning is-light ps-clear-btn">Очистить</button>
+            <button type="button" class="button is-small is-danger is-light ps-hide-btn">Скрыть</button>
+          </div>
+
+          <div class="group-scope {% if form.errors.group5_facade or form.errors.group5_corpus %}scope-error{% endif %}">
+            <label class="big-check">
+              <input type="checkbox" name="group5_facade" value="1" {% if form.group5_facade.value %}checked{% endif %}>
+              <span>ФАСАДЫ</span>
+            </label>
+            <label class="big-check">
+              <input type="checkbox" name="group5_corpus" value="1" {% if form.group5_corpus.value %}checked{% endif %}>
+              <span>КОРПУС</span>
+            </label>
+            {% if form.errors.group5_facade or form.errors.group5_corpus %}
+              <p class="help is-danger">Укажите «ФАСАДЫ» или «КОРПУС».</p>
+            {% else %}
+              <p class="help">Выберите «ФАСАДЫ» или «КОРПУС».</p>
+            {% endif %}
+          </div>
+
+          <div class="columns is-multiline">
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 5 (Наименование)</label>
+              <input type="text" name="lds_name5" class="input" value="{{ form.lds_name5.value|default_if_none:'' }}">
+			  {% if form.errors.lds_name5 %}
+                <p class="help is-danger">{{ form.errors.lds_name5.0 }}</p>
+              {% endif %}
+			</div>
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 5 (Формат)</label>
+              {% with v=form.lds_format5.value %}
+              <div class="select is-fullwidth">
+                <select name="lds_format5">
+                  <option value="">— выберите формат —</option>
+                  <option value="2750x1830" {% if v == '2750x1830' %}selected{% endif %}>2750×1830</option>
+                  <option value="2800x2070" {% if v == '2800x2070' %}selected{% endif %}>2800×2070</option>
+                </select>
+              </div>
+			  {% if form.errors.lds_format5 %}
+                <p class="help is-danger">{{ form.errors.lds_format5.0 }}</p>
+              {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 5 (листов)</label>
+              <input type="number" min="0" step="1" name="lds_color5" class="input" value="{{ form.lds_color5.value|default_if_none:'' }}">
+            </div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ цвет 5 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_color5" class="input input-narrow" value="{{ form.pvc_color5.value|default_if_none:'' }}">
+              {% if form.errors.pvc_color5 %}
+                <p class="help is-danger">{{ form.errors.pvc_color5.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ ШИРОКАЯ цвет 5 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_wide_color5" class="input input-narrow" value="{{ form.pvc_wide_color5.value|default_if_none:'' }}">
+              {% if form.errors.pvc_color5 %}
+                <p class="help is-danger">{{ form.errors.pvc_color5.0 }}</p>
+              {% endif %}
+			</div>
+          </div>
+        </div>
+    
+        <div class="box ps-pair {% if not form.group6_facade.value and not form.group6_corpus.value and not form.lds_name6.value and not form.lds_format6.value and not form.lds_color6.value and not form.pvc_color6.value and not form.pvc_wide_color6.value %}is-hidden{% endif %}" id="pair-6" data-index="6">
+          <div class="group-header">
+            <span class="group-badge">6</span>
+            <span class="group-title">ЛДСП цвет 6</span>
+            <span class="is-flex-grow-1"></span>
+            <button type="button" class="button is-small is-warning is-light ps-clear-btn">Очистить</button>
+            <button type="button" class="button is-small is-danger is-light ps-hide-btn">Скрыть</button>
+          </div>
+
+          <div class="group-scope {% if form.errors.group6_facade or form.errors.group6_corpus %}scope-error{% endif %}">
+
+            <label class="big-check">
+              <input type="checkbox" name="group6_facade" value="1" {% if form.group6_facade.value %}checked{% endif %}>
+              <span>ФАСАДЫ</span>
+            </label>
+            <label class="big-check">
+              <input type="checkbox" name="group6_corpus" value="1" {% if form.group6_corpus.value %}checked{% endif %}>
+              <span>КОРПУС</span>
+            </label>
+            {% if form.errors.group6_facade or form.errors.group6_corpus %}
+              <p class="help is-danger">Укажите «ФАСАДЫ» или «КОРПУС».</p>
+            {% else %}
+              <p class="help">Выберите «ФАСАДЫ» или «КОРПУС».</p>
+            {% endif %}
+          </div>
+
+          <div class="columns is-multiline">
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 6 (Наименование)</label>
+              <input type="text" name="lds_name6" class="input" value="{{ form.lds_name6.value|default_if_none:'' }}">
+			  {% if form.errors.lds_name6 %}
+                <p class="help is-danger">{{ form.errors.lds_name6.0 }}</p>
+              {% endif %}
+			</div>
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 6 (Формат)</label>
+              {% with v=form.lds_format6.value %}
+              <div class="select is-fullwidth">
+                <select name="lds_format6">
+                  <option value="">— выберите формат —</option>
+                  <option value="2750x1830" {% if v == '2750x1830' %}selected{% endif %}>2750×1830</option>
+                  <option value="2800x2070" {% if v == '2800x2070' %}selected{% endif %}>2800×2070</option>
+                </select>
+              </div>
+			  {% if form.errors.lds_format6 %}
+                <p class="help is-danger">{{ form.errors.lds_format6.0 }}</p>
+              {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 6 (листов)</label>
+              <input type="number" min="0" step="1" name="lds_color6" class="input" value="{{ form.lds_color6.value|default_if_none:'' }}">
+              {% if form.errors.lds_color6 %}
+                <p class="help is-danger">{{ form.errors.lds_color6.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ цвет 6 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_color6" class="input input-narrow" value="{{ form.pvc_color6.value|default_if_none:'' }}">
+              {% if form.errors.pvc_color6 %}
+                <p class="help is-danger">{{ form.errors.pvc_color6.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ ШИРОКАЯ цвет 6 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_wide_color6" class="input input-narrow" value="{{ form.pvc_wide_color6.value|default_if_none:'' }}">
+            </div>
+          </div>
+        </div>
+    
+        <div class="box ps-pair {% if not form.group7_facade.value and not form.group7_corpus.value and not form.lds_name7.value and not form.lds_format7.value and not form.lds_color7.value and not form.pvc_color7.value and not form.pvc_wide_color7.value %}is-hidden{% endif %}" id="pair-7" data-index="7">
+          <div class="group-header">
+            <span class="group-badge">7</span>
+            <span class="group-title">ЛДСП цвет 7</span>
+            <span class="is-flex-grow-1"></span>
+            <button type="button" class="button is-small is-warning is-light ps-clear-btn">Очистить</button>
+            <button type="button" class="button is-small is-danger is-light ps-hide-btn">Скрыть</button>
+          </div>
+
+          <div class="group-scope {% if form.errors.group7_facade or form.errors.group7_corpus %}scope-error{% endif %}">
+
+            <label class="big-check">
+              <input type="checkbox" name="group7_facade" value="1" {% if form.group7_facade.value %}checked{% endif %}>
+              <span>ФАСАДЫ</span>
+            </label>
+            <label class="big-check">
+              <input type="checkbox" name="group7_corpus" value="1" {% if form.group7_corpus.value %}checked{% endif %}>
+              <span>КОРПУС</span>
+            </label>
+            {% if form.errors.group7_facade or form.errors.group7_corpus %}
+              <p class="help is-danger">Укажите «ФАСАДЫ» или «КОРПУС».</p>
+            {% else %}
+              <p class="help">Выберите «ФАСАДЫ» или «КОРПУС».</p>
+            {% endif %}
+          </div>
+
+          <div class="columns is-multiline">
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 7 (Наименование)</label>
+              <input type="text" name="lds_name7" class="input" value="{{ form.lds_name7.value|default_if_none:'' }}">
+			  {% if form.errors.lds_name7 %}
+                <p class="help is-danger">{{ form.errors.lds_name7.0 }}</p>
+              {% endif %}
+			</div>
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 7 (Формат)</label>
+              {% with v=form.lds_format7.value %}
+              <div class="select is-fullwidth">
+                <select name="lds_format7">
+                  <option value="">— выберите формат —</option>
+                  <option value="2750x1830" {% if v == '2750x1830' %}selected{% endif %}>2750×1830</option>
+                  <option value="2800x2070" {% if v == '2800x2070' %}selected{% endif %}>2800×2070</option>
+                </select>
+              </div>
+			  {% if form.errors.lds_format7 %}
+                <p class="help is-danger">{{ form.errors.lds_format7.0 }}</p>
+              {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 7 (листов)</label>
+              <input type="number" min="0" step="1" name="lds_color7" class="input" value="{{ form.lds_color7.value|default_if_none:'' }}">
+              {% if form.errors.lds_color7 %}
+                <p class="help is-danger">{{ form.errors.lds_color7.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ цвет 7 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_color7" class="input input-narrow" value="{{ form.pvc_color7.value|default_if_none:'' }}">
+              {% if form.errors.pvc_color7 %}
+                <p class="help is-danger">{{ form.errors.pvc_color7.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ ШИРОКАЯ цвет 7 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_wide_color7" class="input input-narrow" value="{{ form.pvc_wide_color7.value|default_if_none:'' }}">
+            </div>
+          </div>
+        </div>
+    
+        <div class="box ps-pair {% if not form.group8_facade.value and not form.group8_corpus.value and not form.lds_name8.value and not form.lds_format8.value and not form.lds_color8.value and not form.pvc_color8.value and not form.pvc_wide_color8.value %}is-hidden{% endif %}" id="pair-8" data-index="8">
+          <div class="group-header">
+            <span class="group-badge">8</span>
+            <span class="group-title">ЛДСП цвет 8</span>
+            <span class="is-flex-grow-1"></span>
+            <button type="button" class="button is-small is-warning is-light ps-clear-btn">Очистить</button>
+            <button type="button" class="button is-small is-danger is-light ps-hide-btn">Скрыть</button>
+          </div>
+
+          <div class="group-scope {% if form.errors.group8_facade or form.errors.group8_corpus %}scope-error{% endif %}">
+
+            <label class="big-check">
+              <input type="checkbox" name="group8_facade" value="1" {% if form.group8_facade.value %}checked{% endif %}>
+              <span>ФАСАДЫ</span>
+            </label>
+            <label class="big-check">
+              <input type="checkbox" name="group8_corpus" value="1" {% if form.group8_corpus.value %}checked{% endif %}>
+              <span>КОРПУС</span>
+            </label>
+            {% if form.errors.group8_facade or form.errors.group8_corpus %}
+              <p class="help is-danger">Укажите «ФАСАДЫ» или «КОРПУС».</p>
+            {% else %}
+              <p class="help">Выберите «ФАСАДЫ» или «КОРПУС».</p>
+            {% endif %}
+          </div>
+
+          <div class="columns is-multiline">
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 8 (Наименование)</label>
+              <input type="text" name="lds_name8" class="input" value="{{ form.lds_name8.value|default_if_none:'' }}">
+			  {% if form.errors.lds_name8 %}
+                <p class="help is-danger">{{ form.errors.lds_name8.0 }}</p>
+              {% endif %}
+			</div>
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 8 (Формат)</label>
+              {% with v=form.lds_format8.value %}
+              <div class="select is-fullwidth">
+                <select name="lds_format8">
+                  <option value="">— выберите формат —</option>
+                  <option value="2750x1830" {% if v == '2750x1830' %}selected{% endif %}>2750×1830</option>
+                  <option value="2800x2070" {% if v == '2800x2070' %}selected{% endif %}>2800×2070</option>
+                </select>
+              </div>
+			  {% if form.errors.lds_format8 %}
+                <p class="help is-danger">{{ form.errors.lds_format8.0 }}</p>
+              {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 8 (листов)</label>
+              <input type="number" min="0" step="1" name="lds_color8" class="input" value="{{ form.lds_color8.value|default_if_none:'' }}">
+              {% if form.errors.lds_color8 %}
+                <p class="help is-danger">{{ form.errors.lds_color8.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ цвет 8 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_color8" class="input input-narrow" value="{{ form.pvc_color8.value|default_if_none:'' }}">
+              {% if form.errors.pvc_color8 %}
+                <p class="help is-danger">{{ form.errors.pvc_color8.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ ШИРОКАЯ цвет 8 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_wide_color8" class="input input-narrow" value="{{ form.pvc_wide_color8.value|default_if_none:'' }}">
+            </div>
+          </div>
+        </div>
+    
+        <div class="box ps-pair {% if not form.group9_facade.value and not form.group9_corpus.value and not form.lds_name9.value and not form.lds_format9.value and not form.lds_color9.value and not form.pvc_color9.value and not form.pvc_wide_color9.value %}is-hidden{% endif %}" id="pair-9" data-index="9">
+          <div class="group-header">
+            <span class="group-badge">9</span>
+            <span class="group-title">ЛДСП цвет 9</span>
+            <span class="is-flex-grow-1"></span>
+            <button type="button" class="button is-small is-warning is-light ps-clear-btn">Очистить</button>
+            <button type="button" class="button is-small is-danger is-light ps-hide-btn">Скрыть</button>
+          </div>
+
+          <div class="group-scope {% if form.errors.group9_facade or form.errors.group9_corpus %}scope-error{% endif %}">
+
+            <label class="big-check">
+              <input type="checkbox" name="group9_facade" value="1" {% if form.group9_facade.value %}checked{% endif %}>
+              <span>ФАСАДЫ</span>
+            </label>
+            <label class="big-check">
+              <input type="checkbox" name="group9_corpus" value="1" {% if form.group9_corpus.value %}checked{% endif %}>
+              <span>КОРПУС</span>
+            </label>
+            {% if form.errors.group9_facade or form.errors.group9_corpus %}
+              <p class="help is-danger">Укажите «ФАСАДЫ» или «КОРПУС».</p>
+            {% else %}
+              <p class="help">Выберите «ФАСАДЫ» или «КОРПУС».</p>
+            {% endif %}
+          </div>
+
+          <div class="columns is-multiline">
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 9 (Наименование)</label>
+              <input type="text" name="lds_name9" class="input" value="{{ form.lds_name9.value|default_if_none:'' }}">
+			  {% if form.errors.lds_name9 %}
+                <p class="help is-danger">{{ form.errors.lds_name9.0 }}</p>
+              {% endif %}
+			</div>
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 9 (Формат)</label>
+              {% with v=form.lds_format9.value %}
+              <div class="select is-fullwidth">
+                <select name="lds_format9">
+                  <option value="">— выберите формат —</option>
+                  <option value="2750x1830" {% if v == '2750x1830' %}selected{% endif %}>2750×1830</option>
+                  <option value="2800x2070" {% if v == '2800x2070' %}selected{% endif %}>2800×2070</option>
+                </select>
+              </div>
+			  {% if form.errors.lds_format9 %}
+                <p class="help is-danger">{{ form.errors.lds_format9.0 }}</p>
+              {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 9 (листов)</label>
+              <input type="number" min="0" step="1" name="lds_color9" class="input" value="{{ form.lds_color9.value|default_if_none:'' }}">
+              {% if form.errors.lds_color9 %}
+                <p class="help is-danger">{{ form.errors.lds_color9.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ цвет 9 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_color9" class="input input-narrow" value="{{ form.pvc_color9.value|default_if_none:'' }}">
+              {% if form.errors.pvc_color9 %}
+                <p class="help is-danger">{{ form.errors.pvc_color9.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ ШИРОКАЯ цвет 9 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_wide_color9" class="input input-narrow" value="{{ form.pvc_wide_color9.value|default_if_none:'' }}">
+            </div>
+          </div>
+        </div>
+    
+        <div class="box ps-pair {% if not form.group10_facade.value and not form.group10_corpus.value and not form.lds_name10.value and not form.lds_format10.value and not form.lds_color10.value and not form.pvc_color10.value and not form.pvc_wide_color10.value %}is-hidden{% endif %}" id="pair-10" data-index="10">
+          <div class="group-header">
+            <span class="group-badge">10</span>
+            <span class="group-title">ЛДСП цвет 10</span>
+            <span class="is-flex-grow-1"></span>
+            <button type="button" class="button is-small is-warning is-light ps-clear-btn">Очистить</button>
+            <button type="button" class="button is-small is-danger is-light ps-hide-btn">Скрыть</button>
+          </div>
+
+          <div class="group-scope {% if form.errors.group10_facade or form.errors.group10_corpus %}scope-error{% endif %}">
+
+            <label class="big-check">
+              <input type="checkbox" name="group10_facade" value="1" {% if form.group10_facade.value %}checked{% endif %}>
+              <span>ФАСАДЫ</span>
+            </label>
+            <label class="big-check">
+              <input type="checkbox" name="group10_corpus" value="1" {% if form.group10_corpus.value %}checked{% endif %}>
+              <span>КОРПУС</span>
+            </label>
+            {% if form.errors.group10_facade or form.errors.group10_corpus %}
+              <p class="help is-danger">Укажите «ФАСАДЫ» или «КОРПУС».</p>
+            {% else %}
+              <p class="help">Выберите «ФАСАДЫ» или «КОРПУС».</p>
+            {% endif %}
+          </div>
+
+          <div class="columns is-multiline">
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 10 (Наименование)</label>
+              <input type="text" name="lds_name10" class="input" value="{{ form.lds_name10.value|default_if_none:'' }}">
+			  {% if form.errors.lds_name10 %}
+                <p class="help is-danger">{{ form.errors.lds_name10.0 }}</p>
+              {% endif %}
+			</div>
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 10 (Формат)</label>
+              {% with v=form.lds_format10.value %}
+              <div class="select is-fullwidth">
+                <select name="lds_format10">
+                  <option value="">— выберите формат —</option>
+                  <option value="2750x1830" {% if v == '2750x1830' %}selected{% endif %}>2750×1830</option>
+                  <option value="2800x2070" {% if v == '2800x2070' %}selected{% endif %}>2800×2070</option>
+                </select>
+              </div>
+			  {% if form.errors.lds_format10 %}
+                <p class="help is-danger">{{ form.errors.lds_format10.0 }}</p>
+              {% endif %}
+              {% endwith %}
+            </div>
+
+            <div class="column is-6">
+              <label class="label">ЛДСП цвет 10 (листов)</label>
+              <input type="number" min="0" step="1" name="lds_color10" class="input" value="{{ form.lds_color10.value|default_if_none:'' }}">
+              {% if form.errors.lds_color10 %}
+                <p class="help is-danger">{{ form.errors.lds_color10.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ цвет 10 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_color10" class="input input-narrow" value="{{ form.pvc_color10.value|default_if_none:'' }}">
+              {% if form.errors.pvc_color10 %}
+                <p class="help is-danger">{{ form.errors.pvc_color10.0 }}</p>
+              {% endif %}
+			</div>
+
+            <div class="column is-3">
+              <label class="label">ПВХ ШИРОКАЯ цвет 10 (метров)</label>
+              <input type="number" min="0" step="1" name="pvc_wide_color10" class="input input-narrow" value="{{ form.pvc_wide_color10.value|default_if_none:'' }}">
+            </div>
+          </div>
+        </div>
+    
+      </div>
+
+      <div class="field mt-2" id="add-pair-wrap">
+        <button type="button" id="add-pair-btn" class="button is-link is-light is-fullwidth">
+          <strong style="font-size:1.1rem;">+ Добавить группу ЛДСП</strong>
+        </button>
+      </div>
+
+      <hr>
+
+      <!-- Переключатель 3м / 4м -->
+      <div class="columns is-multiline">
+        <div class="column is-4">
+          <label class="label">Длина столешницы</label>
+          <div class="buttons has-addons toggle" id="len-toggle">
+            <label class="button {% if not form.tabletop_length_3m.value %}is-selected{% endif %}">
+              <input type="radio" name="tabletop_length_3m" value="False" {% if not form.tabletop_length_3m.value %}checked{% endif %} style="display:none">
+              4 м
+            </label>
+            <label class="button {% if form.tabletop_length_3m.value %}is-selected{% endif %}">
+              <input type="radio" name="tabletop_length_3m" value="True" {% if form.tabletop_length_3m.value %}checked{% endif %} style="display:none">
+              3 м
+            </label>
+          </div>
+        </div>
+
+        <div class="column is-4">
+          <label class="label">Столешница (шт.)</label>
+          <input type="number" name="tabletop_count" class="input" min="0" step="1" value="{{ form.tabletop_count.value|default_if_none:'' }}">
+        </div>
+
+        <div class="column is-4">
+          <label class="label">ХДФ задняя стенка (листов)</label>
+          <input type="number" name="hdf_count" class="input" min="0" step="1" value="{{ form.hdf_count.value|default_if_none:'' }}">
+        </div>
+      </div>
+
+      <div class="field is-grouped is-justify-content-flex-end mt-4">
+        <div class="control"><a class="button is-danger is-light" href="javascript:history.back()">Отмена</a></div>
+        <div class="control"><button class="button is-primary" type="submit">Сохранить</button></div>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // визуальный toggle для 3м/4м
+  const toggle = document.getElementById('len-toggle');
+  if (toggle){
+    toggle.querySelectorAll('label.button').forEach(lbl=>{
+      lbl.addEventListener('click', ()=>{
+        toggle.querySelectorAll('label.button').forEach(x=>x.classList.remove('is-selected'));
+        lbl.classList.add('is-selected');
+        const inp = lbl.querySelector('input[type="radio"]');
+        if (inp) inp.checked = true;
+      });
+    });
+  }
+
+  const maxGroups = 10;
+  const pairs = Array.from(document.querySelectorAll('.ps-pair'));
+  const addBtn = document.getElementById('add-pair-btn');
+  const addWrap = document.getElementById('add-pair-wrap');
+
+  function groupHasData(pair){
+    const inputs = pair.querySelectorAll('input, select, textarea');
+    for (const el of inputs){
+      if (el.type === 'checkbox' || el.type === 'radio') {
+        if (el.checked) return true;
+      } else if (el.value && String(el.value).trim() !== '') {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // На старте: автоскрываем пустые группы 2..10 (если сервер их не скрыл условием)
+  pairs.forEach((pair, idx) => {
+    if (idx === 0) return;
+    if (!groupHasData(pair)) pair.classList.add('is-hidden');
+  });
+
+  function updateAddBtn(){
+    const visibleCount = document.querySelectorAll('.ps-pair:not(.is-hidden)').length;
+    if (visibleCount >= maxGroups) {
+      addWrap.classList.add('is-hidden');
+    } else {
+      addWrap.classList.remove('is-hidden');
+    }
+  }
+
+  function revealNextGroup(){
+    const next = pairs.find(p => p.classList.contains('is-hidden'));
+    if (next){
+      next.classList.remove('is-hidden');
+      next.scrollIntoView({behavior:'smooth', block:'start'});
+      updateAddBtn();
+    }
+  }
+
+  if (addBtn) addBtn.addEventListener('click', revealNextGroup);
+
+  // Очистить/Скрыть
+  document.addEventListener('click', function(e){
+    const clearBtn = e.target.closest('.ps-clear-btn');
+    const hideBtn  = e.target.closest('.ps-hide-btn');
+    if (!clearBtn && !hideBtn) return;
+
+    const pair = e.target.closest('.ps-pair');
+    if (!pair) return;
+
+    if (clearBtn){
+      const inputs = pair.querySelectorAll('input, select, textarea');
+      inputs.forEach(el=>{
+        if (el.type === 'checkbox' || el.type === 'radio') {
+          el.checked = false;
+        } else {
+          el.value = '';
+        }
+      });
+    }
+
+    if (hideBtn){
+      if (pair.dataset.index !== '1') {
+        pair.classList.add('is-hidden');
+        updateAddBtn();
+      }
+    }
+  });
+
+  updateAddBtn();
+});
+</script>
+{% endblock %}

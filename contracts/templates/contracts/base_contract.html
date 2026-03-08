@@ -1,0 +1,21 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Раздел «Договор»{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'contracts/css/contract.css' %}">
+  {% block extra_head %}{% endblock %}
+  <style>@media print { .no-print{display:none!important} body{margin:0} }</style>
+</head>
+<body class="{% if pdf_mode %}contract-body-pdf{% endif %}">
+  <main class="page">
+    <div class="contract-wrapper{% if pdf_mode %} contract-pdf compact{% endif %}">
+        {% block content %}{% endblock %}
+    </div>
+  </main>
+  <script src="{% static 'contracts/js/contract.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

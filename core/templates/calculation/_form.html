@@ -1,0 +1,577 @@
+{% load l10n %}
+{% block title %}Расчёт стоимости заказа{% endblock %}
+<style>
+.big{
+  font-size: 30px;
+}
+.p-4{
+  width: 99%;
+}
+.notification {
+    background-color: #f5f5f5;
+    border-radius: 14px;
+    position: relative;
+    padding: 1.25rem 1.25rem 1.25rem 1.25rem;
+}
+</style>
+
+
+<!-- ПРОЕКТ -->
+<article class="message is-primary">
+  <div class="message-header"><p>Проект</p></div>
+  <div class="message-body">
+    {% if not calc.was_saved %}
+      <p class="has-text-grey">
+        Для расчета стоимости Дизайн проекта сохраните/обновите расчёт.
+      </p>
+    {% else %}
+      <div class="columns">
+        <div class="column is-7">
+          <h4 class="title is-6">Исходные данные</h4>
+          <p class="mb-1">
+            ЛДСП (листов):
+            <strong>{{ project_qty_ldsp|floatformat:0|unlocalize }}</strong>
+          </p>
+          <p class="mb-1">
+            Фасады (листов по 5 м²):
+            <strong>{{ calc.design_facade_sheets }}</strong>
+          </p>
+        </div>
+        <div class="column is-5">
+          <h4 class="title is-6">Стоимость</h4>
+          <p class="mb-1">
+            ЛДСП × «Дизайн проект»:
+            <strong>{{ calc.design_ldsp_cost|floatformat:0|unlocalize }}</strong>
+            <span class="has-text-grey is-size-7">
+              (по цене {{ price_design|floatformat:0|unlocalize }})
+            </span>
+          </p>
+          <p class="mb-1">
+            Фасады ({{ calc.design_facade_sheets }}) × «Дизайн проект»:
+            <strong>{{ calc.design_facade_cost|floatformat:0|unlocalize }}</strong>
+            <span class="has-text-grey is-size-7">
+              (по цене {{ price_design|floatformat:0|unlocalize }})
+            </span>
+          </p>
+          <hr class="my-2">
+          <p>
+            Итого «Дизайн проект»:
+            <strong>{{ calc.cost_design_total|floatformat:0|unlocalize }}</strong>
+          </p>
+		  <p class="has-text-grey is-size-7">
+            <em>
+              Внимание: оплата за дизайн-проект является оплатой интеллектуальной услуги и после начала работ
+              не подлежит возврату. Оплата подтверждает согласие с ТЗ и составом работ.
+            </em>
+          </p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</article>
+
+
+<!-- ЛДСП -->
+<article class="message is-info">
+  <div class="message-header"><p>ЛДСП</p></div>
+  <div class="message-body">
+    <div class="columns">
+      <div class="column is-7">
+        <h4 class="title is-6">Кол-во листов по цветам</h4>
+        {% if ldsp_rows_view %}
+          <table class="table is-fullwidth is-narrow">
+            <thead><tr><th>Цвет</th><th class="has-text-right">Листов</th></tr></thead>
+            <tbody>
+              {% for label, qty in ldsp_rows_view %}
+              <tr><td>{{ label }}</td><td class="has-text-right">{{ qty| floatformat:0|unlocalize }}</td></tr>
+              {% endfor %}
+              {% if calc.design_facade_sheets|default:0|floatformat:"0" > "0" %}
+              <tr>
+                <td>Фасады (листов по 5 м²)</td><td class="has-text-right">{{ calc.design_facade_sheets }}</td>
+              </tr>
+              {% endif %}
+            </tbody>
+            <tfoot>
+              <tr><th>Итого</th><th class="has-text-right">{{ qty_ldsp_total_view| floatformat:0|unlocalize }}</th></tr>
+            </tfoot>
+          </table>
+        {% else %}
+          <p class="has-text-grey">Нет данных из «Лист закупа».</p>
+        {% endif %}
+      </div>
+      <div class="column is-5">
+        <h4 class="title is-6">Стоимость</h4>
+        <p class="mb-1">
+          Цена «Распил»: <strong>{{ price_raspil| floatformat:0|unlocalize }}</strong> ×
+          {{ qty_ldsp_total_view| floatformat:0|unlocalize }} =
+          <strong>{{ calc.cost_ldsp_raspil| floatformat:0|unlocalize }}</strong>
+        </p>
+        <p class="mb-1">
+          Цена «Присадка»: <strong>{{ price_prisadka| floatformat:0|unlocalize }}</strong> ×
+          {{ qty_ldsp_total_view| floatformat:0|unlocalize }} =
+          <strong>{{ calc.cost_ldsp_prisadka| floatformat:0|unlocalize }}</strong>
+        </p>
+        <hr class="my-2">
+        <p>
+          Итого ЛДСП: <strong>{{ calc.cost_ldsp| floatformat:0|unlocalize }}</strong>
+        </p>
+        <p class="has-text-grey is-size-7">
+          {% if price_snapshot_missing %}
+            <p class="has-text-danger is-size-7">
+              Цены ещё не зафиксированы — нажмите «Загрузить новые цены» ниже.
+            </p>
+          {% else %}
+            <p class="has-text-grey is-size-7">
+              Цены взяты из снимка на {{ calc.last_price_sync_at|date:"d.m.Y H:i" }}.
+              Кнопкой «Загрузить новые цены» можно обновить снимок.
+            </p>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+</article>
+
+<!-- ПВХ узкая -->
+<article class="message is-link">
+  <div class="message-header"><p>ПВХ (узкая)</p></div>
+  <div class="message-body">
+    <div class="columns">
+      <div class="column is-7">
+        <h4 class="title is-6">Метры по цветам</h4>
+        {% if calc.sums_pvc %}
+          <table class="table is-fullwidth is-narrow">
+            <thead><tr><th>Цвет</th><th class="has-text-right">Метры</th></tr></thead>
+            <tbody>
+              {% for k,v in calc.sums_pvc.items %}
+              <tr><td>{{ k }}</td><td class="has-text-right">{{ v| floatformat:0|unlocalize }}</td></tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr><th>Итого</th><th class="has-text-right">{{ calc.qty_pvc_total| floatformat:0|unlocalize }}</th></tr>
+            </tfoot>
+          </table>
+        {% else %}
+          <p class="has-text-grey">Нет данных из «Лист закупа».</p>
+        {% endif %}
+      </div>
+      <div class="column is-5">
+        <h4 class="title is-6">Стоимость</h4>
+        <p>
+          Цена «ПВХ узкая»: <strong>{{ price_pvh_narrow| floatformat:0|unlocalize }}</strong> ×
+          {{ calc.qty_pvc_total| floatformat:0|unlocalize }} =
+          <strong>{{ calc.cost_pvc| floatformat:0|unlocalize }}</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+</article>
+
+<!-- ПВХ широкая -->
+<article class="message is-warning">
+  <div class="message-header"><p>ПВХ (широкая)</p></div>
+  <div class="message-body">
+    <div class="columns">
+      <div class="column is-7">
+        <h4 class="title is-6">Метры по цветам</h4>
+        {% if calc.sums_pvc_wide %}
+          <table class="table is-fullwidth is-narrow">
+            <thead><tr><th>Цвет</th><th class="has-text-right">Метры</th></tr></thead>
+            <tbody>
+              {% for k,v in calc.sums_pvc_wide.items %}
+              <tr><td>{{ k }}</td><td class="has-text-right">{{ v| floatformat:0|unlocalize }}</td></tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr><th>Итого</th><th class="has-text-right">{{ calc.qty_pvc_wide_total| floatformat:0|unlocalize }}</th></tr>
+            </tfoot>
+          </table>
+        {% else %}
+          <p class="has-text-grey">Нет данных из «Лист закупа».</p>
+        {% endif %}
+      </div>
+      <div class="column is-5">
+        <h4 class="title is-6">Стоимость</h4>
+        <p>
+          Цена «ПВХ широкая»: <strong>{{ price_pvh_wide| floatformat:0|unlocalize }}</strong> ×
+          {{ calc.qty_pvc_wide_total| floatformat:0|unlocalize }} =
+          <strong>{{ calc.cost_pvc_wide| floatformat:0|unlocalize }}</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+</article>
+
+<!-- ПРОЧЕЕ -->
+<article class="message is-primary">
+  <div class="message-header"><p>Прочее</p></div>
+  <div class="message-body">
+    <div class="columns">
+      <div class="column is-7">
+        <div class="columns is-multiline">
+          <div class="column is-6">
+            <label class="label">Столешница (шт.)</label>
+			<strong>{{ calc.countertop_qty|floatformat:0|unlocalize }}</strong>
+            {{ form.countertop_qty }}
+          </div>
+          <div class="column is-6">
+            <label class="label">ХДФ задняя стенка (листов)</label>
+			<strong>{{ calc.hdf_qty|floatformat:0|unlocalize }}</strong>
+            {{ form.hdf_qty }}
+          </div>
+        </div>
+      </div>
+      <div class="column is-5">
+        <h4 class="title is-6">Стоимость</h4>
+        <p class="mb-1">
+          Столешницы: <strong>{{ calc.countertop_qty| floatformat:0|unlocalize }}</strong>
+          × {{ price_countertop| floatformat:0|unlocalize }}
+          = <strong>{{ calc.cost_countertop| floatformat:0|unlocalize }}</strong>
+          <span class="has-text-grey is-size-7">(по цене {{ price_countertop| floatformat:0|unlocalize }})</span>
+        </p>
+        <p class="mb-1">
+          ХДФ: <strong>{{ calc.hdf_qty| floatformat:0|unlocalize }}</strong>
+          × {{ price_hdf_by_sheet| floatformat:0|unlocalize }}
+          = <strong>{{ calc.cost_hdf| floatformat:0|unlocalize }}</strong>
+          <span class="has-text-grey is-size-7">(по цене {{ price_hdf_by_sheet| floatformat:0|unlocalize }})</span>
+        </p>
+        <hr class="my-2">
+        <p>Итого «Прочее»: <strong>{{ calc.cost_misc| floatformat:0|unlocalize }}</strong></p>
+      </div>
+    </div>
+  </div>
+</article>
+
+<!-- ДОПОЛНИТЕЛЬНО -->
+<article class="message is-info">
+  <div class="message-header">
+    <p>Дополнительно</p>
+    <button type="button" class="button is-small is-link" id="btnAddAdditional">Добавить позицию</button>
+  </div>
+  <div class="message-body">
+    <table class="table is-fullwidth is-narrow" id="additionalTable">
+      <thead>
+        <tr>
+          <th style="width:55%">Позиция (из «Цены» — Прочее)</th>
+          <th style="width:20%" class="has-text-right">Кол-во</th>
+          <th style="width:20%" class="has-text-right">Стоимость</th>
+          <th style="width:5%"></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% localize off %}
+        {% for row in existing_additionals %}
+        <tr>
+          <td>
+            <div class="select is-small" style="width:100%">
+              <select name="additional_item_id[]" style="width:100%">
+                {% for opt in additional_options %}
+                  <option value="{{ opt.id }}" {% if opt.id == row.id %}selected{% endif %}>
+                    [{{ opt.group__title }}] {{ opt.title }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </td>
+          <td>
+            <input
+              type="text"
+              name="additional_qty[]"
+              inputmode="decimal"
+              autocomplete="off"
+              class="input is-small has-text-right js-qty"
+              value="{{ row.qty|default:0|floatformat:2 }}">
+          </td>
+          <td class="has-text-right">{{ row.cost|default:0|floatformat:0 }}</td>
+          <td><button type="button" class="delete js-del-row" title="Удалить"></button></td>
+        </tr>
+        {% empty %}
+        {% endfor %}
+      {% endlocalize %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="2" class="has-text-right">Итого дополнительно:</th>
+          <th class="has-text-right">{{ calc.cost_additional|floatformat:0|unlocalize }}</th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</article>
+
+<template id="additionalRowTpl">
+  <tr>
+    <td>
+      <select name="additional_item_id[]" class="select is-small" style="width:100%">
+        {% for opt in additional_options %}
+          <option value="{{ opt.id }}">[{{ opt.group__title }}] {{ opt.title }}</option>
+        {% endfor %}
+      </select>
+    </td>
+    <td>
+      <input
+        type="text"
+        name="additional_qty[]"
+        inputmode="decimal"
+        autocomplete="off"
+        class="input is-small has-text-right js-qty"
+        value="0.00">
+    </td>
+    <td class="has-text-right">0</td>
+    <td><button type="button" class="delete js-del-row" title="Удалить"></button></td>
+  </tr>
+</template>
+
+<!-- ФАСАДЫ -->
+<article class="message">
+  <div class="message-header">
+    <p>Фасады</p>
+    <button type="button" class="button is-small is-link" id="btnAddFacade">Добавить фасады</button>
+  </div>
+  <div class="message-body">
+    <table class="table is-fullwidth is-narrow" id="facadeTable">
+      <thead>
+        <tr>
+          <th style="width:55%">Позиция (из «Цены» — Фасады)</th>
+          <th style="width:20%" class="has-text-right">Кв.м</th>
+          <th style="width:20%" class="has-text-right">Стоимость</th>
+          <th style="width:5%"></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% localize off %}
+        {% for row in existing_facades %}
+        <tr>
+          <td>
+            <div class="select is-small" style="width:100%">
+              <select name="facade_item_id[]" style="width:100%">
+                {% for opt in facade_options %}
+                  <option value="{{ opt.id }}" {% if opt.id == row.id %}selected{% endif %}>
+                    [{{ opt.group__title }}] {{ opt.title }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </td>
+
+          <td>
+            <input
+              type="text"
+              name="facade_area[]"
+              inputmode="decimal"
+              autocomplete="off"
+              class="input is-small has-text-right js-area"
+              value="{{ row.area|default_if_none:'0'| floatformat:2|unlocalize }}">
+          </td>
+
+          <td class="has-text-right">{{ row.cost|default:0| floatformat:0 }}</td>
+          <td><button type="button" class="delete js-del-row" title="Удалить"></button></td>
+        </tr>
+        {% empty %}
+        {% endfor %}
+      {% endlocalize %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="2" class="has-text-right">Итого фасады:</th>
+          <th class="has-text-right">{{ calc.cost_facades| floatformat:0|unlocalize }}</th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
+    <template id="facadeRowTpl">
+      <tr>
+        <td>
+          <select name="facade_item_id[]" class="select is-small" style="width:100%">
+            {% for opt in facade_options %}
+              <option value="{{ opt.id }}">[{{ opt.group__title }}] {{ opt.title }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td>
+          <input
+            type="text"
+            name="facade_area[]"
+            inputmode="decimal"
+            autocomplete="off"
+            class="input is-small has-text-right js-area"
+            value="0.00">
+        </td>
+        <td class="has-text-right">0.00</td>
+        <td><button type="button" class="delete js-del-row" title="Удалить"></button></td>
+      </tr>
+    </template>
+  </div>
+</article>
+<div class="mt-4">
+  <button class="button is-success is-medium" type="submit">Сохранить/обновить расчёт</button>
+</div>
+
+<!-- Итог + заметка -->
+<div class="columns">
+  <div class="column is-7">
+    <div class="field">
+      {{ form.note }}
+    </div>
+  </div>
+  <div class="column is-5">
+    <div class="notification is-primary">
+      <div class="is-flex is-justify-content-space-between">
+        <div class="box p-4" style="border-radius: 14px;">
+          <!-- Итоговая стоимость -->
+          <div class="is-flex is-justify-content-space-between is-align-items-center py-1">
+            <div class="has-text-grey-dark">Обработка заказа</div>
+            <div class="is-family-monospace has-text-weight-semibold is-size-5">
+              {{ calc.total_price|floatformat:0|localize }} тг.
+            </div>
+          </div>
+          <hr class="my-2">
+          <!-- Дизайн‑проект -->
+          <div class="is-flex is-justify-content-space-between is-align-items-center py-1">
+            <div class="has-text-grey-dark">Дизайн‑проект</div>
+            <div class="is-family-monospace has-text-weight-semibold is-size-5">
+              {{ calc.cost_design_total|floatformat:0|localize }} тг.
+            </div>
+          </div>
+          <hr class="my-2">
+          <!-- Фасады -->
+          <div class="is-flex is-justify-content-space-between is-align-items-center py-1">
+            <div class="has-text-grey-dark">Фасады</div>
+            <div class="is-family-monospace has-text-weight-semibold is-size-5">
+              {{ calc.cost_facades|floatformat:0|localize }} тг.
+            </div>
+          </div>
+          <hr class="my-2">
+          <!-- Общая сумма -->
+          <div class="is-flex is-justify-content-space-between is-align-items-center py-1">
+            <div>
+              <div class="has-text-weight-semibold">Общая сумма заказа</div>
+              <div class="is-size-7 has-text-grey">Обработка + Дизайн‑проект + Фасады</div>
+            </div>
+            <div class="is-family-monospace has-text-weight-bold is-size-4">
+              {% with t=calc.total_price|default:0 d=calc.cost_design_total|default:0 f=calc.cost_facades|default:0 %}
+                {% if grand_total %}{{ grand_total|floatformat:0|localize }}{% else %}{{ t|add:d|add:f|floatformat:0|localize }}{% endif %} тг.
+              {% endwith %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const btnAdd = document.getElementById("btnAddFacade");
+  const tpl = document.getElementById("facadeRowTpl");
+  const tbody = document.querySelector("#facadeTable tbody");
+
+  function addRow(){
+    const node = tpl.content.cloneNode(true);
+    tbody.appendChild(node);
+    try { initAreas(tbody); } catch(e) {}
+  }
+  btnAdd && btnAdd.addEventListener("click", addRow);
+
+  // делегируем удаление строк
+  tbody.addEventListener("click", function(e){
+    const btn = e.target.closest(".js-del-row");
+    if (!btn) return;
+    const tr = btn.closest("tr");
+    tr && tr.remove();
+  });
+});
+</script>
+
+<script>
+(function(){
+  // убираем пробелы/неразрывные и приводим запятую к точке
+  function normalize(str){
+    return (str || "")
+      .toString()
+      .replace(/\s+/g, "")
+      .replace(/\u00A0/g, "")
+      .replace(/\u202F/g, "")
+      .replace(",", ".");
+  }
+  function toFixed2(numStr){
+    if (!numStr) return "";
+    // оставляем цифры и одну точку
+    numStr = numStr.replace(/[^0-9.]/g, "");
+    if (numStr === "") return "";
+    const parts = numStr.split(".");
+    let i = parts[0] || "0";
+    let d = (parts[1] || "").slice(0, 2);
+    if (d.length === 0) d = "00";
+    if (d.length === 1) d = d + "0";
+    return i + "." + d;
+  }
+
+  function initAreas(scope){
+    (scope || document).querySelectorAll(".js-area").forEach(function(inp){
+      // первичная правка
+      inp.value = toFixed2(normalize(inp.value));
+      // удобное редактирование
+      inp.addEventListener("focus", function(){
+        inp.value = normalize(inp.value);
+      });
+      inp.addEventListener("blur", function(){
+        inp.value = toFixed2(normalize(inp.value));
+      });
+    });
+  }
+
+  // Инициализация для уже существующих строк
+  initAreas();
+
+  // Если добавляем новую строку из шаблона — инициализируем и её
+  const tbody = document.querySelector("#facadeTable tbody");
+  const tpl   = document.getElementById("facadeRowTpl");
+  const btnAdd = document.getElementById("btnAddFacade");
+
+
+  // Перед отправкой формы — нормализуем значения (точка как десятичный, без пробелов)
+  const form = document.querySelector("form");
+  if (form){
+    form.addEventListener("submit", function(){
+      document.querySelectorAll(".js-area").forEach(function(inp){
+        inp.value = normalize(inp.value);
+      });
+    });
+  }
+})();
+
+
+document.addEventListener('DOMContentLoaded', function(){
+  const btnAddAdditional = document.getElementById('btnAddAdditional');
+  const addTpl  = document.getElementById('additionalRowTpl');
+  const addTBody = document.querySelector('#additionalTable tbody');
+  const addTable = document.getElementById('additionalTable');
+
+  function addAdditionalRow(){
+    if(!addTpl || !addTBody) return;
+    const row = addTpl.content.firstElementChild.cloneNode(true);
+    addTBody.appendChild(row);
+    if (typeof initAreas === 'function') try { initAreas(addTBody); } catch(e) {}
+  }
+
+  if(btnAddAdditional){
+    btnAddAdditional.addEventListener('click', addAdditionalRow);
+  }
+
+  if(addTable){
+    addTable.addEventListener('click', function(e){
+      const del = e.target.closest('.js-del-row');
+      if(del){
+        const tr = del.closest('tr');
+        if(tr) tr.remove();
+      }
+    });
+  }
+});
+
+</script>

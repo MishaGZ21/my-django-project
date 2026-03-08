@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}WhatsApp — шаблоны{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'whatsapp/whatsapp_light.css' %}">
+  <link rel="stylesheet" href="{% static 'whatsapp/whatsapp_light_extra.css' %}">
+{% endblock %}
+{% block content %}
+{% include "whatsapp/_subnav.html" %}
+<section class="section">
+  <h1 class="title is-4">Шаблоны уведомлений</h1>
+  <form method="post" class="box">
+    {% csrf_token %}
+    <div class="table-container">
+      <table class="table is-fullwidth is-striped">
+        <thead><tr><th>Событие</th><th>Имя шаблона в Meta</th><th class="has-text-centered">Активен</th></tr></thead>
+        <tbody>
+          {% for t in rows %}
+            <tr>
+              <td>{{ t.get_key_display }}</td>
+              <td><input class="input" type="text" name="name__{{ t.key }}" value="{{ t.template_name }}"></td>
+              <td class="has-text-centered">
+                <input type="checkbox" name="active__{{ t.key }}" {% if t.active %}checked{% endif %}>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="field"><button class="button is-link">Сохранить</button></div>
+  </form>
+</section>
+{% endblock %}

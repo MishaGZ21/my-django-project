@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Договор подписан{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title">Договор уже подписан</h1>
+
+    <div class="notification is-success">
+      Договор подписан: <b>{{ signed_at|date:"d.m.Y" }}</b>
+    </div>
+
+    <div class="buttons">
+      <a class="button is-primary" href="{{ download_url }}">Скачать договор (PDF)</a>
+      <a class="button is-warning" href="{{ edit_url }}">Редактировать данные договора</a>
+      <a class="button is-light" href="/orders/">Назад</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

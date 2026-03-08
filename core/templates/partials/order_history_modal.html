@@ -1,0 +1,42 @@
+{% load static %}
+<div class="modal is-active" id="history-modal" role="dialog" aria-modal="true" aria-label="История изменений">
+  <div class="modal-background"
+       onclick="(function(el){for(;el && !el.classList.contains('modal'); el=el.parentNode); if(el){el.parentNode.removeChild(el);} })(this)"></div>
+  <div class="modal-card" style="width:860px; max-width:96vw">
+    <header class="modal-card-head">
+      <p class="modal-card-title">История изменений — заказ №{{ order.order_number }}</p>
+      <button class="delete" aria-label="close"
+              onclick="(function(el){for(;el && !el.classList.contains('modal'); el=el.parentNode); if(el){el.parentNode.removeChild(el);} })(this); return false;"></button>
+    </header>
+    <section class="modal-card-body" style="max-height:70vh; overflow:auto">
+      {% if logs %}
+        <table class="table is-fullwidth is-hoverable is-striped">
+          <thead>
+            <tr>
+              <th style="width:160px">Дата и время</th>
+              <th style="width:160px">Раздел</th>
+              <th>Изменения</th>
+              <th style="width:160px">Пользователь</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in logs %}
+            <tr>
+              <td>{{ log.created_at|date:"d.m.Y H:i" }}</td>
+              <td>{% if log.get_section_display %}{{ log.get_section_display }}{% else %}{{ log.section }}{% endif %}</td>
+              <td><pre style="white-space:pre-wrap; margin:0">{{ log.diff_text }}</pre></td>
+              <td>{% if log.actor %}{{ log.actor.get_full_name|default:log.actor.username }}{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>Нет записей об изменениях.</p>
+      {% endif %}
+    </section>
+    <footer class="modal-card-foot is-justify-content-flex-end">
+      <button class="button"
+              onclick="(function(el){for(;el && !el.classList.contains('modal'); el=el.parentNode); if(el){el.parentNode.removeChild(el);} })(this); return false;">Закрыть</button>
+    </footer>
+  </div>
+</div>

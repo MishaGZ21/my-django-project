@@ -1,0 +1,303 @@
+:root{
+  --bg:#f7f7f9;
+  --card:#ffffff;
+  --ink:#1b1f23;
+  --sub:#6b7280;
+  --line:#e5e7eb;
+  --radius:16px;
+
+  --brand:#ff8a00;
+}
+
+/* Base */
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+h1.doc-title{text-align:center;font-size:22px;font-weight:800;letter-spacing:.2px;margin:10px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px 12px;margin:16px 0;box-shadow:0 1px 0 rgba(0,0,0,.02)}
+
+/* Общий контейнер договора (для pdf-режима тоже) */
+.contract-wrapper{
+  max-width: 1120px;
+  margin: 8px auto 32px;
+  padding: 8px 16px 24px;
+}
+
+/* Header */
+.header--brandband{
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px; margin:4px 0 0;
+}
+.header__col{display:flex;flex-direction:column;gap:6px}
+.header__col--center{align-items:center}
+.header__line-txt{font-weight:700;font-size:16px;color:#111827}
+.header__line-txt--right{text-align:right}
+.header__logo{max-width:420px;width:min(90vw,420px);height:auto}
+.header__underline{height:3px;background:var(--brand);margin:8px 0 4px;border-radius:2px}
+
+/* Section headers */
+.section-title{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:900;letter-spacing:.2px;margin-bottom:12px}
+.section-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:999px;border:2px solid var(--line);font-weight:900;background:#fff}
+
+/* Info table */
+.info-table{
+  width:100%;border-collapse:collapse;table-layout:fixed;background:#fff;border:1px solid #e6e9ef;border-radius:12px;overflow:hidden;box-shadow:0 1px 0 rgba(16,24,40,.02);
+}
+.info-table th,.info-table td{
+  border:1px solid #a5a5a6;padding:10px 14px;vertical-align:middle;font-size:14px;line-height:1.25;
+}
+.info-table th{background:#f7f9fc;color:#3b3f45;font-weight:600;white-space:nowrap}
+.info-table td.value{font-weight:600;color:#111827}
+.info-table td.value.strong{font-weight:800}
+.info-table em{font-style:italic;color:#667085;font-weight:500}
+.info-table .label-col{width:24%}.info-table .value-col{width:26%}
+
+/* Chips "Принято на складе" */
+.chip-list.flat{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px;padding:0;list-style:none}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid #E6E9EF;border-radius:999px;background:#fff;box-shadow:0 1px 0 rgba(16,24,40,.02);font-size:13px;line-height:1.2;color:#111827}
+.chip-title{font-weight:600;color:#344054}.chip-sep{color:#98A2B3}.chip-size{font-weight:600;color:#111827}
+.chip-qty{margin-left:2px;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px;line-height:1;background:#EEF4FF;color:#3538CD;border:1px solid #E0EAFF}
+
+/* LDSP summary cards grid (3 columns layout with MDF) */
+#ldspSummary.ldsp-3col{
+  display:grid; grid-template-columns:.9fr .9fr 2.2fr; gap:12px; align-items:stretch;
+}
+@media (max-width:1100px){ #ldspSummary.ldsp-3col{ grid-template-columns:1fr } }
+#ldspSummary.ldsp-3col .mdf-card{ grid-column:3; grid-row:1 }
+
+.ldsp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:8px 0 12px}
+.ldsp-stat{background:#f7f9ff;border:1px solid #e6e9ef;border-radius:14px;padding:12px 14px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.ldsp-stat .ldsp-h{font-weight:700;font-size:15px;color:#0f172a;margin-bottom:6px}
+.ldsp-stat .ldsp-row{display:flex;align-items:baseline;gap:8px;margin-top:4px;font-size:14px}
+.ldsp-stat .ldsp-row span:first-child{color:#64748b}
+.ldsp-stat .ldsp-row b{min-width:2ch;text-align:right;font-weight:700;color:#111827}
+.ldsp-stat .ldsp-row span:last-child{color:#64748b}
+.ldsp-stat.ok{background:#f0fdf4;border-color:#86efac}.ldsp-stat.ok .ldsp-h,.ldsp-stat.ok .ldsp-row b{color:#166534}
+.ldsp-stat.over{background:#fff7f7;border-color:#fca5a5}.ldsp-stat.over .ldsp-h{color:#b91c1c}
+.ldsp-warn{display:none;margin-top:6px;font-size:13px;color:#b91c1c}
+.ldsp-stat.over .ldsp-warn{display:block}
+
+/* MDF card */
+.card .mdf-card{margin:0; background: #f0fdf4; color: #000; border-color: #86efac;}
+.mdf-card .card-header{font-weight:700}
+.mdf-row{display:flex;align-items:center;gap:.5rem;justify-content:space-between;padding:.4rem .6rem;margin:.25rem 0;border-radius:.5rem;background:#f6f8fb;font-size:14px}
+.mdf-row.mdf-paint{border-left:4px solid #ff8b3d;background:#fff6ee}
+.mdf-row.mdf-film{border-left:4px solid #3aa3ff;background:#eef6ff}
+.mdf-name{font-weight:600;flex:1 1 auto;color:#000}.mdf-cat{color:#6b7280;flex:0 0 auto}.mdf-dot{color:#c0c4cc}.mdf-area{font-variant-numeric:tabular-nums;font-weight:600;color:#000}
+
+/* Materials input rows */
+.mat-rows{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.mat-row.group--card{display:grid;gap:12px;align-items:end;grid-template-columns:230px 1fr 240px 40px;background:#fff;border:1px solid #e6e9ef;border-radius:12px;padding:10px 12px}
+@media (max-width:980px){.mat-row.group--card{grid-template-columns:1fr 1fr 220px 40px}}
+.lbl{display:block;font-size:12px;color:#6b7280;margin-bottom:6px}
+.inp{width:100%;height:40px;font-size: 18px;padding:8px 10px;border:1px solid #dfe3ea;border-radius:10px}
+.qty{display:flex;align-items:center;gap:8px}
+.qty .qty-btn{width:36px;height:36px;border:1px solid #dfe3ea;border-radius:10px;background:#fff;font-size:18px;cursor:pointer}
+.qty-inp{width:90px;text-align:center}
+.btn-del{width:36px;font-weight: 700;height:40px;border:1px solid #ffffff;border-radius:10px;background:#ffffff;color:#ff0000;font-size:25px;line-height:inherit;cursor:pointer;align-self:end}
+.btn-del:hover{background:#fff5f5;color:#b91c1c;border-color:#fecaca}
+.mat-actions{margin-top:10px}
+.btn-secondary{padding:9px 12px;border:1px solid #dfe3ea;border-radius:10px;background:#fff}
+.btn-secondary:hover{background:#f8fafc}
+.btn-primary{padding:9px 14px;border:1px solid #2563eb;background:#2563eb;color:#fff;border-radius:10px}
+.btn-danger{padding:8px 12px;border:1px solid #fecaca;background:#fff5f5;color:#b91c1c;border-radius:10px}
+
+/* "Далее" */
+.next-actions{display:none;gap:8px;justify-content:flex-end;margin-top:12px}
+.next-actions.show{display:flex}
+.btn-next{background:#2563eb;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.save-hint{font-size:16px;color:#1aae51;align-self:center;text-align: center;background: #ecffe1;}
+
+/* ===== Спецификация ===== */
+.spec-actions{display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px}
+.spec-list{display:flex;flex-direction:column;gap:14px}
+
+/* Группа-обёртка уже использует .group--section/.group--card из старого CSS — оставим совместимость */
+.group--section{border:1.5px solid var(--line);border-radius:14px;background:#fff;padding:14px;margin:18px 0 22px;box-shadow:0 1px 0 rgba(0,0,0,.02);position:relative}
+.group--section > .subsection-title{font-weight:900;font-size:17px;margin:-6px -6px 12px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.group--section > .subsection-title::before{content:"";width:10px;height:10px;border-radius:999px;background:currentColor;box-shadow:0 0 0 3px #fff inset}
+
+/* Палитра 5 цветов для разных подгрупп */
+.color-0 > .subsection-title{background:#FEF3C7;color:#F59E0B} /* amber-100/500 */
+.color-1 > .subsection-title{background:#E0F2FE;color:#0EA5E9} /* sky-100/500 */
+.color-2 > .subsection-title{background:#F3E8FF;color:#8B5CF6} /* violet */
+.color-3 > .subsection-title{background:#DCFCE7;color:#16A34A} /* green  */
+.color-4 > .subsection-title{background:#FFE4E6;color:#F43F5E} /* rose   */
+
+.group__title{font-weight:800;margin-bottom:10px}
+.line{display:grid;grid-template-columns:1.4fr 180px 1.6fr;gap:12px;margin:10px 0}
+.input{border:1px solid var(--line);background:white;border-radius:10px;padding:8px 10px;min-width:180px}
+.input--xl{height:44px}
+.input--textarea{width:100%;min-height:66px;resize:vertical}
+
+/* Доп. строки */
+.freefields__row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin:6px 0}
+.input--short{max-width:120px}
+
+/* Пилюли */
+.pill-row{display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:999px;background:#fff;padding:8px 12px;font-weight:700;cursor:pointer}
+.pill > span{width:12px;height:12px;border-radius:999px;background:#e5e7eb}
+.pill.is-on{border-color:#111827;box-shadow:inset 0 0 0 2px #11182711}
+.pill.is-on > span{background:#10b981}
+
+/* Кнопки в группе */
+.grp-actions{display:flex;justify-content:flex-end;margin-top:10px}
+
+/* ===== Модалка ===== */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:50}
+.modal.show{display:flex}
+.modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.modal__dialog{position:relative;background:#fff;border-radius:14px;min-width:360px;max-width:92vw;padding:14px;border:1px solid var(--line);box-shadow:0 10px 24px rgba(0,0,0,.2)}
+.modal__header{font-weight:900;font-size:18px;margin-bottom:8px}
+.modal__body{display:grid;gap:8px}
+.modal__footer{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+
+/* === Spec: one-line rows ======================================== */
+.spec-section { margin-top: 10px; }
+
+.spec-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.spec-row > label {
+  min-width: 190px;
+  font-weight: 600;
+  color: #4b5563; /* slate-600 */
+  white-space: nowrap;
+}
+
+/* поля в строке: селект и примечание */
+.spec-row select,
+.spec-row input[type="text"],
+.spec-row textarea {
+  flex: 1 1 0;
+}
+
+/* заметка/примечание чуть светлее */
+.spec-row input.note,
+.spec-row textarea.note {
+  background: #fff;
+  border: 1px solid #e5e7eb; /* gray-200 */
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+/* у селектов снова видна системная стрелка */
+.spec-row select,
+.spec-select {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  -moz-appearance: auto !important;
+  background-image: none !important;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+/* группа-заголовок внутри спецификации */
+.spec-subgroup-header {
+  background: #fff7cc;          /* мягкий, но не яркий */
+  border: 1px solid #f6e5a3;
+  color: #7c5b00;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+/* блок с дополнительными строками оставляем, но слегка выравниваем */
+.spec-extras-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1.4fr 90px;
+  gap: 10px;
+}
+
+/* кнопка «Сохранить» внизу подгруппы */
+.spec-actions .btn-primary {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 600;
+}
+.spec-actions .btn-primary:hover {
+  background: #1d4ed8;
+}
+
+/* Утилита "не печатать" */
+.no-print {
+  /* в обычном режиме показываем, в print скрываем (см. @media print) */
+}
+
+/* --- Компактный режим для PDF / печати --- */
+
+.contract-pdf.compact{
+  font-size: 11px;
+}
+.contract-pdf.compact .header--brandband{
+  margin-top: 0;
+}
+.contract-pdf.compact .header__line-txt{
+  font-size: 14px;
+}
+.contract-pdf.compact .header__logo{
+  max-width: 320px;
+}
+.contract-pdf.compact h1.doc-title{
+  font-size: 18px;
+  margin: 6px 0 8px;
+}
+.contract-pdf.compact .info-table th,
+.contract-pdf.compact .info-table td{
+  padding: 6px 8px;
+  font-size: 12px;
+}
+.contract-pdf.compact .card{
+  margin: 10px 0;
+  padding: 12px 12px 8px;
+}
+
+/* Кнопка печати в спецификации немного поменьше */
+.btn-print{
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+/* --- Печать / PDF (A4) --- */
+@media print{
+  @page{
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  body{
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* прячем все элементы с явным no-print, модалки и т.п. */
+  .no-print,
+  .modal{
+    display:none !important;
+  }
+
+  /* не печатаем управляющие кнопки */
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .next-actions{
+    display:none !important;
+  }
+
+  /* контейнер на всю ширину страницы, без внешних теней */
+  .contract-wrapper{
+    margin:0;
+    padding:0;
+    box-shadow:none;
+    border-radius:0;
+  }
+}

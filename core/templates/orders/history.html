@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}История — {{ order.order_number }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    {% include "orders/history_fragment.html" %}
+    <div class="mt-4">
+      <a href="{% url 'orders_all' %}" class="button">Назад к списку</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

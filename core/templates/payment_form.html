@@ -1,0 +1,562 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% load tz %}
+{% block title %}Оплата — заказ №{% localize off %}{{ order.order_number }}{% endlocalize %}{% endblock %}
+{% block content %}
+
+<section class="section">
+  {% if has_payment and existing %}
+  <div class="notification is-success">
+    {% with ts=existing.created_at %}
+      Оплата принята от <strong>{{ ts|localtime|date:"Y-m-d H:i" }}</strong>.
+    {% endwith %}
+    <a class="button is-link is-light is-small ml-2" href="{% url 'payment_receipt' order.id %}">Скачать чек</a>
+    <button id="refreshBtnTop" class="button is-warning is-light is-small ml-2" type="button">Обновить цены</button>
+  </div>
+  {% endif %}
+
+  <h1 class="title is-4">
+    Оплата — заказ №{% localize off %}{{ order.order_number }}{% endlocalize %}
+  </h1>
+  <p class="subtitle is-6">Клиент: <strong>{{ order.customer_name }}</strong></p>
+
+  <div class="columns is-variable is-6">
+    <div class="column is-7">
+      <!-- ЕДИНАЯ ФОРМА ДЛЯ ОБОИХ ШАГОВ -->
+      <form action="{% url 'payment_new' order.id %}" method="post" id="paymentForm" class="box" style="max-width: 720px;">
+        {% csrf_token %}
+
+        <div class="columns">
+          <div class="column">
+            <label class="label">Обработка материала</label>
+            {{ form.amount_total }}
+          </div>
+          <div class="column">
+            <label class="label">Дизайн проект</label>
+            {{ form.amount_design }}
+          </div>
+        </div>
+
+        <div class="columns">
+          <div class="column is-6">
+            <label class="label">Фасады</label>
+            {{ form.amount_facades }}
+          </div>
+        </div>
+
+        <!-- ПИЛЮЛИ выбора категорий -->
+        <div class="field mt-3">
+          <label class="label">Включить в операцию</label>
+          <div class="pill-group" id="pillGroup">
+            <!-- Обработка -->
+            <button type="button"
+                    class="pill {% if inc_total|default:False %}is-active{% endif %}"
+                    data-key="inc_total" data-code="total"
+                    aria-pressed="{% if inc_total|default:False %}true{% else %}false{% endif %}">
+              Обработка
+            </button>
+            {% if inc_total|default:False %}<input type="hidden" name="inc_total" value="1">{% endif %}
+
+            <!-- Дизайн -->
+            <button type="button"
+                    class="pill {% if inc_design|default:False %}is-active{% endif %}"
+                    data-key="inc_design" data-code="design"
+                    aria-pressed="{% if inc_design|default:False %}true{% else %}false{% endif %}">
+              Дизайн
+            </button>
+            {% if inc_design|default:False %}<input type="hidden" name="inc_design" value="1">{% endif %}
+
+            <!-- Фасады -->
+            <button type="button"
+                    class="pill {% if inc_facades|default:False %}is-active{% endif %}"
+                    data-key="inc_facades" data-code="facades"
+                    aria-pressed="{% if inc_facades|default:False %}true{% else %}false{% endif %}">
+              Фасады
+            </button>
+            {% if inc_facades|default:False %}<input type="hidden" name="inc_facades" value="1">{% endif %}
+          </div>
+
+          <!-- ЕДИНАЯ маска выбранных категорий -->
+          <input type="hidden" name="include_mask" id="includeMask" value="{{ include_mask|default:'' }}">
+
+          <p class="help is-size-7 has-text-grey">Нажмите на пилюлю, чтобы исключить позицию из текущей операции</p>
+        </div>
+
+        <div class="field">
+          <label class="label">Итого к оплате</label>
+          <input id="amount_due" class="input is-large has-text-right" type="text" readonly value="">
+          <p class="help">Сумма по выбранным позициям (Обработка + Дизайн + Фасады)</p>
+        </div>
+
+        <div class="field" id="methodsFieldWrap">
+          <label class="label">Способ оплаты</label>
+          <div class="control {% if form.methods.errors %}is-danger{% endif %}">
+            <div class="pay-methods">
+              {% for cb in form.methods %}
+              <label class="pm-chip">
+                {{ cb.tag }}<span class="chip">{{ cb.choice_label }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% if form.methods.errors %}
+            <p class="help is-danger">{{ form.methods.errors.0 }}</p>
+          {% else %}
+            <p class="help">Выберите хотя бы один вариант</p>
+          {% endif %}
+        </div>
+
+        <div class="field is-grouped is-justify-content-flex-end">
+          <p class="control">
+            <a class="button" href="{% url 'orders_all' %}">Отмена</a>
+          </p>
+          <p class="control">
+            <button id="submitBtn" type="submit" class="button is-primary is-medium">Принять оплату</button>
+          </p>
+        </div>
+      </form>
+    </div>
+
+    <div class="column is-5">
+      {% if has_payment and existing %}
+      <div class="card receipts-panel">
+        <header class="card-header">
+          <p class="card-header-title">Чеки</p>
+        </header>
+        <div class="card-content p-0">
+          <div class="receipts-list">
+            {% for p in payments_short %}
+            <a class="receipts-item {% if selected_payment and selected_payment.id == p.id %}is-active{% endif %}" href="?p={{ p.id }}">
+              <div class="receipts-item__top">
+                <span class="receipts-item__id">#{{ p.id }}</span>
+                <span class="receipts-item__date">{{ p.created_at|localtime|date:"d.m H:i" }}</span>
+              </div>
+              <div class="receipts-item__sum {% if p.amount_due < 0 %}is-refund{% else %}is-pay{% endif %}">
+                {{ p.amount_due|floatformat:"0" }} ₸
+              </div>
+              <div class="receipts-item__tags">
+                {% if p.amount_total %}<span class="tag is-light">Обработка</span>{% endif %}
+                {% if p.amount_design %}<span class="tag is-light">Дизайн</span>{% endif %}
+                {% if p.amount_facades %}<span class="tag is-light">Фасады</span>{% endif %}
+              </div>
+            </a>
+            {% empty %}
+              <div class="p-4 has-text-grey">Пока нет чеков.</div>
+            {% endfor %}
+          </div>
+
+          {% if selected_payment %}
+          <div class="receipt-preview">
+            <div class="receipt-preview__hdr">
+              <div>
+                <div class="is-size-6 has-text-weight-semibold">Чек № {{ selected_payment.id }}</div>
+                <div class="is-size-7 has-text-grey">
+                  {{ selected_payment.created_at|localtime|date:"d.m.Y H:i" }}
+                </div>
+              </div>
+              <a class="button is-small" href="{% url 'payment_receipt_id' order.id selected_payment.id %}">Чек PDF</a>
+            </div>
+
+            <table class="table is-fullwidth is-narrow">
+              <tbody>
+                {% if selected_payment.amount_total %}
+                <tr><td>Обработка материала</td><td class="has-text-right">{{ selected_payment.amount_total|floatformat:"0" }} ₸</td></tr>
+                {% endif %}
+                {% if selected_payment.amount_design %}
+                <tr><td>Дизайн проект</td><td class="has-text-right">{{ selected_payment.amount_design|floatformat:"0" }} ₸</td></tr>
+                {% endif %}
+                {% if selected_payment.amount_facades %}
+                <tr><td>Фасады</td><td class="has-text-right">{{ selected_payment.amount_facades|floatformat:"0" }} ₸</td></tr>
+                {% endif %}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th>Итого</th>
+                  <th class="has-text-right {% if selected_payment.amount_due < 0 %}has-text-danger{% else %}has-text-success{% endif %}">
+                    {{ selected_payment.amount_due|floatformat:"0" }} ₸
+                  </th>
+                </tr>
+              </tfoot>
+            </table>
+
+            {% if selected_payment.methods %}
+            <div class="is-size-7 has-text-grey">
+              Способ: {{ selected_payment.methods|join:", " }}
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <hr class="my-5">
+  <h2 class="title is-5">История оплат</h2>
+
+  {% if payments %}
+    <table class="table is-fullwidth is-striped">
+      <thead>
+        <tr>
+          <th>№</th>
+          <th>Дата</th>
+          <th>Обработка</th>
+          <th>Дизайн</th>
+          <th>Фасады</th>
+          <th>Способ</th>
+          <th class="has-text-right">Итого</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>#{{ p.id }}</td>
+          <td>{{ p.created_at|localtime|date:"Y-m-d H:i" }}</td>
+
+          <td>{% if p.amount_total %}{{ p.amount_total|floatformat:"0" }} ₸{% endif %}</td>
+          <td>{% if p.amount_design %}{{ p.amount_design|floatformat:"0" }} ₸{% endif %}</td>
+          <td>{% if p.amount_facades %}{{ p.amount_facades|floatformat:"0" }} ₸{% endif %}</td>
+
+          <td>
+            {% if p.methods %}
+              <div class="tags is-marginless">
+                {% for m in p.methods %}
+                  <span class="tag is-light">
+                    {% if m == 'cash' %}Наличные
+                    {% elif m == 'card' %}Карта
+                    {% elif m == 'qr' %}QR
+                    {% else %}{{ m }}{% endif %}
+                  </span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <span class="has-text-grey">—</span>
+            {% endif %}
+          </td>
+
+          <td class="has-text-right {% if p.amount_due < 0 %}has-text-danger{% elif p.amount_due > 0 %}has-text-success{% endif %}">
+            {{ p.amount_due|floatformat:"0" }} ₸
+          </td>
+          <td><a class="button is-small" href="{% url 'payment_receipt_id' order.id p.id %}">Чек PDF</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="6" class="has-text-right">Итого уплачено:</th>
+          <th class="has-text-right {% if paid_sum < 0 %}has-text-danger{% elif paid_sum > 0 %}has-text-success{% endif %}">
+            {{ paid_sum|floatformat:"0" }} ₸
+          </th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
+  {% else %}
+    <p class="has-text-grey">Пока оплат нет.</p>
+  {% endif %}
+
+  <!-- Форма обновления цен (справа вверху) -->
+  <form id="refreshForm" action="{% url 'payment_refresh' order.id %}" method="post" style="display:none;">
+    {% csrf_token %}
+  </form>
+</section>
+
+<!-- МОДАЛКА ПОДТВЕРЖДЕНИЯ: без своей формы; отправляет ТУ ЖЕ форму с confirm=1 -->
+<div id="confirmModal" class="modal{% if show_confirm_modal %} is-active{% endif %}">
+  <div class="modal-background"></div>
+  <div class="modal-card modal-card--elevated">
+    <header class="modal-card-head {% if delta.due and delta.due < 0 %}has-background-danger{% else %}has-background-success{% endif %} has-text-white">
+      <p class="modal-card-title modal-card-title--tight">
+        {% if delta.due and delta.due < 0 %}Подтверждение возврата{% else %}Подтверждение оплаты{% endif %}
+      </p>
+      <button class="delete is-white" aria-label="close"></button>
+    </header>
+
+    <section class="modal-card-body">
+      <div class="notification is-light mb-4 confirm-banner {% if delta.due and delta.due < 0 %}is-danger-soft{% else %}is-success-soft{% endif %}">
+        <span class="confirm-dot {% if delta.due and delta.due < 0 %}is-danger{% else %}is-success{% endif %}"></span>
+        <span class="confirm-label">{% if delta.due and delta.due < 0 %}К возврату клиенту{% else %}К оплате{% endif %}</span>
+        <strong class="confirm-amount money {% if delta.due and delta.due < 0 %}has-text-danger{% else %}has-text-success{% endif %}">
+          {{ delta.due|floatformat:"0" }} ₸
+        </strong>
+      </div>
+
+      <table class="table is-fullwidth is-striped is-narrow">
+        <thead><tr><th>Позиция</th><th class="has-text-right">Сумма</th></tr></thead>
+        <tbody>
+          {% if delta.total %}<tr><td>Обработка материала</td><td class="has-text-right money {% if delta.total < 0 %}has-text-danger{% else %}has-text-success{% endif %}">{{ delta.total|floatformat:"0" }}</td></tr>{% endif %}
+          {% if delta.design %}<tr><td>Дизайн проект</td><td class="has-text-right money {% if delta.design < 0 %}has-text-danger{% else %}has-text-success{% endif %}">{{ delta.design|floatformat:"0" }}</td></tr>{% endif %}
+          {% if delta.facades %}<tr><td>Фасады</td><td class="has-text-right money {% if delta.facades < 0 %}has-text-danger{% else %}has-text-success{% endif %}">{{ delta.facades|floatformat:"0" }}</td></tr>{% endif %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <th class="has-text-right">Итого:</th>
+            <th class="has-text-right money {% if delta.due and delta.due < 0 %}has-text-danger{% else %}has-text-success{% endif %}">{{ delta.due|floatformat:"0" }}</th>
+          </tr>
+        </tfoot>
+      </table>
+
+      <p class="is-size-7 has-text-grey mt-2">Отрицательное значение — возврат клиенту.</p>
+    </section>
+
+    <footer class="modal-card-foot is-justify-content-flex-end">
+      <button type="button" class="button {% if delta.due and delta.due < 0 %}is-danger{% else %}is-success{% endif %}" id="confirmYes">
+        {% if delta.due and delta.due < 0 %}Подтвердить возврат{% else %}Подтвердить оплату{% endif %}
+      </button>
+      <button type="button" class="button is-light" id="confirmNo">Отмена</button>
+    </footer>
+  </div>
+</div>
+
+<style>
+/* inputs */
+#paymentForm input[type="text"],
+#paymentForm input[type="number"],
+#paymentForm textarea,
+#paymentForm select {
+  width: 100%;
+  border: 1px solid #dcdfe6;
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 44px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03) inset;
+}
+#paymentForm input[type="text"]:focus,
+#paymentForm input[type="number"]:focus,
+#paymentForm textarea:focus,
+#paymentForm select:focus {
+  outline: none;
+  border-color: #e67e22;
+  box-shadow: 0 0 0 3px rgba(230,126,34,0.15);
+}
+#amount_due { font-weight: 700; }
+
+/* methods chips */
+#methodsFieldWrap .pay-methods { display:flex; flex-wrap:wrap; gap:10px; }
+#methodsFieldWrap label.pm-chip{ position:relative; display:inline-flex; align-items:center; cursor:pointer; user-select:none; }
+#methodsFieldWrap label.pm-chip input[type="checkbox"]{ position:absolute; opacity:0; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+#methodsFieldWrap label.pm-chip .chip{ display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid #dcdfe6; border-radius:9999px; font-weight:600; background:#fff; color:#374151; transition:all .15s ease; }
+#methodsFieldWrap label.pm-chip .chip::before{ content:''; width:14px; height:14px; border:2px solid #9ca3af; border-radius:3px; display:inline-block; box-sizing:border-box; }
+#methodsFieldWrap label.pm-chip input[type="checkbox"]:checked + .chip{ background:#ffedd5; border-color:#e67e22; color:#7c3e00; box-shadow:0 0 0 3px rgba(230,126,34,0.12); }
+#methodsFieldWrap label.pm-chip input[type="checkbox"]:checked + .chip::before{ border-color:#e67e22; background:#e67e22; box-shadow:inset 0 0 0 2px #fff; }
+#methodsFieldWrap .control.is-danger{ border:1px solid #f14668; border-radius:8px; padding:8px 10px; }
+#methodsFieldWrap .help.is-danger{ color:#f14668; }
+
+/* pills */
+.pill-group { display:flex; gap:.5rem; flex-wrap:wrap; }
+.pill {
+  border:1px solid #d1d5db; background:#fff; color:#374151;
+  padding:.4rem .9rem; border-radius:9999px; font-weight:600;
+  transition:all .15s ease; cursor:pointer;
+}
+.pill:hover { box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.pill.is-active { background:#10b981; border-color:#10b981; color:#fff; }
+
+/* receipts (right panel) */
+.receipts-panel { max-height: 78vh; display:flex; flex-direction: column; }
+.receipts-list { max-height: 38vh; overflow: auto; padding: .25rem .5rem; }
+.receipts-item { display:block; border-radius: 12px; padding: .6rem .75rem; margin: .25rem 0; border:1px solid #eee; transition: background .15s, border-color .15s; }
+.receipts-item:hover { background: #fafafa; border-color:#e6e6e6; }
+.receipts-item.is-active { background: #f3f4f6; border-color:#d1d5db; }
+.receipts-item__top { display:flex; justify-content:space-between; align-items:center; margin-bottom:.25rem; }
+.receipts-item__id { font-weight:600; color:#374151; }
+.receipts-item__date { font-size: .8rem; color:#6b7280; }
+.receipts-item__sum { font-weight:700; font-variant-numeric: tabular-nums; }
+.receipts-item__sum.is-pay { color:#16a34a; }
+.receipts-item__sum.is-refund { color:#dc2626; }
+.receipt-preview { border-top:1px solid #eee; padding: .75rem; }
+.receipt-preview__hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:.25рем; }
+
+/* modal styles */
+.modal-card--elevated { border-radius: 16px; overflow: hidden; box-shadow: 0 14px 40px rgba(10,10,10,.22); }
+.modal-card-title--tight { line-height: 1.1; }
+.confirm-banner { display:flex; align-items:center; gap:.75rem; border-radius: 12px; padding:.85rem 1rem; }
+.confirm-banner.is-success-soft { background: #f0fff4; border: 1px solid #c6f6d5; }
+.confirm-banner.is-danger-soft  { background: #fff5f5; border: 1px solid #fed7d7; }
+.confirm-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+.confirm-dot.is-success { background: #22c55e; }
+.confirm-dot.is-danger  { background: #ef4444; }
+.confirm-label { font-weight: 600; color:#4b5563; }
+.money { font-variant-numeric: tabular-nums; letter-spacing: .2px; }
+.table.is-narrow td, .table.is-narrow th { padding: .55rem .75rem; }
+</style>
+
+<script>
+// Пилюли: включение/исключение категорий + пересчёт суммы + запись include_mask
+(function(){
+  function parseNum(v){
+    var s = (v || '').toString().replace(/[ \u00A0\u202F]/g, '').replace('₸','').replace(',', '.');
+    var n = parseFloat(s); return isNaN(n) ? 0 : n;
+  }
+  function isOn(name){
+    return !!document.querySelector('input[type="hidden"][name="'+name+'"]');
+  }
+  function getMask(){
+    var mask = [];
+    document.querySelectorAll('.pill-group .pill').forEach(function(btn){
+      var active = btn.classList.contains('is-active');
+      if(active){
+        var code = btn.getAttribute('data-code');
+        if(code) mask.push(code);
+      }
+    });
+    return mask.join(',');
+  }
+  function setMaskInput(){
+    var input = document.getElementById('includeMask');
+    if(input) input.value = getMask();
+  }
+  function recalc(){
+    var a = parseNum(document.querySelector('[name="amount_total"]')?.value);
+    var b = parseNum(document.querySelector('[name="amount_design"]')?.value);
+    var c = parseNum(document.querySelector('[name="amount_facades"]')?.value);
+    var sum = 0;
+    if(isOn('inc_total'))   sum += a||0;
+    if(isOn('inc_design'))  sum += b||0;
+    if(isOn('inc_facades')) sum += c||0;
+    var out = document.getElementById('amount_due');
+    if(out) out.value = new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(Math.round(sum)) + ' ₸';
+    setMaskInput();
+  }
+  function togglePill(btn){
+    var key = btn.getAttribute('data-key');
+    var active = btn.classList.toggle('is-active');
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    var hidden = document.querySelector('input[type="hidden"][name="'+key+'"]');
+    if(active){
+      if(!hidden){
+        hidden = document.createElement('input');
+        hidden.type = 'hidden'; hidden.name = key; hidden.value = '1';
+        btn.insertAdjacentElement('afterend', hidden);
+      }
+    }else{
+      if(hidden) hidden.remove();
+    }
+    recalc();
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    // ВОССТАНОВЛЕНИЕ СОСТОЯНИЯ ПИЛЮЛЕЙ ИЗ include_mask (важно при показе модалки!)
+    var includeMaskEl = document.getElementById('includeMask');
+    if (includeMaskEl && includeMaskEl.value) {
+      var active = new Set(includeMaskEl.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean));
+      // убираем все скрытые inc_*
+      document.querySelectorAll('input[type="hidden"][name^="inc_"]').forEach(function(h){ h.remove(); });
+      // расставляем состояние
+      document.querySelectorAll('.pill-group .pill').forEach(function(btn){
+        var code = btn.getAttribute('data-code');
+        var key  = btn.getAttribute('data-key');
+        var on   = active.has(code);
+        btn.classList.toggle('is-active', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        if (on) {
+          var hi = document.createElement('input');
+          hi.type = 'hidden'; hi.name = key; hi.value = '1';
+          btn.insertAdjacentElement('afterend', hi);
+        }
+      });
+    }
+
+    // обработчики
+    document.querySelectorAll('.pill-group .pill').forEach(function(btn){
+      btn.addEventListener('click', function(){ togglePill(btn); });
+    });
+    ['amount_total','amount_design','amount_facades'].forEach(function(n){
+      var el = document.querySelector('[name="'+n+'"]'); if(el) el.addEventListener('input', recalc);
+    });
+
+    recalc(); // also sets include_mask
+  });
+})();
+</script>
+
+<script>
+// Подтверждение: сабмитим ЭТУ ЖЕ форму с confirm=1 (никаких отдельных форм)
+document.addEventListener('DOMContentLoaded', function(){
+  var modal = document.getElementById('confirmModal');
+  if(!modal) return;
+  var btnYes = document.getElementById('confirmYes');
+  var btnNo  = document.getElementById('confirmNo');
+  var btnClose = modal.querySelector('.delete');
+  var form  = document.getElementById('paymentForm');
+
+  function close(){ modal.classList.remove('is-active'); }
+  if(btnClose) btnClose.addEventListener('click', close);
+  if(btnNo) btnNo.addEventListener('click', close);
+  if(btnYes) btnYes.addEventListener('click', function(){
+    if(!form) return;
+    // обязательно перед отправкой обновим include_mask
+    var maskInput = document.getElementById('includeMask');
+    if(maskInput){
+      maskInput.value = (function(){
+        var mask = [];
+        document.querySelectorAll('.pill-group .pill.is-active').forEach(function(btn){
+          var code = btn.getAttribute('data-code'); if(code) mask.push(code);
+        });
+        return mask.join(',');
+      })();
+    }
+    var h = form.querySelector('input[name="confirm"]');
+    if(!h){ h = document.createElement('input'); h.type='hidden'; h.name='confirm'; form.appendChild(h); }
+    h.value = '1';
+    form.submit();
+  });
+});
+</script>
+
+<script>
+// Валидация «методы оплаты» и анти-двойной клик
+(function(){
+  function validateMethods(){
+    var wrap = document.getElementById('methodsFieldWrap');
+    if(!wrap) return true;
+    var checks = wrap.querySelectorAll('input[type="checkbox"][name="methods"]');
+    var any = false;
+    checks.forEach(function(c){ if(c.checked) any = true; });
+    var help = wrap.querySelector('.help');
+    var ctrl = wrap.querySelector('.control');
+    if(!any){
+      if(ctrl) ctrl.classList.add('is-danger');
+      if(help){ help.classList.add('is-danger'); help.textContent = 'Отметьте хотя бы один способ оплаты'; }
+      wrap.scrollIntoView({behavior:'smooth', block:'center'});
+      return false;
+    }else{
+      if(ctrl) ctrl.classList.remove('is-danger');
+      if(help){ help.classList.remove('is-danger'); help.textContent = 'Выберите хотя бы один вариант'; }
+      return true;
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var form = document.getElementById('paymentForm');
+    var btn  = document.getElementById('submitBtn');
+    var refreshBtn = document.getElementById('refreshBtnTop');
+    var refreshForm = document.getElementById('refreshForm');
+    if(refreshBtn && refreshForm){
+      refreshBtn.addEventListener('click', function(){
+        refreshForm.submit();
+      });
+    }
+    if(form && btn){
+      form.addEventListener('submit', function(e){
+        // первый POST: без confirm
+        if(!validateMethods()){ e.preventDefault(); e.stopPropagation(); return; }
+        // На всякий: перед отправкой зафиксируем маску
+        var maskInput = document.getElementById('includeMask');
+        if(maskInput){
+          var arr = [];
+          document.querySelectorAll('.pill-group .pill.is-active').forEach(function(b){
+            var code = b.getAttribute('data-code'); if(code) arr.push(code);
+          });
+          maskInput.value = arr.join(',');
+        }
+        btn.disabled = true; btn.classList.add('is-loading');
+        setTimeout(function(){ btn.disabled = false; btn.classList.remove('is-loading'); }, 8000);
+      });
+    }
+  });
+})();
+</script>
+
+{% endblock %}

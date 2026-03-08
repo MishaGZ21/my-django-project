@@ -1,0 +1,100 @@
+<h2 class="title is-5">Выходные / Праздничные дни (Казахстан)</h2>
+
+<div class="notification is-light">
+  Эти даты исключаются из расчёта рабочих дней в графиках (суббота/воскресенье исключаются автоматически).
+  Добавляй сюда праздники и переносы.
+</div>
+
+<form method="post" class="box">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="bulk_add">
+
+  <div class="title is-6">Массовое добавление</div>
+  <p class="help">
+    Вставь даты по одной в строке в формате <strong>YYYY-MM-DD</strong>.
+    Можно добавлять комментарий через пробел: <code>2026-03-21 Наурыз</code>
+  </p>
+
+  <div class="field">
+    <textarea class="textarea" name="bulk_text" rows="6"
+              placeholder="2026-01-01 Новый год
+2026-01-02 Новый год
+2026-03-21 Наурыз"></textarea>
+  </div>
+
+  <div class="field is-grouped">
+    <div class="control">
+      <button class="button is-link" type="submit">Импортировать</button>
+    </div>
+  </div>
+</form>
+
+
+
+{# Добавить новую дату #}
+<form method="post" class="box">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="add">
+  <div class="columns is-vcentered is-multiline">
+    <div class="column is-3">
+      <label class="label">Дата</label>
+      <input class="input" type="date" name="date" required>
+    </div>
+    <div class="column is-6">
+      <label class="label">Название (необязательно)</label>
+      <input class="input" type="text" name="title" placeholder="Напр. Наурыз, перенос и т.д.">
+    </div>
+    <div class="column is-3" style="margin-top:22px;">
+      <button class="button is-primary" type="submit">Добавить</button>
+    </div>
+  </div>
+</form>
+
+{# Список дат #}
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="save">
+
+  <div class="box">
+    <div class="table-container">
+      <table class="table is-fullwidth is-striped is-hoverable is-narrow">
+        <thead>
+          <tr>
+            <th style="width:140px;">Дата</th>
+            <th>Название</th>
+            <th style="width:90px;" class="has-text-centered">Удалить</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in holidays %}
+            <tr>
+              <td>
+                <input class="input is-small" type="date"
+                       name="holiday_{{ h.id }}_date"
+                       value="{{ h.date|date:'Y-m-d' }}">
+              </td>
+              <td>
+                <input class="input is-small" type="text"
+                       name="holiday_{{ h.id }}_title"
+                       value="{{ h.title }}">
+              </td>
+              <td class="has-text-centered">
+                <label class="checkbox">
+                  <input type="checkbox" name="delete_{{ h.id }}" value="1">
+                </label>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3">Пока пусто</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="field is-grouped">
+      <div class="control">
+        <button class="button is-success" type="submit">Сохранить изменения</button>
+      </div>
+    </div>
+  </div>
+</form>

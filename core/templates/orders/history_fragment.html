@@ -1,0 +1,22 @@
+<div class="content">
+  <h4>История изменений по заказу {{ order.order_number }}</h4>
+
+  {% if items %}
+    <ul>
+      {% for it in items %}
+        <li style="margin-bottom: .75rem;">
+          <small class="has-text-grey">
+            {{ it.dt|date:"d.m.Y H:i" }}
+            {% if it.section %}
+              • <span class="tag {{ it.section_tag }}">{{ it.section }}</span>
+            {% endif %}
+            {% if it.user %} • {{ it.user.get_username|default:it.user }}{% endif %}
+          </small>
+          <pre style="white-space: pre-wrap; font-size: 12px; margin-top:.25rem;">{{ it.text }}</pre>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="has-text-grey">Пока нет записей в истории.</p>
+  {% endif %}
+</div>

@@ -1,0 +1,144 @@
+{% load user_groups %}
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Производство{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+	
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar is-light has-shadow" style="border-top: 3px solid #F58220;" role="navigation">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="{% url 'orders_all' %}"><img src="{% static 'img/company_logo_20250903104444.png' %}?v=20250903104444" alt="WoodDecor" style="height:48px;"></a>
+        </div>
+        <div class="navbar-menu">
+            
+    
+    
+    
+    <div class="navbar-start">
+      {% if user.is_authenticated %}
+        {% if user|has_group:"ACCESS_ORDERS" %}
+          <a class="navbar-item" href="{% url 'orders_all' %}">Все заказы</a>
+        {% endif %}
+        {% if user|has_group:"ACCESS_CHART" %}
+          <a class="navbar-item" href="{% url 'orders_chart' %}">График заказов</a>
+        {% endif %}
+        {% if user|has_group:"ACCESS_WORKSHOP" %}
+          <a class="navbar-item" href="{% url 'workshop' %}">Цех</a>
+		  <a class="navbar-item" href="{% url 'warehouse' %}">Склад</a>
+        {% endif %}
+		{% if user|has_group:"ACCESS_ACCOUNTING" %}
+          <a class="navbar-item" href="{% url 'accounting' %}">Бухгалтерия</a>
+        {% endif %}
+		{% if request.user.is_staff %}
+          <a class="navbar-item" href="{% url 'whatsapp_dashboard' %}">WhatsApp</a>
+        {% endif %}
+        {% if user|has_group:"ACCESS_ADMIN" %}
+          <a class="navbar-item" href="/admin/">Админка</a>
+        {% endif %}
+      {% endif %}
+    </div>
+
+
+
+
+            <div class="navbar-end">
+                {% if user.is_authenticated %}
+                <div class="navbar-item">Привет, {{ user.username }}!</div>
+                <div class="navbar-item"><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="button is-light" type="submit">Выйти</button></form></div>
+                {% else %}
+                <div class="navbar-item"><a class="button is-primary" href="{% url 'login' %}">Войти</a></div>
+                {% endif %}
+            </div>
+        </div>
+    
+<form class="navbar-item" method="get" action="{% url 'orders_all' %}">
+  <div class="field has-addons">
+    <div class="control">
+      <input class="input" type="text" name="q" placeholder="№ заказа или телефон" value="{{ request.GET.q }}">
+    </div>
+    <div class="control">
+      <button class="button is-link" type="submit">Поиск</button>
+    </div>
+  </div>
+</form>
+</nav>
+    <section class="section">
+        <div class="container">
+        <!--{% for message in messages %}
+            <div class="notification is-info">{{ message }}</div>
+            {% endfor %} -->
+
+{% block content %}{% endblock %}
+        </div>
+    </section>
+  {% block extra_js %}{% endblock %}
+
+<div id="ajax-modal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card" style="width: 900px; max-width: 95vw;">
+    <header class="modal-card-head">
+      <p class="modal-card-title" id="ajax-modal-title">Лист закупа</p>
+      <button class="delete" aria-label="close" id="ajax-modal-close"></button>
+    </header>
+    <section class="modal-card-body" id="ajax-modal-body"></section>
+  </div>
+</div>
+<script>
+(function(){
+  const modal = document.getElementById("ajax-modal");
+  const body = document.getElementById("ajax-modal-body");
+  const closeBtn = document.getElementById("ajax-modal-close");
+  function openModal(html) {
+    body.innerHTML = html;
+    modal.classList.add("is-active");
+  }
+  function closeModal() {
+    modal.classList.remove("is-active");
+    body.innerHTML = "";
+  }
+  closeBtn.addEventListener("click", closeModal);
+  modal.querySelector(".modal-background").addEventListener("click", closeModal);
+  window.addEventListener("ajax-modal:close", closeModal);
+
+  document.addEventListener("click", function(e){
+    const a = e.target.closest("a.js-ajax-modal");
+    if (!a) return;
+    const url = a.getAttribute("href");
+    if (!url) return;
+    e.preventDefault();
+    fetch(url, {headers: {"X-Requested-With": "XMLHttpRequest"}})
+      .then(r => r.text())
+      .then(html => openModal(html))
+      .catch(err => { console.error(err); });
+  });
+})();
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.js-history-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const url = btn.getAttribute('data-history-url');
+      try {
+        const resp = await fetch(url, {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+        const html = await resp.text();
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        document.body.appendChild(container);
+      } catch (e) {
+        alert('Не удалось загрузить историю. Попробуйте позже.');
+      }
+    });
+  });
+});
+</script>
+
+
+</body>
+</html>

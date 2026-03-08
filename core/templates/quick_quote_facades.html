@@ -1,0 +1,28 @@
+<h4 class="title is-6">Фасады</h4>
+
+<div class="facadeRows"></div>
+
+<div class="mt-2">
+  <button type="button" class="button is-small" onclick="addFacadeRow(this)">+ Добавить фасад</button>
+</div>
+
+<template class="facadeRowTpl">
+  <div class="columns is-mobile">
+    <div class="column is-7">
+      <div class="select is-fullwidth">
+        <select name="facade_item_id[]">
+          <option value="">— выберите фасад —</option>
+          {% for it in facade_options %}
+            <option value="{{ it.id }}">{{ it.group__title }} — {{ it.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="column is-3">
+      <input class="input" name="facade_area[]" inputmode="decimal" placeholder="Площадь, м²">
+    </div>
+    <div class="column is-2">
+      <button type="button" class="button is-light" onclick="removeRow(this)">Удалить</button>
+    </div>
+  </div>
+</template>

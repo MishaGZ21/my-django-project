@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Договор{% endblock %}
+{% block content %}
+<h1 class="title">Договор — заказ №{{ order.order_number }}</h1>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button class="button is-primary">Сохранить</button>
+</form>
+{% endblock %}

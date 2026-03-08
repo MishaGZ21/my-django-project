@@ -1,0 +1,630 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% block title %}Склад{% endblock %}
+{% block content %}
+
+
+<style>
+/* ===== Журнал оприходования ===== */
+.journal-wrap { margin-top: 1rem; }
+.journal-head {
+  display: grid; 
+  grid-template-columns: 1fr auto;
+  gap: .25rem .75rem;
+  align-items: end; 
+  justify-content:space-between;
+  padding:.25rem 0 .5rem 0; 
+  border-bottom:1px solid #e8e8e8; 
+  margin-bottom:.5rem;
+}
+
+.journal-left { display:flex; flex-direction:column; gap:.25rem; }
+.journal-summary{
+  display:flex; flex-wrap:wrap; gap:12px;
+  font-size:.9rem; color:#444;
+}
+.journal-summary b{ font-variant-numeric:tabular-nums; }
+
+.journal-title {
+  font-weight:600; letter-spacing:.2px; color:#2f2f2f; margin:0;
+}
+.journal-counter {
+  font-size:.9rem; color:#666; background:#f5f5f5; border:1px solid #e8e8e8;
+  padding:.15rem .5rem; border-radius:.5rem;
+}
+
+.journal-table-wrap { overflow:auto; border:1px solid #eaeaea; border-radius:8px; }
+table.journal {
+  width:100%; border-collapse:separate; border-spacing:0;
+  font-size:0.95rem; background:#fff;
+}
+table.journal thead th {
+  position:sticky; top:0; z-index:2;
+  background:#fafafa; color:#3a3a3a; font-weight:600;
+  text-transform:uppercase; font-size:.78rem; letter-spacing:.04em;
+  border-bottom:1px solid #e8e8e8; padding:.55rem .6rem;
+  white-space:nowrap;
+}
+table.journal tbody td {
+  padding:.55rem .25rem; border-bottom:1px solid #f1f1f1; vertical-align:middle;
+}
+
+/* Читаемость чисел и дат */
+.num      { text-align:right; font-variant-numeric: tabular-nums; }
+.nowrap   { white-space:nowrap; }
+.muted    { color:#7a7a7a; }
+.status   { font-size:.78rem; padding:.1rem .5rem; border-radius:.5rem; }
+.status-accepted { background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; }
+.status-waiting  { background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; }
+
+/* Ровные шапки вкладок */
+.tabs.is-boxed li.is-active a { font-weight:600; }
+
+/* Рядовые улучшения */
+table.journal tbody tr:hover { background:#fcfcfc; }
+.actions { white-space:nowrap; }
+.pill    { font-size:.78rem; padding:.15rem .5rem; border-radius:999px; border:1px solid #e1e1e1; }
+
+
+/* Кнопки действий в один ряд (компактный вид в таблицах) */
+.actions .wh-btns{
+  display:flex;
+  flex-wrap:nowrap;          /* запрещаем перенос */
+  align-items:center;
+  gap:6px;                   /* поменьше расстояние между кнопками */
+  justify-content:flex-start;
+}
+
+.actions .wh-btn{
+  --wh-pad-y: 6px;           /* компактнее сами кнопки */
+  --wh-pad-x: 10px;
+  --wh-fz: 14px;
+  min-height: 34px;          /* ниже минимальную высоту */
+  white-space:nowrap;        /* текст в кнопках не переносить */
+}
+
+/* Чуть ужмём иконки, если они есть */
+.actions .wh-btn .wh-ico{ width:18px; height:18px; }
+
+/* Узкий экран — разрешаем перенос, чтобы не вылезало за ячейку */
+@media (max-width: 640px){
+  .actions .wh-btns{ flex-wrap:wrap; gap:8px; }
+}
+
+
+.order-badge{
+  display:inline-flex; align-items:center; gap:6px;
+  font-weight:700; letter-spacing:.2px;
+  padding:.25rem .5rem; border-radius:999px;
+  background:#eef2ff; color:#3730a3;             /* спокойный индиго */
+  border:1px solid #e0e7ff;
+  font-variant-numeric: tabular-nums;
+}
+.order-badge .hash{
+  display:inline-block; width:18px; height:18px; line-height:18px;
+  text-align:center; border-radius:50%;
+  background:#c7d2fe; color:#1e1b4b; font-size:.78rem;
+}
+
+/* ===== УНИВЕРСАЛЬНЫЕ ТАЧ-КНОПКИ ДЛЯ "СКЛАДА" ===== */
+.wh-btn {
+  --wh-radius: 12px;
+  --wh-pad-y: 12px;
+  --wh-pad-x: 18px;
+  --wh-fz: 16px;
+  --wh-gap: 10px;
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wh-gap);
+  padding: var(--wh-pad-y) var(--wh-pad-x);
+  border-radius: var(--wh-radius);
+  border: 1px solid transparent;
+  font-weight: 700;
+  font-size: var(--wh-fz);
+  line-height: 1.2;
+  user-select: none;
+  text-decoration: none !important;
+  transition: transform .02s ease-out, box-shadow .15s ease, background-color .15s ease, border-color .15s ease;
+  min-height: 44px;            /* Apple HIG / Material min-touch */
+  min-width: 44px;
+  box-shadow: 0 2px 0 rgba(0,0,0,.04);
+}
+.wh-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(0,0,0,.04);
+}
+.wh-btn.is-block { width: 100%; justify-content: center; }
+
+/* ВАРИАНТЫ */
+.wh-btn--primary   { background:#2563eb; color:#fff; border-color:#1e40af; }
+.wh-btn--primary:hover { background:#1d4ed8; }
+.wh-btn--success   { background:#16a34a; color:#fff; border-color:#15803d; }
+.wh-btn--success:hover { background:#15803d; }
+.wh-btn--warning   { background:#f59e0b; color:#111827; border-color:#d97706; }
+.wh-btn--warning:hover { background:#d97706; color:#111827; }
+.wh-btn--danger    { background:#dc2626; color:#fff; border-color:#b91c1c; }
+.wh-btn--danger:hover { background:#b91c1c; }
+.wh-btn--ghost     { background:#fff; color:#374151; border-color:#d1d5db; }
+.wh-btn--ghost:hover { background:#f9fafb; border-color:#9ca3af; }
+
+/* КОМПАКТ (если нужно в таблицах) */
+.wh-btn.is-compact {
+  --wh-pad-y: 8px;
+  --wh-pad-x: 12px;
+  --wh-fz: 15px;
+  min-height: 40px;
+}
+
+/* ИКОНКА (если используете <svg> или <i>) */
+.wh-btn .wh-ico {
+  width: 20px; height: 20px; display:inline-block;
+}
+
+/* ГРУППА КНОПОК */
+.wh-btns { display:flex; flex-wrap:wrap; gap:12px; }
+.wh-btns--stack { gap:10px; flex-direction:column; }
+
+/* АДАПТИВ: на планшете делаем крупнее и расстояния больше */
+@media (max-width: 1024px) {
+  .wh-btn { --wh-pad-y: 14px; --wh-pad-x: 20px; --wh-fz: 17px; }
+  .wh-btn .wh-ico { width: 22px; height: 22px; }
+}
+@media (max-width: 768px) {
+  .wh-btns { gap: 10px; }
+  .wh-btn.is-block-mobile { width: 100%; justify-content: center; }
+}
+
+/* Primary-кнопка (в т.ч. "Добавить"): читаемый текст при наведении */
+.wh-btn--primary{
+  --p-bg: #2563eb;      /* базовый синий */
+  --p-bg-hov: #1e40af;  /* темнее при наведении */
+  --p-bg-act: #16358c;  /* ещё темнее при клике */
+  --p-tx: #ffffff;      /* всегда белый текст */
+  background: var(--p-bg);
+  color: var(--p-tx);
+  border: 1px solid transparent;
+}
+
+.wh-btn--primary:hover,
+.wh-btn--primary:focus-visible{
+  background: var(--p-bg-hov);
+  color: #ffffff;
+  text-decoration: none;
+  border-color: #1a3a99;
+  outline: 2px solid rgba(37,99,235,.35);
+  outline-offset: 2px;
+}
+
+.wh-btn--primary:active{
+  background: var(--p-bg-act);
+  color: #ffffff;
+}
+
+.wh-btn--primary:visited{ color:#ffffff; }
+
+/* Если бывает "выключенная" ссылка-кнопка */
+.wh-btn--primary.is-disabled,
+.wh-btn--primary[aria-disabled="true"]{
+  background: #9db5f9;
+  color: #ffffff;
+  pointer-events: none;
+  opacity: .85;
+}
+.has-text-right {
+  text-align: center !important;
+
+}
+  
+</style>
+
+
+
+<h1 class="title">Склад</h1>
+
+<div class="tabs is-boxed">
+  <ul>
+    <li class="is-active"><a data-target="tab-waiting">Ожидают</a></li>
+    <li><a data-target="tab-accepted">Приняты</a></li>
+    <li><a data-target="tab-history">История</a></li>
+  </ul>
+</div>
+
+<div id="tab-waiting">
+  <div class="journal-wrap">
+    <div class="journal-head">
+      <div class="journal-left">
+        <h3 class="journal-title">Ожидают к завозу</h3>
+        
+      </div>
+      <span class="journal-counter">записей: {{ waiting|length }}</span>
+    </div>
+
+    <div class="journal-table-wrap">
+      <table class="journal">
+        <!-- Задаём ширины колонок -->
+        <colgroup>
+          <col style="width:105px"><col style="width:22%"><col style="width:14%">
+          <col style="width:8%"><col style="width:8%"><col style="width:8%">
+          <col style="width:8%"><col style="width:10%"><col style="width:19%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>№ заказа</th><th>Клиент</th><th>Телефон</th>
+            <th>ЛДСП</th><th>ПВХ узк</th><th>ПВХ шир</th><th>ХДФ</th><th>Столеш.</th>
+            <th class="nowrap">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in waiting %}
+          <tr data-order-id="{{ r.order.id }}">
+            <td class="nowrap">
+              <span class="order-badge">
+                
+                {% localize off %}{{ r.order.order_number }}{% endlocalize %}
+              </span>
+            </td>
+            <td class="nowrap">{{ r.order.customer_name }}</td>
+            <td class="nowrap"><a href="tel:{{ r.order.phone }}" class="muted">{{ r.order.phone }}</a></td>
+            <td class="num">{{ r.ldsp|floatformat:"0" }}</td>
+            <td class="num">{{ r.pvc_narrow|floatformat:"0" }}</td>
+            <td class="num">{{ r.pvc_wide|floatformat:"0" }}</td>
+            <td class="num">{{ r.hdf|floatformat:"0" }}</td>
+            <td class="num">{{ r.countertop|floatformat:"0" }}</td>
+            <td class="actions">
+              <div class="wh-btns">
+                <a class="wh-btn wh-btn--success is-compact"
+                   href="{% url 'warehouse_start_accept' r.order.id %}">
+                  Принять
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="9" class="muted has-text-centered">Нет записей</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<div id="tab-accepted" style="display:none">
+  <div class="journal-wrap">
+    <div class="journal-head">
+      <div class="journal-left">
+        <h3 class="journal-title">Приняты на склад</h3>
+        <div class="journal-summary">
+          <span>ЛДСП: <b>{{ total_ldsp|floatformat:"0" }}</b> лист.</span>
+          <span>ХДФ: <b>{{ total_hdf|floatformat:"0" }}</b> лист.</span>
+          <span>Столешницы: <b>{{ total_countertop|floatformat:"0" }}</b> шт.</span>
+        </div>
+      </div>
+      <span class="journal-counter">записей: {{ accepted|length }}</span>
+    </div>
+
+    <div class="journal-table-wrap">
+      <table class="journal">
+        <colgroup>
+          <col style="width:105px"><col style="width:110px"><col style="width:22%"><col style="width:14%">
+          <col style="width:8%"><col style="width:8%"><col style="width:8%">
+          <col style="width:8%"><col style="width:10%"><col style="width:10%"><col style="width:19%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>№ заказа</th><th>Дата</th><th>Клиент</th><th>Телефон</th>
+            <th>ЛДСП</th><th>ПВХ узк</th><th>ПВХ шир</th><th>ХДФ</th><th>Столеш.</th>
+            <th>Статус</th><th class="nowrap">Действия</th>
+          </tr>
+        </thead>
+        <tbody id="accepted-body">
+          {% for r in accepted %}
+          <tr data-order-id="{{ r.order.id }}">
+            <td class="nowrap">
+              <span class="order-badge">
+                
+                {% localize off %}{{ r.order.order_number }}{% endlocalize %}
+              </span>
+            </td>
+            <td class="nowrap">{% if r.received_date %}{{ r.received_date|date:"d.m.Y" }}{% else %}-{% endif %}</td>
+            <td class="nowrap">{{ r.order.customer_name }}</td>
+            <td class="nowrap"><a href="tel:{{ r.order.phone }}" class="muted">{{ r.order.phone }}</a></td>
+            <td class="has-text-left">
+              {% with got=r.ldsp need=r.need_ldsp %}
+                <span class="{% if got < need %}has-text-danger{% elif got > need %}has-text-link{% else %}has-text-success{% endif %}">
+                  {{ got|floatformat:"0" }}/{{ need|floatformat:"0" }}
+                </span>
+              {% endwith %}
+            </td>
+            <td class="has-text-left">
+              {% with got=r.pvc_narrow need=r.need_pvc_narrow %}
+                <span class="{% if got < need %}has-text-danger{% elif got > need %}has-text-link{% else %}has-text-success{% endif %}">
+                  {{ got|floatformat:"0" }}/{{ need|floatformat:"0" }}
+                </span>
+              {% endwith %}
+            </td>
+            <td class="has-text-left">
+              {% with got=r.pvc_wide need=r.need_pvc_wide %}
+                <span class="{% if got < need %}has-text-danger{% elif got > need %}has-text-link{% else %}has-text-success{% endif %}">
+                  {{ got|floatformat:"0" }}/{{ need|floatformat:"0" }}
+                </span>
+              {% endwith %}
+            </td>
+            <td class="has-text-left">
+              {% with got=r.hdf need=r.need_hdf %}
+                <span class="{% if got < need %}has-text-danger{% elif got > need %}has-text-link{% else %}has-text-success{% endif %}">
+                  {{ got|floatformat:"0" }}/{{ need|floatformat:"0" }}
+                </span>
+              {% endwith %}
+            </td>
+            <td class="has-text-left">
+              {% with got=r.countertop need=r.need_countertop %}
+                <span class="{% if got < need %}has-text-danger{% elif got > need %}has-text-link{% else %}has-text-success{% endif %}">
+                  {{ got|floatformat:"0" }}/{{ need|floatformat:"0" }}
+                </span>
+              {% endwith %}
+            </td>
+            <td><span class="status status-accepted">Принято</span></td>
+            <td class="actions">
+              <div class="wh-btns">
+                <button class="wh-btn wh-btn--ghost is-compact js-sign" data-order-id="{{ r.order.id }}">
+                  Подпись
+                </button>
+            
+                <a class="wh-btn wh-btn--primary is-compact"
+                   href="{% url 'warehouse_start_additional' r.order.id %}">
+                  Добавить
+                </a>
+            
+                <button class="wh-btn wh-btn--ghost is-compact js-toggle" data-order-id="{{ r.order.id }}" title="Раскрыть историю">
+                  ⤵
+                </button>
+              </div>
+            </td>
+          </tr>
+          <!-- скрытая «дерево»-строка -->
+          <tr class="is-hidden" id="receipts-row-{{ r.order.id }}">
+            <td colspan="11" class="p-0">
+              <div class="box m-2" id="receipts-box-{{ r.order.id }}">
+                <p class="has-text-grey p-3">Загрузка истории…</p>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="11" class="muted has-text-centered">Нет записей</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<div id="tab-history" style="display:none">
+  <div class="journal-wrap">
+    <div class="journal-head">
+      <div class="journal-left">
+        <h3 class="journal-title">История</h3>
+        <div class="journal-summary">
+          <span>Здесь будут заказы, которые цех отметил как «Готов к выдаче».</span>
+        </div>
+      </div>
+      <span class="journal-counter">записей: 0</span>
+    </div>
+
+    <div class="journal-table-wrap">
+      <table class="journal">
+        <thead>
+          <tr>
+            <th>№ заказа</th><th>Дата готовности</th><th>Клиент</th><th>Телефон</th>
+            <th>ЛДСП</th><th>ПВХ узк</th><th>ПВХ шир</th><th>ХДФ</th><th>Столеш.</th>
+            <th class="nowrap">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="10" class="has-text-grey has-text-centered" style="padding:16px">
+              Раздел скоро заработает: сюда будут перемещаться выполненные заказы с привязкой к завозам.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div class="modal" id="sign-modal">
+  <div class="modal-background"></div>
+  <div class="modal-card" style="width:820px;max-width:95vw;">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Журнал регистрации</p>
+      <button class="delete" aria-label="close" id="sign-close"></button>
+    </header>
+    <section class="modal-card-body" id="sign-body">
+      <!-- контент подставим из JS -->
+    </section>
+    <footer class="modal-card-foot">
+	  <a class="button is-primary is-light" id="sign-pdf" target="_blank" rel="noopener">PDF</a>
+      <button class="button" id="sign-ok">Закрыть</button>
+    </footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  const tabs = document.querySelectorAll('.tabs a[data-target]');
+  const panes = ['tab-waiting','tab-accepted','tab-history'].map(id=>document.getElementById(id));
+
+  tabs.forEach(a=>{
+    a.addEventListener('click', (e)=>{
+      e.preventDefault();
+      const target = a.getAttribute('data-target');
+      // активная вкладка
+      a.closest('ul').querySelectorAll('li').forEach(li=>li.classList.remove('is-active'));
+      a.parentElement.classList.add('is-active');
+      // показ/скрытие панелей
+      panes.forEach(p=>{ if(p) p.style.display = (p.id === target) ? '' : 'none'; });
+    });
+  });
+})();
+
+/* ===== История и модалка «Подпись» ===== */
+
+async function fetchReceipts(orderId){
+  // Шаблон URL от Django заканчивается на /0/ — заменяем надёжно хвост.
+  const urlTpl = "{% url 'warehouse_receipts_json' 0 %}";
+  const url = urlTpl.replace(/0\/?$/, String(orderId) + "/");
+  const r = await fetch(url, { method: "GET" });
+  if(!r.ok) throw new Error("fetch failed: " + r.status);
+  return await r.json();
+}
+
+const noDec = v => String(Math.trunc(Number(v)||0));
+
+
+
+
+
+function renderHistory(box, data){
+  if(!data.receipts.length){
+    box.innerHTML = '<p class="p-3 has-text-grey">Нет приёмок.</p>'; return;
+  }
+  let html = `
+    <table class="table is-fullwidth is-striped is-narrow">
+      <thead>
+        <tr>
+          <th>#</th><th>Дата</th><th>2750×1830</th><th>2800×2070</th>
+          <th>ПВХ узк (м)</th><th>ПВХ шир (м)</th><th>ХДФ (л.)</th><th>Столеш. (шт.)</th><th>Кромка</th><th>Водитель</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  data.receipts.forEach((it, idx)=>{
+    html += `
+      <tr>
+        <td>${idx+1}</td>
+        <td>${it.created_at}</td>
+        <td class="has-text-right">${noDec(it.qty_ldsp_2750x1830)}</td>
+        <td class="has-text-right">${noDec(it.qty_ldsp_2800x2070)}</td>
+        <td class="has-text-right">${noDec(it.qty_pvc_narrow_m)}</td>
+        <td class="has-text-right">${noDec(it.qty_pvc_wide_m)}</td>
+        <td class="has-text-right">${noDec(it.qty_hdf_sheets)}</td>
+        <td class="has-text-right">${noDec(it.qty_countertop_pcs)}</td>
+        <td>${it.edge ? "ЕСТЬ" : "НЕТ"}</td>
+        <td>${(it.driver_name||"—")}<br><small class="has-text-grey">${(it.driver_phone||"")}</small></td>
+      </tr>`;
+  });
+  html += `</tbody></table>`;
+  box.innerHTML = html;
+}
+
+function renderSignModal(body, data){
+  const receipts = Array.isArray(data.receipts) ? data.receipts : [];
+  const total = receipts.length;
+
+  if (total === 0) {
+    body.innerHTML = '<p class="has-text-grey p-3">Приёмок пока нет</p>';
+    return;
+  }
+
+  let html = `<div class="content">
+    <h4>Заказ № ${data.order_number}</h4>
+    ${receipts.map((it, idx)=>{
+      const n = (v)=>Number(v||0);
+      const rows = [];
+      if (n(it.qty_ldsp_2750x1830)) rows.push(`<li>ЛДСП 2750×1830: <b>${noDec(it.qty_ldsp_2750x1830)}</b></li>`);
+      if (n(it.qty_ldsp_2800x2070)) rows.push(`<li>ЛДСП 2800×2070: <b>${noDec(it.qty_ldsp_2800x2070)}</b></li>`);
+      if (n(it.qty_pvc_narrow_m))   rows.push(`<li>ПВХ узк (м): <b>${noDec(it.qty_pvc_narrow_m)}</b></li>`);
+      if (n(it.qty_pvc_wide_m))     rows.push(`<li>ПВХ шир (м): <b>${noDec(it.qty_pvc_wide_m)}</b></li>`);
+      if (n(it.qty_hdf_sheets))     rows.push(`<li>ХДФ (лист.): <b>${noDec(it.qty_hdf_sheets)}</b></li>`);
+      if (n(it.qty_countertop_pcs)) rows.push(`<li>Столешница (шт.): <b>${noDec(it.qty_countertop_pcs)}</b></li>`);
+      const prev = receipts[idx + 1];                  // может быть undefined у самого старого
+      const currEdge = !!it.edge;
+      const prevEdge = prev == null ? null : !!prev.edge;
+      
+      // правило: если предыдущего нет — покажем только если сейчас ЕСТЬ;
+      // если предыдущий есть — покажем, когда состояние поменялось (true↔false)
+      const edgeChanged = (prev == null) ? currEdge : (currEdge !== prevEdge);
+      if (edgeChanged) {
+        rows.push(`<li>Кромка для столешницы: <b>${currEdge ? 'ЕСТЬ' : 'НЕТ'}</b></li>`);
+      }
+
+      const listHtml = rows.length ? `<ul style="columns:2">${rows.join("")}</ul>`
+                                   : `<p class="has-text-grey">Без изменений</p>`;
+
+      return `
+      <div class="box" style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="flex:1;">
+          <p><b>Завоз №${total - idx}</b> — ${it.created_at}
+             <span class="tag is-${it.status==='accepted'?'success':'warning'} is-light">${it.status}</span></p>
+          ${listHtml}
+          <p class="mt-2"><small>Водитель: <b>${(it.driver_name||'—')}</b> <span class="has-text-grey">${(it.driver_phone||'')}</span></small></p>
+        </div>
+        <div style="width:220px;">
+          ${
+            it.signature_url
+              ? `<img src="${it.signature_url}" alt="Подпись"
+                       style="display:block;max-width:100%;max-height:160px;height:auto;object-fit:contain;border:1px solid #e5e5e5;border-radius:8px;padding:6px;background:#fff;">`
+              : ''
+          }
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+
+  body.innerHTML = html;
+}
+
+document.addEventListener("click", async (e)=>{
+  // раскрыть/скрыть «дерево»
+  if(e.target.closest(".js-toggle")){
+    const btn = e.target.closest(".js-toggle");
+    const orderId = btn.dataset.orderId;
+    const tr = document.getElementById(`receipts-row-${orderId}`);
+    tr.classList.toggle("is-hidden");
+    if(!tr.classList.contains("is-hidden")){
+      const box = document.getElementById(`receipts-box-${orderId}`);
+      box.innerHTML = '<p class="p-3 has-text-grey">Загрузка…</p>';
+      try{ const data = await fetchReceipts(orderId); renderHistory(box, data); }
+      catch{ box.innerHTML = '<p class="p-3 has-text-danger">Ошибка загрузки</p>'; }
+    }
+  }
+
+  // модалка «Подпись»
+  if (e.target.closest(".js-sign")) {
+    const orderId = e.target.closest(".js-sign").dataset.orderId;
+    const modal = document.getElementById("sign-modal");
+    const body  = document.getElementById("sign-body");
+    modal.classList.add("is-active");
+    body.innerHTML = '<p class="p-3 has-text-grey">Загрузка…</p>';
+  
+    // >>> Добавка: подставляем ссылку на PDF
+    // >>> Подставляем корректный href на PDF (используем PK заказа)
+    const pdfBtn = document.getElementById("sign-pdf");
+    if (pdfBtn && orderId) {
+      pdfBtn.href = `/warehouse/order/${orderId}/pdf/`;
+    }
+  
+    try {
+      const data = await fetchReceipts(orderId);
+      renderSignModal(body, data);
+    } catch {
+      body.innerHTML = '<p class="p-3 has-text-danger">Ошибка загрузки</p>';
+    }
+  }
+});
+
+// закрыть модалку
+["sign-close","sign-ok"].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el){ el.addEventListener("click", ()=> document.getElementById("sign-modal").classList.remove("is-active")); }
+});
+document.querySelector("#sign-modal .modal-background")
+  ?.addEventListener("click", ()=> document.getElementById("sign-modal").classList.remove("is-active"));
+</script>
+
+{% endblock %}

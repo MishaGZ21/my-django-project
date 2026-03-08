@@ -1,0 +1,244 @@
+{% load l10n %}
+
+<h3 class="title is-5">Редактирование цен</h3>
+<p class="mb-4 has-text-grey">Все значения — в денежной единице. Вводите через точку или запятую; разделители тысяч добавятся автоматически.</p>
+
+<!-- MAIN SAVE FORM (prices) -->
+<form method="post" action="{% url 'accounting' %}?tab=prices">
+  {% csrf_token %}
+
+  {% for group in price_groups %}
+    <article class="message is-link" id="group-{{ group.id }}">
+      <div class="message-header">
+        <p>{{ group.title }}</p>
+        <button type="button"
+                class="button is-small is-white has-text-weight-bold js-add-item"
+                data-group="{{ group.id }}"
+                title="Добавить позицию">+</button>
+      </div>
+      <div class="message-body">
+        <div class="columns is-multiline" data-group-columns="{{ group.id }}">
+          {% for item in group.items.all %}
+            <div class="column is-6-tablet is-4-desktop">
+              <label class="label" for="id_price_{{ item.id }}">
+                {{ item.title }}
+                <small class="tag is-light ml-2 js-was"
+                       data-val="{{ item.value|default:0|floatformat:0|unlocalize }}">
+                  Было: {{ item.value|default:0|floatformat:0|unlocalize }}
+                </small>
+              </label>
+              <div class="control has-icons-left">
+                <!-- type="text", чтобы можно было показывать разделители тысяч -->
+                <input id="id_price_{{ item.id }}"
+                       name="price_{{ item.id }}"
+                       type="text"
+                       inputmode="decimal"
+                       class="input js-price"
+                       value="{{ item.value|default:0|floatformat:0|unlocalize }}"
+                       autocomplete="off">
+                <span class="icon is-small is-left">₸</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </article>
+  {% empty %}
+    <p class="has-text-grey">Группы цен не найдены. Проверь миграции PriceGroup/PriceItem и дата-наполнение.</p>
+  {% endfor %}
+
+  <div class="mt-4">
+    <button type="submit" class="button is-success is-medium">Сохранить цены</button>
+  </div>
+</form>
+<!-- /MAIN SAVE FORM -->
+
+<!-- Add Price Item Modal OUTSIDE of the main form to avoid nested forms -->
+<div id="addItemModal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Новая позиция</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+    <section class="modal-card-body">
+      <!-- We still keep a form element for fields/validation, but submission is handled by JS (AJAX) -->
+      <form id="addItemForm">
+        {% csrf_token %}
+        <input type="hidden" name="group_id" id="add_group_id" value="">
+        <div class="field">
+          <label class="label">Наименование</label>
+          <div class="control">
+            <input class="input" type="text" name="title" id="add_title" placeholder="Например, Резка МДФ" required>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label">Стоимость</label>
+          <div class="control">
+            <input class="input js-price" type="text" name="value" id="add_value" placeholder="Например, 15000" required>
+          </div>
+          <p class="help is-info">Можно вводить с пробелами и запятой — мы всё поправим.</p>
+        </div>
+      </form>
+    </section>
+    <footer class="modal-card-foot">
+      <button class="button is-link" id="addSaveBtn" type="button">Сохранить</button>
+      <button class="button" id="addCancelBtn" type="button">Отмена</button>
+    </footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  // отображаем разделитель тысяч (узкий неразрывный пробел), десятичный разделитель — точка
+  const THIN_NBSP = "\u202F"; // узкий неразрывный пробел — красиво и не ломает переносы
+
+  function normalize(str){
+    return (str || "")
+      .toString()
+      .replace(/\s+/g, "")     // обычные пробелы
+      .replace(/\u00A0/g, "")  // NBSP
+      .replace(/\u202F/g, "")  // THIN NBSP
+      .replace(",", ".");       // запятая -> точка
+  }
+
+  function formatWithGroups(numStr){
+    if (!numStr) return "";
+    // оставляем только цифры и одну точку
+    numStr = numStr.replace(/[^0-9.]/g, "");
+    const parts = numStr.split(".");
+    let intPart = parts[0] || "0";
+    let decPart = (parts[1] || "").slice(0, 2);
+    // группировка тысяч
+    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, THIN_NBSP);
+    // два знака после точки
+    if (decPart.length === 0) decPart = "00";
+    else if (decPart.length === 1) decPart = decPart + "0";
+    return intPart + "." + decPart;
+  }
+
+  // инициализация: проставим красивый формат и «Было: …»
+  document.querySelectorAll(".js-price").forEach(function(inp){
+    const col = inp.closest(".column");
+    const wasTag = col ? col.querySelector(".js-was") : null;
+
+    const raw = normalize(inp.value);
+    const formatted = raw ? formatWithGroups(raw) : "";
+    if (formatted) inp.value = formatted;
+    if (wasTag){
+      const wasRaw = normalize(wasTag.getAttribute("data-val") || "");
+      wasTag.textContent = "Было: " + (wasRaw ? formatWithGroups(wasRaw) : "0.00");
+    }
+
+    // при фокусе — убираем разделители, чтобы удобнее править
+    inp.addEventListener("focus", function(){
+      inp.value = normalize(inp.value);
+    });
+
+    // при расфокусе — форматируем с разделителями
+    inp.addEventListener("blur", function(){
+      const n = normalize(inp.value);
+      inp.value = n ? formatWithGroups(n) : "";
+    });
+  });
+
+  // перед отправкой формы удалим разделители и оставим «точку» как десятичный
+  const form = document.querySelector('form[action$="?tab=prices"]');
+  if (form){
+    form.addEventListener("submit", function(){
+      document.querySelectorAll(".js-price").forEach(function(inp){
+        inp.value = normalize(inp.value); // серверу отправляем без пробелов и с точкой
+      });
+    });
+  }
+})();
+
+// --- Add item modal logic (AJAX) ---
+(function(){
+  const modal = document.getElementById('addItemModal');
+  if (!modal) return;
+  const bg = modal.querySelector('.modal-background');
+  const closeBtn = modal.querySelector('.delete');
+  const cancelBtn = document.getElementById('addCancelBtn');
+  const saveBtn = document.getElementById('addSaveBtn');
+  const form = document.getElementById('addItemForm');
+  const gid = document.getElementById('add_group_id');
+  const title = document.getElementById('add_title');
+  const value = document.getElementById('add_value');
+
+  function open(groupId){
+    gid.value = groupId;
+    title.value = '';
+    value.value = '';
+    modal.classList.add('is-active');
+    setTimeout(()=>title.focus(), 0);
+  }
+  function close(){
+    modal.classList.remove('is-active');
+  }
+
+  document.querySelectorAll('.js-add-item').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const id = this.getAttribute('data-group');
+      open(id);
+    });
+  });
+
+  [bg, closeBtn, cancelBtn].forEach(function(el){ if(el) el.addEventListener('click', close); });
+
+  function getCSRF(){
+    // возьмём токен прямо из скрытого поля формы модалки
+    const inp = form.querySelector('input[name="csrfmiddlewaretoken"]');
+    return inp ? inp.value : null;
+  }
+
+  if (saveBtn){
+    saveBtn.addEventListener('click', async function(){
+      // простая фронт-валидация
+      if (!title.value.trim() || !value.value.trim()){
+        title.reportValidity();
+        value.reportValidity();
+        return;
+      }
+      // нормализуем стоимость
+      const normalized = (value.value || '').replace(/\s+/g,'').replace(/,/g,'.').replace(/\u00A0|\u202F/g,'');
+      value.value = normalized;
+
+      const payload = new FormData(form);
+      payload.set('value', normalized);
+
+      saveBtn.classList.add('is-loading');
+      saveBtn.disabled = true;
+      try {
+        const resp = await fetch("{% url 'accounting_price_add' %}", {
+          method: "POST",
+          headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': getCSRF() || '' },
+          body: payload
+        });
+        if (!resp.ok){
+          const data = await resp.json().catch(()=>({}));
+          throw new Error(data.error || 'Не удалось добавить позицию');
+        }
+        const data = await resp.json();
+        // вставим новый инпут в нужную группу
+        if (data && data.ok && data.html && data.group_id){
+          const container = document.querySelector(`#group-${data.group_id} .message-body .columns`);
+          if (container){
+            const tmp = document.createElement('template');
+            tmp.innerHTML = data.html.trim();
+            container.appendChild(tmp.content.firstElementChild);
+          }
+          close();
+        } else {
+          throw new Error('Неверный ответ сервера');
+        }
+      } catch(err){
+        alert(err.message || err);
+      } finally {
+        saveBtn.classList.remove('is-loading');
+        saveBtn.disabled = false;
+      }
+    });
+  }
+})();
+</script>

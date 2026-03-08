@@ -1,0 +1,10 @@
+--- core/models.py (original)
++++ core/models.py (fixed)
+@@ -197,7 +197,6 @@
+     # --- Фасады ---
+     cost_facades   = models.DecimalField("Стоимость фасадов (итого)", max_digits=14, decimal_places=2, default=0)
+     cost_additional = models.DecimalField("Стоимость дополнительно (итого)", max_digits=14, decimal_places=2, default=0)
+-    cost_facades   = models.DecimalField("Стоимость фасадов (итого)", max_digits=14, decimal_places=2, default=0)
+     
+     # --- Проект / Дизайн-проект ---
+     design_ldsp_cost = models.DecimalField(

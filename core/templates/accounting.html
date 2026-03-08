@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Бухгалтерия{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title">Бухгалтерия</h1>
+    <article class="message is-info">
+      <div class="message-header">Сводка</div>
+      <div class="message-body">
+        <p><strong>Всего, ₽:</strong> {{ totals.total_amount|default:0 }}</p>
+        <p><strong>Оплачено, ₽:</strong> {{ totals.paid_amount|default:0 }}</p>
+        <p><strong>Не оплачено, ₽:</strong> {{ totals.unpaid_amount|default:0 }}</p>
+        <hr>
+        <p><strong>Кол-во оплаченных:</strong> {{ totals.paid_count|default:0 }}</p>
+        <p><strong>Кол-во неоплаченных:</strong> {{ totals.unpaid_count|default:0 }}</p>
+      </div>
+    </article>
+
+    <h2 class="subtitle">Последние счета</h2>
+    <div class="table-container">
+      <table class="table is-striped is-fullwidth">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Заказ</th>
+            <th>Дата</th>
+            <th>Сумма</th>
+            <th>Статус</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in invoices %}
+            <tr>
+              <td>{{ inv.id }}</td>
+              <td>{% if inv.order %}<a href="{% url 'purchase_sheet' inv.order.pk %}">№{{ inv.order.order_number }}</a>{% else %}—{% endif %}</td>
+              <td>{{ inv.issued_at|date:"Y-m-d" }}</td>
+              <td>{{ inv.amount }}</td>
+              <td>{% if inv.paid %}<span class="tag is-success">Оплачен</span>{% else %}<span class="tag is-warning">Не оплачен</span>{% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="has-text-centered">Нет данных</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="buttons is-right">
+      <a href="{% url 'orders_all' %}" class="button">К заказам</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

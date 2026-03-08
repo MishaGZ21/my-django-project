@@ -1,0 +1,20 @@
+{% load l10n %}
+{# core/_price_row.html #}
+<div class="column is-6-tablet is-4-desktop">
+  <label class="label" for="id_price_{{ item.id }}">
+    {{ item.title }}
+    <small class="tag is-light ml-2 js-was" data-val="{{ item.value|default:0|floatformat:0|unlocalize }}">
+      Было: {{ item.value|default:0|floatformat:0|unlocalize }}
+    </small>
+  </label>
+  <div class="control has-icons-left">
+    <input id="id_price_{{ item.id }}"
+           name="price_{{ item.id }}"
+           type="text"
+           inputmode="decimal"
+           class="input js-price"
+           value="{{ item.value|default:0|floatformat:0|unlocalize }}"
+           autocomplete="off">
+    <span class="icon is-small is-left">₸</span>
+  </div>
+</div>

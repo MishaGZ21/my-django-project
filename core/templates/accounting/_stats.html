@@ -1,0 +1,887 @@
+<section class="section pt-4">
+  <h2 class="title is-5">Сотрудники и заработная пллата</h2>
+
+  <!-- Форма создания / редактирования сотрудника -->
+  <div class="box">
+    <h3 class="subtitle is-6">Новый сотрудник</h3>
+    <form id="staff-create-form" class="field is-grouped is-grouped-multiline">
+      <input type="hidden" name="employee_id" id="staff-employee-id">
+
+      <div class="field">
+        <label class="label is-small">ФИО</label>
+        <div class="control">
+          <input class="input is-small" type="text" name="full_name" placeholder="ФИО сотрудника">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label is-small">Должность</label>
+        <div class="control">
+          <input class="input is-small" type="text" name="position" placeholder="Напр. дизайнер">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label is-small">Оклад, тг</label>
+        <div class="control">
+          <input class="input is-small" type="number" step="0.01" name="base_salary" placeholder="Напр. 200000">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label is-small">Удержание, тг</label>
+        <div class="control">
+          <input class="input is-small" type="number" step="0.01" name="deduction_amount" placeholder="Напр. 12500">
+        </div>
+      </div>
+
+      <div class="field is-align-self-flex-end">
+        <div class="control">
+          <button type="submit" class="button is-link is-small" id="staff-submit-btn">
+            Добавить
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <p class="is-size-7 has-text-grey mt-1">
+      Удержание — фиксированная сумма, которую удерживаем с оклада каждый месяц
+      (пенсионка, медстраховка и т.п.). Фактическая выплата = оклад − удержание.
+    </p>
+  </div>
+
+  <!-- Таблица сотрудников -->
+  <div class="box">
+    <div class="level is-mobile mb-2">
+      <div class="level-left">
+        <h3 class="subtitle is-6 mb-0">Сотрудники</h3>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="table is-fullwidth is-striped is-hoverable" id="staff-table">
+        <thead>
+          <tr>
+            <th>ФИО</th>
+            <th>Должность</th>
+            <th class="has-text-right">Оклад, тг</th>
+            <th class="has-text-right">Удержание, тг</th>
+            <th class="has-text-right">К выплате, тг</th>
+            <th class="has-text-centered js-current-month-header">Текущий месяц</th>
+            <th class="has-text-centered">Действия</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Аванс -->
+  <div class="box">
+    <h3 class="subtitle is-6">Аванс</h3>
+
+    <form id="advance-form" class="field is-grouped is-grouped-multiline">
+      <div class="field">
+        <label class="label is-small">Сотрудник</label>
+        <div class="control">
+          <div class="select is-small">
+            <select name="employee_id" id="advance-employee-select">
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label is-small">Сумма аванса, тг</label>
+        <div class="control">
+          <input class="input is-small" type="number" step="0.01" name="amount" placeholder="Напр. 30000">
+        </div>
+      </div>
+
+      <div class="field is-expanded">
+        <label class="label is-small">Комментарий</label>
+        <div class="control">
+          <input class="input is-small" type="text" name="comment" placeholder="Напр. Аванс за первую половину месяца">
+        </div>
+      </div>
+
+      <div class="field is-align-self-flex-end">
+        <div class="control">
+          <button type="submit" class="button is-warning is-small">
+            Выдать аванс
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <div class="table-container mt-3">
+      <table class="table is-fullwidth is-striped is-hoverable" id="advance-table">
+        <thead>
+          <tr>
+            <th>Дата</th>
+            <th>Сотрудник</th>
+            <th class="has-text-right">Сумма, тг</th>
+            <th class="has-text-right">Уплачено, тг</th>
+            <th>Комментарий</th>
+            <th class="has-text-centered">Действия</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <p class="is-size-7 has-text-grey mt-1">
+      Авансы увеличивают баланс долга по авансам у сотрудника. При следующей выплате ЗП
+      часть этого долга можно удержать, указав сумму в колонке «Аванс к удержанию» в таблице ниже.
+      Погашенный аванс подсвечивается зелёным.
+    </p>
+  </div>
+
+  <!-- Расчёт и выплата зарплаты за период -->
+  <div class="box">
+    <h3 class="subtitle is-6">Выплата заработной платы за текущий период</h3>
+
+    <div class="table-container">
+      <table class="table is-fullwidth is-striped is-hoverable" id="salary-table">
+        <thead>
+          <tr>
+            <th class="has-text-centered">
+              <input type="checkbox" id="salary-select-all">
+            </th>
+            <th>ФИО</th>
+            <th class="has-text-right">Оклад за период, тг</th>
+            <th class="has-text-right">Аванс к удержанию, тг</th>
+            <th class="has-text-right">Сумма выплаты, тг</th>
+            <th class="has-text-centered">Действие</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <p class="has-text-right has-text-weight-semibold mt-2">
+      Итого к выплате: <span id="salary-total-amount">0</span> тг
+    </p>
+    
+    <div class="has-text-right mt-1" id="salary-bulk-actions" style="display:none;">
+      <button type="button" class="button is-small is-success" id="salary-bulk-pay-btn">
+        Зачислить выбранным
+      </button>
+    </div>
+
+    <p class="is-size-7 has-text-grey mt-1">
+      Оклад за период рассчитывается как (оклад − удержание) / 2. По умолчанию к удержанию
+      предлагается вся доступная сумма авансов, но вы можете указать меньшую сумму, чтобы
+      разбить погашение аванса на несколько ЗП.
+    </p>
+  </div>
+
+  <!-- Журнал выплат -->
+  <div class="box">
+    <div class="level is-mobile mb-2">
+      <div class="level-left">
+        <h3 class="subtitle is-6 mb-0">Журнал выплат</h3>
+      </div>
+      <div class="level-right">
+        <div class="field is-narrow">
+          <label class="label is-small mb-1">Месяц</label>
+          <div class="control">
+            <input class="input is-small" type="month" id="salary-history-month">
+          </div>
+        </div>
+        <div class="field is-narrow">
+          <label class="label is-small mb-1">Сотрудник</label>
+          <div class="control">
+            <div class="select is-small">
+              <select id="salary-history-employee">
+                <option value="">Все сотрудники</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="field is-narrow is-align-self-flex-end">
+          <div class="control">
+            <button type="button" class="button is-small" id="salary-history-apply">Применить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="table is-fullwidth is-striped is-hoverable" id="salary-history-table">
+        <thead>
+        <tr>
+          <th>Дата</th>
+          <th>Сотрудник</th>
+          <th>Тип</th>
+          <th class="has-text-right">Начислено, тг</th>
+          <th class="has-text-right">Удержание, тг</th>
+          <th class="has-text-right">К выплате, тг</th>
+          <th>Комментарий</th>
+          <th class="has-text-centered">Действия</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <p class="is-size-7 has-text-grey mt-1">
+      Здесь отображаются выплаты (зарплаты) за выбранный месяц. Можно фильтровать по сотруднику.
+    </p>
+  </div>
+</section>
+
+<!-- Модальное окно удаления -->
+<div class="modal" id="payment-delete-modal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Удаление записи</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+    <section class="modal-card-body">
+      <p class="mb-2">Для удаления записи введите пароль.</p>
+      <div class="field">
+        <label class="label is-small">Пароль</label>
+        <div class="control">
+          <input class="input is-small" type="password" id="delete-password-input">
+        </div>
+      </div>
+      <p class="help is-danger" id="delete-error-text" style="display:none;"></p>
+    </section>
+    <footer class="modal-card-foot">
+      <button class="button is-danger is-small" id="delete-confirm-btn">Удалить</button>
+      <button class="button is-light is-small" id="delete-cancel-btn">Отмена</button>
+    </footer>
+  </div>
+</div>
+
+<script>
+(function() {
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  const csrftoken = getCookie("csrftoken");
+
+  const staffTableBody = document.querySelector("#staff-table tbody");
+  const staffCreateForm = document.getElementById("staff-create-form");
+  const staffEmployeeIdInput = document.getElementById("staff-employee-id");
+  const staffSubmitButton = document.getElementById("staff-submit-btn");
+
+  const advanceForm = document.getElementById("advance-form");
+  const advanceEmployeeSelect = document.getElementById("advance-employee-select");
+  const advanceTableBody = document.querySelector("#advance-table tbody");
+
+  const salaryTableBody = document.querySelector("#salary-table tbody");
+  const salaryTotalElement = document.getElementById("salary-total-amount");
+  const salarySelectAll = document.getElementById("salary-select-all");
+  const salaryBulkActions = document.getElementById("salary-bulk-actions");
+  const salaryBulkPayBtn = document.getElementById("salary-bulk-pay-btn");
+
+  const salaryHistoryMonth = document.getElementById("salary-history-month");
+  const salaryHistorySelect = document.getElementById("salary-history-employee");
+  const salaryHistoryApply = document.getElementById("salary-history-apply");
+  const salaryHistoryBody = document.querySelector("#salary-history-table tbody");
+
+  const paymentDeleteModal = document.getElementById("payment-delete-modal");
+  const deletePasswordInput = document.getElementById("delete-password-input");
+  const deleteErrorText = document.getElementById("delete-error-text");
+  const deleteConfirmBtn = document.getElementById("delete-confirm-btn");
+  const deleteCancelBtn = document.getElementById("delete-cancel-btn");
+  const modalCloseBtn = paymentDeleteModal.querySelector(".modal-card-head .delete");
+  const modalBg = paymentDeleteModal.querySelector(".modal-background");
+
+  const currentMonthHeader = document.querySelector(".js-current-month-header");
+
+  if (!staffTableBody || !staffCreateForm || !staffEmployeeIdInput || !staffSubmitButton ||
+      !advanceForm || !advanceEmployeeSelect || !advanceTableBody ||
+      !salaryTableBody || !salaryTotalElement || !salarySelectAll || !salaryBulkActions || !salaryBulkPayBtn ||
+      !salaryHistoryMonth || !salaryHistorySelect ||
+      !salaryHistoryApply || !salaryHistoryBody ||
+      !paymentDeleteModal || !deletePasswordInput || !deleteErrorText ||
+      !deleteConfirmBtn || !deleteCancelBtn || !modalCloseBtn || !modalBg) {
+    return;
+  }
+
+  // Галочка "выбрать всех" в таблице зарплат
+  salarySelectAll.addEventListener("change", function() {
+    const checked = salarySelectAll.checked;
+    const checkboxes = getSalaryRowCheckboxes();
+    checkboxes.forEach(cb => {
+      cb.checked = checked;
+    });
+    updateSalaryTotal();
+  });
+
+  let staffEmployees = [];
+  let paymentIdToDelete = null;
+
+  function openDeleteModal(paymentId) {
+    paymentIdToDelete = paymentId;
+    deletePasswordInput.value = "";
+    deleteErrorText.style.display = "none";
+    paymentDeleteModal.classList.add("is-active");
+    deletePasswordInput.focus();
+  }
+
+  function closeDeleteModal() {
+    paymentIdToDelete = null;
+    paymentDeleteModal.classList.remove("is-active");
+  }
+
+  function formatTenge(val) {
+    if (val === null || val === undefined) return "0";
+    const n = Math.round(val);
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "";
+    const [y, m, d] = iso.split("-");
+    return `${d}.${m}.${y}`;
+  }
+
+  function getSalaryRowCheckboxes() {
+    return Array.from(salaryTableBody.querySelectorAll(".js-salary-select"));
+  }
+
+  function syncSelectAllState() {
+    const checkboxes = getSalaryRowCheckboxes();
+    if (checkboxes.length === 0) {
+      salarySelectAll.checked = false;
+      salarySelectAll.indeterminate = false;
+      return;
+    }
+    const checkedCount = checkboxes.filter(cb => cb.checked).length;
+    salarySelectAll.checked = (checkedCount === checkboxes.length);
+    salarySelectAll.indeterminate = (checkedCount > 0 && checkedCount < checkboxes.length);
+  }
+
+  function updateBulkActionsVisibility() {
+    const checkboxes = getSalaryRowCheckboxes();
+    const anyChecked = checkboxes.some(cb => cb.checked);
+    salaryBulkActions.style.display = anyChecked ? "block" : "none";
+  }
+
+  function initHistoryMonthDefault() {
+    if (!salaryHistoryMonth.value) {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      salaryHistoryMonth.value = `${y}-${m}`;
+    }
+  }
+
+  function fillHistoryEmployeeSelect(employees) {
+    salaryHistorySelect.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = "";
+    allOpt.textContent = "Все сотрудники";
+    salaryHistorySelect.appendChild(allOpt);
+
+    employees.forEach(emp => {
+      const opt = document.createElement("option");
+      opt.value = emp.id;
+      opt.textContent = emp.full_name;
+      salaryHistorySelect.appendChild(opt);
+    });
+  }
+
+  async function loadSalaryHistory() {
+    const employeeId = salaryHistorySelect.value || "";
+    const month = salaryHistoryMonth.value || "";
+  
+    const params = new URLSearchParams();
+    if (month) params.set("month", month);
+    if (employeeId) params.set("employee_id", employeeId);
+  
+    const resp = await fetch(
+      "{% url 'accounting_salary_payments_list' %}?" + params.toString(),
+      { headers: { "X-Requested-With": "XMLHttpRequest" } }
+    );
+  
+    if (!resp.ok) {
+      console.error("Ошибка загрузки журнала выплат", resp.status);
+      return;
+    }
+  
+    const data = await resp.json();
+    const payments = data.payments || [];
+    salaryHistoryBody.innerHTML = "";
+  
+    payments.forEach(p => {
+      const deduction = p.deduction_amount || 0;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${formatDate(p.pay_date)}</td>
+        <td>${p.employee_name}</td>
+        <td>${p.kind_label}</td>
+        <td class="has-text-right">${formatTenge(p.gross_amount)}</td>
+        <td class="has-text-right has-text-danger">${deduction ? "-" + formatTenge(deduction) : "0"}</td>
+        <td class="has-text-right has-text-success has-text-weight-semibold">${formatTenge(p.net_amount)}</td>
+        <td>${p.comment || ""}</td>
+        <td class="has-text-centered">
+          <button type="button" class="button is-small is-danger is-light js-payment-delete" data-id="${p.id}">
+            🗑
+          </button>
+        </td>
+      `;
+      salaryHistoryBody.appendChild(tr);
+    });
+  }
+
+  function fillStaffTable(employees) {
+    staffTableBody.innerHTML = "";
+    employees.forEach(emp => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${emp.full_name}</td>
+        <td>${emp.position || ""}</td>
+        <td class="has-text-right">${formatTenge(emp.base_salary)}</td>
+        <td class="has-text-right">${formatTenge(emp.deduction_amount)}</td>
+        <td class="has-text-right">${formatTenge(emp.net_salary)}</td>
+        <td class="has-text-centered">
+          ${emp.current_month_status || ""}
+        </td>
+        <td class="has-text-centered">
+          <button type="button" class="button is-small is-light js-staff-edit" data-id="${emp.id}">
+            Редактировать
+          </button>
+        </td>
+      `;
+      staffTableBody.appendChild(tr);
+    });
+  }
+
+  function fillAdvanceEmployeeSelect(employees) {
+    advanceEmployeeSelect.innerHTML = "";
+    employees.forEach(emp => {
+      const opt = document.createElement("option");
+      opt.value = emp.id;
+      opt.textContent = emp.full_name;
+      advanceEmployeeSelect.appendChild(opt);
+    });
+  }
+
+  async function loadAdvances() {
+    const resp = await fetch("{% url 'accounting_staff_advance_list' %}", {
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+    if (!resp.ok) {
+      console.error("Ошибка загрузки журнала авансов", resp.status);
+      return;
+    }
+    const data = await resp.json();
+    const items = data.items || [];
+    advanceTableBody.innerHTML = "";
+    items.forEach(p => {
+      const tr = document.createElement("tr");
+      if (p.is_closed) {
+        tr.classList.add("has-background-success-light");
+      }
+      const paid = p.paid_amount || 0;
+      tr.innerHTML = `
+        <td>${formatDate(p.pay_date)}</td>
+        <td>${p.employee_name}</td>
+        <td class="has-text-right">${formatTenge(p.amount)}</td>
+        <td class="has-text-right">${paid ? formatTenge(p.paid_amount) : "0"}</td>
+        <td>${p.comment || ""}</td>
+        <td class="has-text-centered">
+          <button type="button" class="button is-small is-danger is-light js-payment-delete" data-id="${p.id}">
+            🗑
+          </button>
+        </td>
+      `;
+      advanceTableBody.appendChild(tr);
+    });
+  }
+
+  function updateSalaryTotal() {
+    let total = 0;
+
+    const rows = Array.from(salaryTableBody.querySelectorAll("tr"));
+    const selectedRows = rows.filter(tr => {
+      const cb = tr.querySelector(".js-salary-select");
+      return cb && cb.checked;
+    });
+
+    const rowsToSum = selectedRows.length > 0 ? selectedRows : rows;
+
+    rowsToSum.forEach(tr => {
+      const cell = tr.querySelector(".js-salary-pay-amount");
+      if (!cell) return;
+      const text = cell.textContent.replace(/\s+/g, "").trim();
+      const val = parseFloat(text || "0");
+      if (!isNaN(val)) {
+        total += val;
+      }
+    });
+
+    salaryTotalElement.textContent = formatTenge(total);
+    updateBulkActionsVisibility();
+  }
+
+  function fillSalaryTable(employees) {
+    salaryTableBody.innerHTML = "";
+    employees.forEach(emp => {
+      const netMonth = emp.net_salary || 0;
+      const half = netMonth / 2;
+      const advanceBalance = emp.advance_balance || 0;
+      const defaultDeduction = Math.min(half, advanceBalance);
+
+      const tr = document.createElement("tr");
+      tr.dataset.empId = emp.id;
+      tr.dataset.half = half;
+
+      tr.innerHTML = `
+        <td class="has-text-centered">
+          <input type="checkbox" class="js-salary-select">
+        </td>
+        <td>${emp.full_name}</td>
+        <td class="has-text-right">${formatTenge(half)}</td>
+        <td class="has-text-right">
+          <input class="input is-small js-advance-deduction" type="number" step="0.01"
+                 value="${defaultDeduction > 0 ? defaultDeduction : 0}"
+                 data-balance="${advanceBalance}">
+          <p class="is-size-7 has-text-grey">Баланс аванса: ${formatTenge(advanceBalance)}</p>
+        </td>
+        <td class="has-text-right js-salary-pay-amount">${formatTenge(half - defaultDeduction)}</td>
+        <td class="has-text-centered">
+          <button type="button" class="button is-small is-success js-salary-pay">
+            Зачислить ЗП
+          </button>
+        </td>
+      `;
+      salaryTableBody.appendChild(tr);
+    });
+
+    // Сбрасываем "выбрать всех" и пересчитываем сумму
+    if (salarySelectAll) {
+      salarySelectAll.checked = false;
+      salarySelectAll.indeterminate = false;
+    }
+    updateSalaryTotal();
+  }
+
+  async function loadStaff() {
+    const resp = await fetch("{% url 'accounting_staff_list' %}", {
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+    if (!resp.ok) {
+      console.error("Ошибка загрузки сотрудников", resp.status);
+      return;
+    }
+    const data = await resp.json();
+    const employees = data.employees || [];
+    staffEmployees = employees;
+
+    // Обновляем заголовок столбца с текущим месяцем
+    if (currentMonthHeader && employees.length > 0) {
+      const label = employees[0].current_month_label || "";
+      if (label) {
+        currentMonthHeader.textContent = `Текущий месяц (${label})`;
+      }
+    }
+
+    fillStaffTable(employees);
+    fillAdvanceEmployeeSelect(employees);
+    fillHistoryEmployeeSelect(employees);
+    fillSalaryTable(employees);
+  }
+
+  // Создание / редактирование сотрудника
+  staffCreateForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const formData = new FormData(staffCreateForm);
+    const employeeId = staffEmployeeIdInput.value;
+
+    let url;
+    if (employeeId) {
+      url = "{% url 'accounting_staff_update' employee_id=0 %}".replace("0", employeeId);
+    } else {
+      url = "{% url 'accounting_staff_create' %}";
+    }
+
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+        "X-CSRFToken": csrftoken,
+      },
+      body: formData,
+    });
+
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || data.ok === false) {
+      alert(data.error || "Ошибка при сохранении сотрудника");
+      return;
+    }
+
+    window.location.reload();
+  });
+
+  // Редактирование сотрудника по кнопке в таблице
+  staffTableBody.addEventListener("click", function(e) {
+    const btn = e.target.closest(".js-staff-edit");
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+    const emp = staffEmployees.find(item => String(item.id) === String(id));
+    if (!emp) return;
+
+    staffCreateForm.querySelector('input[name="full_name"]').value = emp.full_name;
+    staffCreateForm.querySelector('input[name="position"]').value = emp.position || "";
+    staffCreateForm.querySelector('input[name="base_salary"]').value = emp.base_salary;
+    staffCreateForm.querySelector('input[name="deduction_amount"]').value = emp.deduction_amount;
+
+    staffEmployeeIdInput.value = emp.id;
+    if (staffSubmitButton) {
+      staffSubmitButton.textContent = "Сохранить";
+    }
+
+    staffCreateForm.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  // Выдача аванса
+  advanceForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const formData = new FormData(advanceForm);
+
+    const resp = await fetch("{% url 'accounting_staff_advance_create' %}", {
+      method: "POST",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+        "X-CSRFToken": csrftoken,
+      },
+      body: formData,
+    });
+
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || data.ok === false) {
+      alert(data.error || "Ошибка при выдаче аванса");
+      return;
+    }
+
+    window.location.reload();
+  });
+
+  // Пересчёт суммы выплаты при изменении "Аванс к удержанию"
+  salaryTableBody.addEventListener("input", function(e) {
+    const input = e.target.closest(".js-advance-deduction");
+    if (!input) return;
+
+    const tr = input.closest("tr");
+    const half = parseFloat(tr.dataset.half) || 0;
+    let val = parseFloat(input.value || "0");
+    const balance = parseFloat(input.dataset.balance || "0");
+
+    if (val < 0) val = 0;
+    if (val > balance) val = balance;
+    input.value = val;
+
+    const payCell = tr.querySelector(".js-salary-pay-amount");
+    const pay = half - val;
+    payCell.textContent = formatTenge(pay);
+
+    updateSalaryTotal();
+  });
+
+  // Переключение галочки у конкретного сотрудника (выбор строки для массовой выплаты)
+  salaryTableBody.addEventListener("change", function(e) {
+    const cb = e.target.closest(".js-salary-select");
+    if (!cb) return;
+
+    syncSelectAllState();
+    updateSalaryTotal();
+  });
+
+  // Зачислить ЗП (одному сотруднику)
+  salaryTableBody.addEventListener("click", async function(e) {
+    const btn = e.target.closest(".js-salary-pay");
+    if (!btn) return;
+
+    const tr = btn.closest("tr");
+    const empId = tr.dataset.empId;
+    const half = parseFloat(tr.dataset.half) || 0;
+    const input = tr.querySelector(".js-advance-deduction");
+    const advanceToDeduct = parseFloat(input.value || "0");
+
+    async function sendPayRequest(force) {
+      const formData = new FormData();
+      formData.set("amount", String(half));
+      formData.set("advance_deduction", String(advanceToDeduct));
+      formData.set("extra_deduction", "0");
+      formData.set("kind", "salary");
+      if (force) {
+        formData.set("force", "1");
+      }
+
+      const resp = await fetch(
+        "{% url 'accounting_staff_pay' employee_id=0 %}".replace("0", empId),
+        {
+          method: "POST",
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": csrftoken,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await resp.json().catch(() => ({}));
+
+      // Если сервер просит подтверждение — показываем confirm
+      if (data.need_confirm) {
+        const msg = data.error || "За этот период уже есть выплата. Выдать ещё раз?";
+        if (confirm(msg)) {
+          // Повторный вызов с флагом force
+          return await sendPayRequest(true);
+        } else {
+          return;
+        }
+      }
+
+      if (!resp.ok || data.ok === false) {
+        alert(data.error || "Ошибка при выплате зарплаты");
+        return;
+      }
+
+      window.location.reload();
+    }
+
+    // первый вызов — без принудительного флага
+    await sendPayRequest(false);
+  });
+
+  // Массовая выплата ЗП выбранным сотрудникам
+  salaryBulkPayBtn.addEventListener("click", async function() {
+    const rows = Array.from(salaryTableBody.querySelectorAll("tr")).filter(tr => {
+      const cb = tr.querySelector(".js-salary-select");
+      return cb && cb.checked;
+    });
+
+    if (rows.length === 0) {
+      return;
+    }
+
+    const totalText = salaryTotalElement.textContent || "0";
+    const confirmMsg = `Выплатить зарплату выбранным сотрудникам на сумму ${totalText} тг?`;
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+
+    for (const tr of rows) {
+      const empId = tr.dataset.empId;
+      const half = parseFloat(tr.dataset.half) || 0;
+      const input = tr.querySelector(".js-advance-deduction");
+      const advanceToDeduct = parseFloat(input.value || "0");
+
+      const formData = new FormData();
+      formData.set("amount", String(half));
+      formData.set("advance_deduction", String(advanceToDeduct));
+      formData.set("extra_deduction", "0");
+      formData.set("kind", "salary");
+
+      const resp = await fetch(
+        "{% url 'accounting_staff_pay' employee_id=0 %}".replace("0", empId),
+        {
+          method: "POST",
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": csrftoken,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || data.ok === false) {
+        alert(data.error || "Ошибка при выплате зарплаты");
+        return;
+      }
+    }
+
+    window.location.reload();
+  });
+
+  // Открыть модал удаления
+  document.addEventListener("click", function(e) {
+    const btn = e.target.closest(".js-payment-delete");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    openDeleteModal(id);
+  });
+
+  // Закрытие модального окна
+  modalCloseBtn.addEventListener("click", function() { closeDeleteModal(); });
+  modalBg.addEventListener("click", function() { closeDeleteModal(); });
+  deleteCancelBtn.addEventListener("click", function(e) {
+    e.preventDefault();
+    closeDeleteModal();
+  });
+
+  // Подтверждение удаления
+  deleteConfirmBtn.addEventListener("click", async function(e) {
+    e.preventDefault();
+    if (!paymentIdToDelete) {
+      closeDeleteModal();
+      return;
+    }
+    const password = deletePasswordInput.value || "";
+    const formData = new FormData();
+    formData.set("password", password);
+
+    const resp = await fetch(
+      "{% url 'accounting_salary_payment_delete' payment_id=0 %}".replace("0", paymentIdToDelete),
+      {
+        method: "POST",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": csrftoken,
+        },
+        body: formData,
+      }
+    );
+
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok || data.ok === false) {
+      deleteErrorText.textContent = data.error || "Ошибка удаления";
+      deleteErrorText.style.display = "block";
+      return;
+    }
+
+    closeDeleteModal();
+    window.location.reload();
+  });
+
+  salaryHistoryApply.addEventListener("click", function() {
+    loadSalaryHistory();
+  });
+  
+  salaryHistorySelect.addEventListener("change", function() {
+    loadSalaryHistory();
+  });
+  
+  salaryHistoryMonth.addEventListener("change", function() {
+    loadSalaryHistory();
+  });
+  
+  initHistoryMonthDefault();
+  loadStaff();
+  loadAdvances();
+  loadSalaryHistory();
+})();
+</script>
+

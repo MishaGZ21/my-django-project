@@ -1,0 +1,1198 @@
+{% extends "base.html" %}
+{% block title %}Все заказы{% endblock %}
+
+
+
+
+{% block content %}
+<style>
+.button{
+  border-radius: 10px;
+}
+.sort-arrow{ font-size:.8em; opacity:.7; margin-left:.25em; }
+  th a{ color:inherit; text-decoration:none; }
+  th a:hover{ text-decoration:underline; }
+  
+th a{ color:inherit; text-decoration:none; }
+th a:hover{ text-decoration:underline; }
+
+/* Всегда показываем пару стрелок ▲▼ */
+.sort-arrows{
+  display:inline-flex; flex-direction:column; line-height:0.8;
+  margin-left:.35em; font-size:.85em; opacity:.45;
+  vertical-align:middle;
+}
+/* Активная колонка — ярче */
+.sort-arrows.is-active{ opacity:1; }
+/* Подсветка текущего направления: вторую стрелку приглушаем */
+.sort-arrows.is-active.asc  .down{ opacity:.35; }
+.sort-arrows.is-active.desc .up  { opacity:.35; }  
+
+
+/* Подсветка ТОЛЬКО ячейки "Срок сдачи" */
+.due-green{
+  background: #e8f5e9;   /* светло-зелёный */
+  color: #1b5e20;        /* тёмно-зелёный */
+  font-weight: 600;
+  border-left: 2px solid #a5d6a7;
+  border-right: 2px solid #a5d6a7;
+  padding: 6px 10px;
+}
+.due-warning{
+  background: #fff7e6;
+  color: #8a4b00;
+  font-weight: 600;
+  border-left: 2px solid #ffd699;
+  border-right: 2px solid #ffd699;
+  padding: 6px 10px;
+}
+.due-danger{
+  background: #fdecea;
+  color: #b71c1c;
+  font-weight: 700;
+  border-left: 2px solid #f5b5af;
+  border-right: 2px solid #f5b5af;
+  padding: 6px 10px;
+}
+
+
+
+.status-cell {
+  position: relative;
+  background: #f5f5f5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.status-progress {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  background: linear-gradient(90deg,#3b82f6,#ff00d4); /* синий градиент */
+  opacity: 0.25; /* мягкий фон */
+}
+.status-text {
+  position: relative;
+  z-index: 1;
+  display: block;
+  text-align: center;
+  font-weight: 600;
+  padding: 2px 4px;
+}
+.table td, .table th {
+  border: 1px solid #dbdbdb;
+  border-width: 0 0 1px;
+  padding: .15em .2em;
+  vertical-align: top;
+}
+
+.warehouse-indicator {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:22px; height:22px;
+  border-radius:50%;
+  font-size:14px;
+  font-weight:bold;
+  color:#fff;
+}
+.warehouse-false { background:#ef4444; }  /* красный */
+.warehouse-true  { background:#10b981; }  /* зелёный */
+
+/* ===== Новый заказ — современный стиль (только CSS) ===== */
+#newOrderModal .modal-card{
+  border-radius: 14px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,.18);
+}
+#newOrderModal .modal-card-head{
+  background: linear-gradient(135deg, #10b981 0%, #047857 100%) !important;
+  color: #fff; border: none; padding: 16px 18px;
+}
+#newOrderModal .modal-card-title{
+  font-weight: 700; letter-spacing: .2px; color:#fff !important;
+}
+#newOrderModal .delete{ filter: brightness(0) invert(1); opacity: .95; }
+#newOrderModal .delete:hover{ opacity: 1; }
+
+#newOrderModal .modal-card-body{
+  background: #f7fafc; padding: 18px; /* чуть плотнее */
+}
+
+/* Поля и подписи */
+#newOrderModal .field{ margin-bottom: 14px; }
+#newOrderModal .label{
+  font-weight: 600; color: #374151; margin-bottom: 6px;
+}
+#newOrderModal input[type="text"],
+#newOrderModal input[type="tel"],
+#newOrderModal input[type="number"],
+#newOrderModal input[type="date"],
+#newOrderModal textarea,
+#newOrderModal select{
+  width: 100%;
+  border: 1px solid #d9dee3; border-radius: 10px;
+  padding: .65rem .75rem; box-shadow: none; background: #fff;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+#newOrderModal input:focus,
+#newOrderModal textarea:focus,
+#newOrderModal select:focus{
+  outline: none; border-color:#34d399 !important;
+  box-shadow:0 0 0 3px rgba(52,211,153,.28) !important;
+  background: #fff;
+}
+
+/* Чекбокс — компактная «карточка» */
+#newOrderModal label.checkbox{
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 1px solid #eef0f2;
+  padding: 10px 12px; border-radius: 10px; color: #1f2937;
+}
+#newOrderModal label.checkbox input[type="checkbox"]{
+  width: 18px; height: 18px;
+}
+
+/* Блок телефона WhatsApp — визуальная группировка */
+#newOrderModal #whatsapp-field{
+  background: #fff; border: 1px solid #eef0f2;
+  padding: 12px; border-radius: 10px;
+}
+
+/* Кнопки внизу — «липкий» футер внутри тела модалки */
+#newOrderModal .field.is-grouped.is-justify-content-flex-end{
+  position: sticky; bottom: 0; z-index: 1;
+  background: rgba(255,255,255,.95);
+  backdrop-filter: saturate(1.1) blur(2px);
+  margin-top: 16px; padding: 12px 0 0;
+  border-top: 1px solid #eef0f2;
+}
+#newOrderModal .field.is-grouped .button{
+  border-radius: 10px;
+  padding: .6rem .9rem;
+}
+#newOrderModal .field.is-grouped .button.is-link{
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  border: none; color: #fff;
+}
+#newOrderModal .field.is-grouped .button.is-link:hover{
+  filter: brightness(.96);
+}
+
+/* Сообщение об ошибке — чуть аккуратнее */
+#newOrderModal .message.is-danger{
+  border-radius: 10px; border: 1px solid #fecaca;
+}
+#newOrderModal .message.is-danger .message-body{
+  padding: 12px 14px;
+  
+}
+
+.button.btn-sm.btn-outline-primary{
+  border-radius: 2px;
+  font-size: .75rem;
+  background-color: #984fd1;
+  border-color: transparent;
+  color: #fff;
+  border-width: 1px;
+  cursor: pointer;
+  justify-content: center;
+  padding-bottom: calc(.5em - 1px);
+  padding-left: 1em;
+  padding-right: 1em;
+  padding-top: calc(.5em - 1px);
+  text-align: center;
+  white-space: nowrap;
+}
+.button.is-small{
+  border-radius: 10px;
+}
+</style>
+{% with "new=20,calc=40,payment=60,warehouse=80,work=100" as percent_map %}
+<!-- Модалка: Новый заказ -->
+<div class="modal" id="newOrderModal">
+  <div class="modal-background" onclick="closeNewOrderModal()"></div>
+  <div class="modal-card" style="width: 720px; max-width: 95vw;">
+    <header class="modal-card-head">
+      <p class="modal-card-title" style="color: #000000">Новый заказ</p>
+      <button class="delete" aria-label="close" onclick="closeNewOrderModal()"></button>
+    </header>
+    <section class="modal-card-body">
+      <form method="post" id="newOrderForm">
+        {% csrf_token %}
+        <div class="field">
+          <label class="label">Имя заказчика</label>
+          {{ form.customer_name }}
+        </div>
+        
+        <div class="field">
+          <label class="label">Фамилия</label>
+          {{ form.last_name }}
+        </div>
+        
+        <div class="field">
+          <label class="label">ИИН</label>
+          {{ form.iin }}
+        </div>
+        
+        <div class="field">
+          <label class="label">Телефон заказчика</label>
+          {{ form.phone }}
+        </div>
+
+        <div class="field">
+          <label class="checkbox">
+            {{ form.has_whatsapp }} Есть WhatsApp у этого номера
+          </label>
+        </div>
+        <div class="field" id="whatsapp-field">
+          <label class="label">Телефон для WhatsApp (если отличается)</label>
+          {{ form.whatsapp_phone }}
+        </div>
+        <div class="field is-grouped is-justify-content-flex-end">
+          <p class="control">
+            <button type="button" class="button" onclick="closeNewOrderModal()">Отмена</button>
+          </p>
+          <p class="control">
+            <button type="submit" class="button is-link">Сохранить</button>
+          </p>
+        </div>
+      </form>
+      {% if form.errors %}
+        <article class="message is-danger mt-3">
+          <div class="message-body">
+            Проверьте корректность заполнения полей формы.
+          </div>
+        </article>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+
+
+<h1 class="title">Все заказы</h1>
+
+<div class="mb-4">
+  <button class="button is-primary" onclick="openNewOrderModal()">Новый заказ</button>
+  <a class="button is-warning" href="{% url 'quick_quote' %}">Быстрый расчёт</a>
+</div>
+
+
+{% if created_order %}
+<div class="modal is-active" id="createdModal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Заказ сохранён</p>
+      <button class="delete" aria-label="close" onclick="closeCreatedModal()"></button>
+    </header>
+    <section class="modal-card-body">
+      <p>Заказ №{{ created_order.order_number }} успешно сохранён! Хотите создать «Лист закупа» сейчас?</p>
+    </section>
+    <footer class="modal-card-foot">
+      <a href="{% url 'purchase_sheet' created_order.pk %}" class="button is-primary">Создать Лист закупа</a>
+      <button class="button" onclick="closeCreatedModal()">Позже</button>
+    </footer>
+  </div>
+</div>
+
+{% endif %}
+
+
+
+<div class="content">
+  <p><strong>Легенда:</strong>
+    <span class="tag is-danger">Просрочен</span>
+    <span class="tag is-warning">≤ 3 дней</span>
+    <span class="tag is-success">> 7 дней</span>
+  </p>
+</div>
+
+
+<div class="box mb-4">
+  <form method="get">
+    <div class="columns is-multiline is-mobile">
+      <div class="column is-12-mobile is-4-tablet">
+        <label class="label is-small">Статус</label>
+        <div class="select is-fullwidth">
+          <select name="status">
+            <option value="">Все статусы</option>
+            <option value="new" {% if flt.status == "new" %}selected{% endif %}>Новый</option>
+            <option value="calc" {% if flt.status == "calc" %}selected{% endif %}>Расчёт</option>
+            <option value="payment" {% if flt.status == "payment" %}selected{% endif %}>Закуп</option>
+            <option value="warehouse" {% if flt.status == "warehouse" %}selected{% endif %}>Договор</option>
+            <option value="work" {% if flt.status == "work" %}selected{% endif %}>В работе</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="column is-12-mobile is-8-tablet">
+        <label class="label is-small">Поиск (№ заказа, Имя или телефон)</label>
+        <input class="input" type="text" name="q" value="{{ flt.q }}"
+               placeholder=" № заказа / Имя / Телефон">
+      </div>
+    </div>
+
+    {# сохраняем текущую сортировку #}
+    <input type="hidden" name="sort" value="{{ sort }}">
+    <input type="hidden" name="dir"  value="{{ dir }}">
+
+    <div class="buttons is-right">
+      <a class="button is-light" href="{% url 'orders_all' %}">Сбросить</a>
+      <button class="button is-link" type="submit">Применить</button>
+    </div>
+  </form>
+</div>
+
+{% load l10n %}
+
+<table class="table is-fullwidth is-striped">
+  <thead>
+    <tr>
+      <th>
+        <a href="?status={{ flt.status|urlencode }}&q={{ flt.q|urlencode }}&sort=order&dir={% if sort == 'order' and dir == 'asc' %}desc{% else %}asc{% endif %}"
+           aria-label="Сортировать по номеру заказа">
+          № заказа
+          <span class="sort-arrows {% if sort == 'order' %}is-active {{ dir }}{% endif %}">
+            <span class="up">▲</span><span class="down">▼</span>
+          </span>
+        </a>
+      </th>
+	  <th>
+        <a href="?status={{ flt.status|urlencode }}&q={{ flt.q|urlencode }}&sort=date&dir={% if sort == 'date' and dir == 'asc' %}desc{% else %}asc{% endif %}"
+           aria-label="Сортировать по дате создания">
+          Дата создания
+          <span class="sort-arrows {% if sort == 'date' %}is-active {{ dir }}{% endif %}">
+            <span class="up">▲</span><span class="down">▼</span>
+          </span>
+        </a>
+      </th>
+      <th>Кол-во ЛДСП</th>
+      <th>МДФ краска</th>
+      <th>МДФ плёнка</th>
+      <th>Склад</th>
+      <th>Срок сдачи</th>
+      <th>
+        <a href="?status={{ flt.status|urlencode }}&q={{ flt.q|urlencode }}&sort=status&dir={% if sort == 'status' and dir == 'asc' %}desc{% else %}asc{% endif %}"
+           aria-label="Сортировать по статусу">
+          Статус
+          <span class="sort-arrows {% if sort == 'status' %}is-active {{ dir }}{% endif %}">
+            <span class="up">▲</span><span class="down">▼</span>
+          </span>
+        </a>
+      </th>
+      <th>Действия</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in orders %}
+      <tr>
+        <td>
+		  <a href="#"
+             class="order-modal-link"
+             data-order-id="{{ order.id }}"
+             data-order-number="{{ order.order_number|unlocalize }}"
+             data-customer="{{ order.customer_name }}"
+             data-last-name="{{ order.last_name }}"
+             data-iin="{{ order.iin }}"
+             data-phone="{{ order.phone }}">
+            {{ order.order_number|unlocalize }}
+          </a>
+
+		</td>
+		<td>{{ order.created_date|date:"Y-m-d" }}</td>
+        <td>{{ order.contract.lds_count|default:"-" }}</td>
+        <td>
+          {% if order.mdf_paint_m2 is not None %}
+            {% localize on %}{{ order.mdf_paint_m2|floatformat:"-2" }}{% endlocalize %}
+          {% else %}-{% endif %}
+        </td>
+        <td>
+          {% if order.mdf_film_m2 is not None %}
+            {% localize on %}{{ order.mdf_film_m2|floatformat:"-2" }}{% endlocalize %}
+          {% else %}-{% endif %}
+        </td>
+        <td>
+          {% if order.status in "warehouse work" %}
+            <span class="warehouse-indicator warehouse-true">✔</span>
+          {% else %}
+            <span class="warehouse-indicator warehouse-false">✖</span>
+          {% endif %}
+        </td>
+        <td class="
+          {% if order.contract and order.contract.days_left != None %}
+            {% if order.contract.days_left < 0 %}due-danger
+            {% elif order.contract.days_left <= 3 %}due-warning
+            {% elif order.status == 'work' %}due-green
+            {% endif %}
+          {% endif %}
+        ">
+          {% if order.contract and order.contract.due_date %}
+            {{ order.contract.due_date|date:"d.m.Y" }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        
+        <td class="status-cell">
+          {% if order.status == "new" %}
+            <div class="status-progress" style="width:20%"></div>
+            <span class="status-text">Новый</span>
+          {% elif order.status == "calc" %}
+            <div class="status-progress" style="width:40%"></div>
+            <span class="status-text">Расчёт</span>
+          {% elif order.status == "payment" %}
+            <div class="status-progress" style="width:60%"></div>
+            <span class="status-text">Закуп</span>
+          {% elif order.status == "warehouse" %}
+            <div class="status-progress" style="width:80%"></div>
+            <span class="status-text">Договор</span>
+          {% elif order.status == "work" %}
+            <div class="status-progress" style="width:100%"></div>
+            <span class="status-text">В работе</span>
+          {% else %}
+            <span class="status-text">—</span>
+          {% endif %}
+        </td>
+
+        <td>
+
+          {# 1. Закуп — доступна сразу #}
+          <a href="{% url 'purchase_sheet' order.pk %}"
+             class="button is-small is-info">
+            Закуп
+          </a>
+          
+          {# 2. Расчёт — только если есть Лист закупа #}
+          {% if order.purchase_sheet %}
+            <a class="button is-small is-link"
+               href="{% url 'calculation_edit' order.id %}">
+              Расчёт
+            </a>
+          
+            {# 3. Оплата — после сохранения расчёта #}
+            {% if order.calculation %}
+              <a class="button is-small is-warning"
+                 href="{% url 'payment_new' order.id %}">
+                Оплата
+              </a>
+          
+              {# 4. Бланк — после оплаты и приёмки #}
+              {% if order.has_payment and order.has_accepted %}
+                <a href="{% url 'contract_view' pk=order.id %}"
+                   class="button is-small is-primary">
+                  Бланк
+                </a>
+          
+                {# 5. Подписание/договор — после печати/сохранения бланка #}
+                {% if order.contract_blank_generated %}
+          
+                  {% if order.main_contract_signed %}
+                    <button type="button"
+                            class="button is-small is-info js-sign-contract"
+                            data-order-id="{{ order.id }}"
+                            data-order-number="{{ order.order_number|unlocalize }}"
+                            data-customer="{{ order.customer_name }}"
+                            data-last-name="{{ order.last_name }}"
+                            data-iin="{{ order.iin }}"
+                            data-phone="{{ order.phone }}"
+                            data-main-contract-pdf-url="{% url 'main_contract_pdf' order.id %}"
+                            data-sign-url="{% url 'main_contract_sign_flow' order.id %}"
+                            data-is-signed="1"
+                            data-signed-at="{% if order.contract_signed_at %}{{ order.contract_signed_at|date:'Y-m-d' }}{% endif %}"
+                            data-edit-url="{% url 'main_contract_view' order.id %}">
+                      Договор подписан
+                    </button>
+                  {% else %}
+                    <button type="button"
+                            class="button is-small is-success js-sign-contract"
+                            data-order-id="{{ order.id }}"
+                            data-order-number="{{ order.order_number|unlocalize }}"
+                            data-customer="{{ order.customer_name }}"
+                            data-last-name="{{ order.last_name }}"
+                            data-iin="{{ order.iin }}"
+                            data-phone="{{ order.phone }}"
+                            data-main-contract-pdf-url="{% url 'main_contract_pdf' order.id %}"
+                            data-is-signed="0"
+                            data-signed-at=""
+                            data-edit-url="{% url 'main_contract_view' order.id %}"
+                            data-sign-url="{% url 'main_contract_sign_flow' order.id %}">
+                      Подписать
+                    </button>
+                  {% endif %}
+          
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+
+
+        
+          <!-- История => круглая иконка "i" -->
+          <a class="button is-small is-light is-rounded js-history"
+             style="width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center"
+             title="История"
+             href="{% url 'order_history' order.id %}">
+             <strong>i</strong>
+          </a>
+        </td>
+
+
+      </tr>
+    {% endfor %}
+
+    <!-- Модалка с подробностями заказа -->
+<div class="modal" id="orderInfoModal">
+  <div class="modal-background" onclick="closeOrderModal()"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Информация по заказу</p>
+      <button class="delete" aria-label="close" onclick="closeOrderModal()"></button>
+    </header>
+    <section class="modal-card-body">
+      <div class="content">
+        <p>
+          <strong>№ заказа:</strong>
+          <span id="mOrderNumber"></span>
+        </p>
+    
+        <p style="display:flex;align-items:center;gap:.5rem;">
+          <strong>Имя заказчика:</strong>
+          <span id="mCustomer"></span>
+          <button class="button is-small is-light edit-field-btn"
+                  type="button"
+                  data-field="customer_name"
+                  data-target="mCustomer">
+            ✏
+          </button>
+        </p>
+    
+        <p style="display:flex;align-items:center;gap:.5rem;">
+          <strong>Фамилия:</strong>
+          <span id="mLastName"></span>
+          <button class="button is-small is-light edit-field-btn"
+                  type="button"
+                  data-field="last_name"
+                  data-target="mLastName">
+            ✏
+          </button>
+        </p>
+    
+        <p style="display:flex;align-items:center;gap:.5rem;">
+          <strong>ИИН:</strong>
+          <span id="mIin"></span>
+          <button class="button is-small is-light edit-field-btn"
+                  type="button"
+                  data-field="iin"
+                  data-target="mIin">
+            ✏
+          </button>
+        </p>
+    
+        <p style="display:flex;align-items:center;gap:.5rem;">
+          <strong>Телефон:</strong>
+          <span id="mPhone"></span>
+          <button class="button is-small is-light edit-field-btn"
+                  type="button"
+                  data-field="phone"
+                  data-target="mPhone">
+            ✏
+          </button>
+          <button class="button is-small" id="copyPhoneBtn" type="button">Копировать</button>
+          <a class="button is-small is-success" id="whatsappBtn" target="_blank" rel="noopener">
+            Написать в WhatsApp
+          </a>
+        </p>
+      </div>
+    
+      <!-- Форма inline-редактирования -->
+      <form id="inline-edit-form" method="post" style="display:none;margin-top:1rem;">
+        {% csrf_token %}
+        <input type="text" name="value" id="inline-edit-input" class="input" style="max-width:260px;">
+        <button type="submit" class="button is-small is-link">Сохранить</button>
+        <button type="button" class="button is-small" id="inline-edit-cancel">Отмена</button>
+      </form>
+    </section>
+
+    <footer class="modal-card-foot">
+      <button class="button" onclick="closeOrderModal()">Закрыть</button>
+    </footer>
+  </div>
+</div>
+
+
+<div class="modal" id="signContractModal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Подписание основного договора</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+
+    <section class="modal-card-body">
+      <!-- Шаг 1: подтверждение -->
+      <div id="signStepConfirm">
+        <p>Вы подтвердили, что Бланк заказа распечатан и подписан?</p>
+        <p class="has-text-danger mt-2">
+          Это заключительный этап оформления перед передачей заказа в производство.
+        </p>
+        <div class="buttons mt-4">
+          <button class="button is-link" type="button" onclick="signContractStep2()">
+            Да, Бланк подписан
+          </button>
+          <button class="button" type="button" onclick="closeSignModal()">
+            Отмена
+          </button>
+        </div>
+      </div>
+
+      <!-- Шаг 2: проверка данных и формирование договора -->
+      <div id="signStepDetails" style="display:none;">
+        <p>
+          <strong>Статус Бланк подписан:</strong>
+          <span class="has-text-success">OK</span>
+        </p>
+        <p><strong>№ заказа:</strong> <span id="signOrderNumber"></span></p>
+        <p><strong>Имя Фамилия:</strong> <span id="signCustomerName"></span></p>
+        <p><strong>Телефон:</strong> <span id="signPhone"></span></p>
+        <p><strong>ИИН:</strong> <span id="signIin"></span></p>
+
+        <p class="mt-3">
+          Пожалуйста, ещё раз проверьте корректность данных перед формированием
+          основного договора.
+        </p>
+
+        <div class="buttons mt-4">
+          <!-- Кнопка формирования договора -->
+          <button
+              id="btnGenerateMainContract"
+              class="button is-primary"
+              type="button"
+              onclick="onGenerateMainContract()">
+            Сформировать договор
+          </button>
+
+          <!-- Кнопка печати / подписания (PDF) — появляется ПОСЛЕ формирования -->
+          <a id="btnPrintMainContract"
+             href="#"
+             class="button is-link"
+             target="_blank"
+             style="display:none;">
+            Распечатать / Подписать
+          </a>
+
+          <button class="button" type="button" onclick="closeSignModal()">
+            Закрыть
+          </button>
+        </div>
+
+        <p class="mt-4 has-text-grey is-size-7">
+          * Сейчас используется тестовый текст основного договора (заглушка).
+        </p>
+      </div>
+    </section>
+  </div>
+</div>
+
+
+
+
+	
+	
+  </tbody>
+</table>
+{% endwith %}
+
+<!-- Модалка: История -->
+<div class="modal" id="historyModal">
+  <div class="modal-background"></div>
+  <div class="modal-card" style="width: 780px; max-width: 95vw;">
+    <header class="modal-card-head">
+      <p class="modal-card-title">История изменений</p>
+      <button class="delete" aria-label="close" id="historyCloseBtn"></button>
+    </header>
+    <section class="modal-card-body" id="historyModalBody">
+      <p class="has-text-grey">Загрузка…</p>
+    </section>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* whatsapp disabled style */
+  a.button.is-static[disabled] { pointer-events: none; opacity: .5; cursor: not-allowed; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let currentSignUrl = null;
+  let currentSignOrderId = null;
+
+  function closeSignModal() {
+    const modal = document.getElementById('signContractModal');
+    if (modal) {
+      modal.classList.remove('is-active');
+    }
+  }
+  function replaceSignButtonInRow(orderId, signedAt) {
+    const oldBtn = document.querySelector(`.js-sign-contract[data-order-id="${orderId}"]`);
+    if (!oldBtn) return;
+  
+    oldBtn.classList.remove("is-success");
+    oldBtn.classList.add("is-info");
+    oldBtn.textContent = "Договор подписан";
+    oldBtn.dataset.isSigned = "1";
+    oldBtn.dataset.signedAt = signedAt || "";
+  }
+
+  function getCookie(name) {
+    const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return v ? v.pop() : '';
+  }
+  function openSignModal(button) {
+    if (!button) return;
+  
+    const isSigned = button.dataset.isSigned === "1";
+    const signedAt = button.dataset.signedAt || "";
+    const editUrl  = button.dataset.editUrl || "";
+  
+    currentSignOrderId = button.dataset.orderId || null;
+    currentSignUrl = button.dataset.signUrl || null;
+  
+    const number   = button.dataset.orderNumber || '';
+    const customer = button.dataset.customer || '';
+    const lastName = button.dataset.lastName || '';
+    const phone    = button.dataset.phone || '';
+    const iin      = button.dataset.iin || '';
+    const pdfUrl   = button.dataset.mainContractPdfUrl || '';
+  
+    const fullName = (customer + ' ' + (lastName || '')).trim();
+  
+    const elNumber = document.getElementById('signOrderNumber');
+    const elName   = document.getElementById('signCustomerName');
+    const elPhone  = document.getElementById('signPhone');
+    const elIin    = document.getElementById('signIin');
+  
+    const step1    = document.getElementById('signStepConfirm');
+    const step2    = document.getElementById('signStepDetails');
+  
+    const btnGen   = document.getElementById('btnGenerateMainContract');
+    const btnPrint = document.getElementById('btnPrintMainContract');
+  
+    // если этих элементов нет — просто игнорируем
+    const btnEdit    = document.getElementById('btnEditMainContract'); // у тебя пока нет в HTML
+    const signedAtEl = document.getElementById('signedAtText');        // у тебя пока нет в HTML
+    if (btnEdit) btnEdit.href = editUrl;
+    if (signedAtEl) signedAtEl.textContent = signedAt ? signedAt : "—";
+  
+    if (elNumber) elNumber.textContent = number;
+    if (elName)   elName.textContent   = fullName;
+    if (elPhone)  elPhone.textContent  = phone;
+    if (elIin)    elIin.textContent    = iin;
+  
+    // Настраиваем ссылку PDF
+    if (btnPrint) {
+      if (pdfUrl) btnPrint.href = pdfUrl;
+      else btnPrint.removeAttribute('href');
+    }
+  
+    // ✅ Если уже подписан — сразу показываем шаг 2 и кнопку скачать
+    if (isSigned) {
+      if (step1) step1.style.display = 'none';
+      if (step2) step2.style.display = '';
+  
+      if (btnGen) btnGen.style.display = 'none';
+  
+      if (btnPrint) {
+        btnPrint.style.display = '';
+        btnPrint.textContent = "Скачать договор (PDF)";
+      }
+  
+    } else {
+      // ✅ Если не подписан — показываем стандартный шаг 1
+      if (step1) step1.style.display = '';
+      if (step2) step2.style.display = 'none';
+  
+      if (btnGen) {
+        btnGen.style.display = '';
+        btnGen.disabled = false;
+        btnGen.textContent = 'Сформировать договор';
+      }
+  
+      if (btnPrint) {
+        btnPrint.style.display = 'none'; // до формирования
+        btnPrint.textContent = "Распечатать / Подписать";
+      }
+    }
+  
+    const modal = document.getElementById('signContractModal');
+    if (modal) modal.classList.add('is-active');
+  }
+
+
+  function signContractStep2() {
+    const step1 = document.getElementById('signStepConfirm');
+    const step2 = document.getElementById('signStepDetails');
+    if (step1 && step2) {
+      step1.style.display = 'none';
+      step2.style.display = '';
+    }
+  }
+
+  // 👉 Вызывается по нажатию "Сформировать договор" (внутри шага 2)
+  async function onGenerateMainContract() {
+    const btnGen   = document.getElementById('btnGenerateMainContract');
+    const btnPrint = document.getElementById('btnPrintMainContract');
+  
+    if (!currentSignUrl) {
+      alert("Не найден URL для подписи договора");
+      return;
+    }
+  
+    if (btnGen) {
+      btnGen.disabled = true;
+      btnGen.textContent = 'Формируем договор...';
+    }
+  
+    try {
+      const resp = await fetch(currentSignUrl, {
+        method: "POST",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+      });
+  
+      if (!resp.ok) {
+        throw new Error("HTTP " + resp.status);
+      }
+  
+      // ✅ дата подписи (на этом этапе берём "сегодня", позже можно вернуть из JSON)
+      const signedAt = new Date().toISOString().slice(0, 10);
+  
+      // ✅ Успешно: договор зафиксирован (1 раз)
+      if (btnGen) {
+        btnGen.disabled = true;
+        btnGen.textContent = 'Договор зафиксирован';
+      }
+  
+      // ✅ Показываем кнопку печати/скачивания PDF
+      if (btnPrint && btnPrint.href) {
+        btnPrint.style.display = '';
+        btnPrint.textContent = "Скачать договор (PDF)";
+      }
+  
+      // ✅ Обновим кнопку в строке заказа (чтобы после закрытия снова не было "Подписать")
+      if (typeof replaceSignButtonInRow === "function") {
+        // если ты сделал функцию, как мы обсуждали
+        replaceSignButtonInRow(currentSignOrderId, signedAt);
+      } else {
+        // запасной вариант — просто обновить страницу
+        // (можешь оставить только этот вариант, если не хочешь возиться с DOM)
+        window.location.reload();
+        return;
+      }
+  
+    } catch (err) {
+      console.error(err);
+      if (btnGen) {
+        btnGen.disabled = false;
+        btnGen.textContent = 'Сформировать договор';
+      }
+      alert("Ошибка при формировании/фиксации договора");
+    }
+  }
+
+
+
+
+  document.addEventListener('DOMContentLoaded', function () {
+    // Открытие модалки по кнопке "Подписать"
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('.js-sign-contract');
+      if (!btn) return;
+      e.preventDefault();
+      openSignModal(btn);
+    });
+
+
+    // Закрытие по крестику и фону
+    const modal    = document.getElementById('signContractModal');
+    const bg       = modal ? modal.querySelector('.modal-background') : null;
+    const closeBtn = modal ? modal.querySelector('.delete') : null;
+
+    [bg, closeBtn].forEach(function (el) {
+      if (el) {
+        el.addEventListener('click', function () {
+          closeSignModal();
+        });
+      }
+    });
+  });
+</script>
+
+
+<script>
+  function openNewOrderModal() {
+    document.getElementById('newOrderModal').classList.add('is-active');
+  }
+  function closeNewOrderModal() {
+    document.getElementById('newOrderModal').classList.remove('is-active');
+  }
+  // Логика показа поля WhatsApp
+  document.addEventListener('DOMContentLoaded', function() {
+    // Открывать модалку, если пришли с /orders/new/
+    {% if request.GET.open_new %}openNewOrderModal();{% endif %}
+    const checkbox = document.querySelector("#id_has_whatsapp");
+    const whatsappField = document.querySelector("#whatsapp-field");
+    function toggleWhatsapp() {
+      if (!checkbox) return;
+      if (checkbox.checked) {
+        whatsappField.style.display = "none";
+      } else {
+        whatsappField.style.display = "block";
+      }
+    }
+    if (checkbox) {
+      checkbox.addEventListener("change", toggleWhatsapp);
+      toggleWhatsapp();
+    }
+    // Если на сервере возникли ошибки формы, откроем модалку автоматически
+    {% if form.errors %}
+      openNewOrderModal();
+    {% endif %}
+  });
+</script>
+<script>
+  function closeCreatedModal() {
+    const modal = document.getElementById('createdModal');
+    if (modal) modal.classList.remove('is-active');
+    // удаляем ?created=... из адресной строки, чтобы модалка не появлялась при перезагрузке
+    if (window.history && window.history.replaceState) {
+      const url = new URL(window.location);
+      url.searchParams.delete('created');
+      window.history.replaceState({}, document.title, url.toString());
+    }
+  }
+</script>
+<script>
+  // Открыть модалку и заполнить данными
+  let currentOrderId = null;  // глобальная переменная выше всех функций
+
+  function openOrderModal(data) {
+    currentOrderId = data.orderId || null;
+  
+    document.getElementById('mOrderNumber').textContent = data.orderNumber || '';
+    document.getElementById('mCustomer').textContent    = data.customer     || '';
+    document.getElementById('mLastName').textContent    = data.lastName     || '';
+    document.getElementById('mIin').textContent         = data.iin          || '';
+    document.getElementById('mPhone').textContent       = data.phone        || '';
+  
+    document.getElementById('orderInfoModal').classList.add('is-active');
+  
+    const waBtn = document.getElementById('whatsappBtn');
+    const rawPhone = (data.phone || '').toString();
+    const digits = rawPhone.replace(/\D+/g, '');
+    let intl = digits;
+    if (intl.startsWith('8')) intl = '7' + intl.slice(1);
+    const text = `Здравствуйте! По заказу №${data.orderNumber || ''}`;
+    const waUrl = intl ? `https://wa.me/${intl}?text=${encodeURIComponent(text)}` : '';
+    if (waBtn) {
+      if (waUrl) {
+        waBtn.href = waUrl;
+        waBtn.classList.remove('is-static');
+        waBtn.removeAttribute('disabled');
+      } else {
+        waBtn.removeAttribute('href');
+        waBtn.classList.add('is-static');
+        waBtn.setAttribute('disabled','disabled');
+      }
+    }
+  }
+
+  function closeOrderModal() {
+    document.getElementById('orderInfoModal').classList.remove('is-active');
+  }
+
+  // Навешиваем обработчики на ссылки с номерами
+  document.addEventListener('DOMContentLoaded', function () {
+    const links = document.querySelectorAll('.order-modal-link');
+    links.forEach(link => {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        openOrderModal({
+          orderId:      this.dataset.orderId,
+          orderNumber:  this.dataset.orderNumber,
+          customer:     this.dataset.customer,
+          lastName:     this.dataset.lastName,
+          iin:          this.dataset.iin,
+          phone:        this.dataset.phone
+        });
+      });
+    });
+
+    // Копирование телефона в буфер обмена
+    const copyBtn = document.getElementById('copyPhoneBtn');
+    copyBtn.addEventListener('click', async function () {
+      const phone = document.getElementById('mPhone').textContent.trim();
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(phone);
+        } else {
+          // Фолбэк для небезопасного контекста
+          const ta = document.createElement('textarea');
+          ta.value = phone;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+        this.classList.add('is-success');
+        this.textContent = 'Скопировано';
+        setTimeout(() => { this.classList.remove('is-success'); this.textContent = 'Копировать'; }, 1200);
+      } catch (err) {
+        this.classList.add('is-danger');
+        this.textContent = 'Ошибка';
+        setTimeout(() => { this.classList.remove('is-danger'); this.textContent = 'Копировать'; }, 1200);
+      }
+    });
+  });
+</script>
+<script>
+  function openNewOrderModal() {
+    document.getElementById('newOrderModal').classList.add('is-active');
+  }
+  function closeNewOrderModal() {
+    document.getElementById('newOrderModal').classList.remove('is-active');
+  }
+  // Логика показа поля WhatsApp
+  document.addEventListener('DOMContentLoaded', function() {
+    // Открывать модалку, если пришли с /orders/new/
+    {% if request.GET.open_new %}openNewOrderModal();{% endif %}
+    const checkbox = document.querySelector("#id_has_whatsapp");
+    const whatsappField = document.querySelector("#whatsapp-field");
+    function toggleWhatsapp() {
+      if (!checkbox) return;
+      if (checkbox.checked) {
+        whatsappField.style.display = "none";
+      } else {
+        whatsappField.style.display = "block";
+      }
+    }
+    if (checkbox) {
+      checkbox.addEventListener("change", toggleWhatsapp);
+      toggleWhatsapp();
+    }
+    // Если на сервере возникли ошибки формы, откроем модалку автоматически
+    {% if form.errors %}
+      openNewOrderModal();
+    {% endif %}
+  });
+</script>
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const modal = document.getElementById("historyModal");
+  const body  = document.getElementById("historyModalBody");
+  const closeBtn = document.getElementById("historyCloseBtn");
+  const bg = modal.querySelector(".modal-background");
+
+  function openModal(){ modal.classList.add("is-active"); }
+  function closeModal(){ modal.classList.remove("is-active"); }
+
+  [closeBtn, bg].forEach(el => el && el.addEventListener("click", closeModal));
+
+  document.querySelectorAll(".js-history").forEach(link => {
+    link.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const url = link.getAttribute("href");
+      // просим фрагмент, который без base.html
+      const fetchUrl = url + (url.includes("?") ? "&" : "?") + "modal=1";
+      body.innerHTML = "<p class='has-text-grey'>Загрузка…</p>";
+      openModal();
+      try {
+        const resp = await fetch(fetchUrl, { headers: { "X-Requested-With": "XMLHttpRequest" }});
+        const html = await resp.text();
+        body.innerHTML = html;
+      } catch (err) {
+        body.innerHTML = "<p class='has-text-danger'>Не удалось загрузить историю. Попробуйте позже.</p>";
+        console.error(err);
+      }
+    });
+  });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const editButtons = document.querySelectorAll('.edit-field-btn');
+  const form        = document.getElementById('inline-edit-form');
+  const input       = document.getElementById('inline-edit-input');
+  const cancelBtn   = document.getElementById('inline-edit-cancel');
+
+  let currentField = null;
+  let currentTargetSpan = null;
+
+  // Нажатие на карандаш
+  editButtons.forEach(btn => {
+    btn.addEventListener('click', function () {
+      currentField = this.dataset.field;
+      const targetId = this.dataset.target;
+      currentTargetSpan = document.getElementById(targetId);
+
+      if (!currentTargetSpan || !currentOrderId) return;
+
+      input.value = currentTargetSpan.textContent.trim();
+      form.style.display = 'block';
+
+      // /orders/<id>/update-field/<field>/
+      const baseUrl = `/orders/${currentOrderId}/update-field/${currentField}/`;
+      form.setAttribute('action', baseUrl);
+    });
+  });
+
+  // Отмена
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function () {
+      form.style.display = 'none';
+      currentField = null;
+      currentTargetSpan = null;
+    });
+  }
+
+  // Отправка формы
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!form.action) return;
+
+      const formData = new FormData(form);
+
+      fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.status === 'ok' && currentTargetSpan) {
+          currentTargetSpan.textContent = data.value || '';
+          form.style.display = 'none';
+        } else {
+          alert('Ошибка при сохранении');
+        }
+      })
+      .catch(() => alert('Ошибка при сохранении'));
+    });
+  }
+});
+</script>
+
+
+{% endblock %}

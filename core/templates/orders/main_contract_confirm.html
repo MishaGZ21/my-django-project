@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Подписание договора{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title">Подписание договора</h1>
+
+    <div class="notification is-warning">
+      Вы подтвердили, что Бланк заказа распечатан и подписан?<br>
+      Это заключительный этап оформления перед передачей заказа в производство.
+    </div>
+
+    <div class="box">
+      <p><b>№ заказа:</b> {{ order.order_number }}</p>
+      <p><b>Имя Фамилия:</b> {{ order.customer_name }} {{ order.last_name }}</p>
+      <p><b>Телефон:</b> {{ order.phone|default:"—" }}</p>
+      <p><b>ИИН:</b> {{ order.iin|default:"—" }}</p>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <button class="button is-primary">
+        Да, бланк подписан — сформировать и зафиксировать договор
+      </button>
+      <a class="button is-light" href="/orders/">Отмена</a>
+    </form>
+  </div>
+</section>
+{% endblock %}

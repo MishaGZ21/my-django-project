@@ -1,0 +1,16 @@
+{% url 'whatsapp_dashboard' as dash_url %}
+{% url 'whatsapp_settings' as settings_url %}
+{% url 'whatsapp_templates' as templates_url %}
+{% url 'whatsapp_logs' as logs_url %}
+<nav class="navbar whatsapp-subnav is-white" role="navigation" aria-label="secondary navigation">
+  <div class="container">
+    <div class="navbar-menu is-active">
+      <div class="navbar-start">
+        <a class="navbar-item {% if request.path == dash_url %}is-active{% endif %}" href="{{ dash_url }}">Обзор</a>
+        <a class="navbar-item {% if request.path == settings_url %}is-active{% endif %}" href="{{ settings_url }}">Настройки</a>
+        <a class="navbar-item {% if request.path == templates_url %}is-active{% endif %}" href="{{ templates_url }}">Шаблоны</a>
+        <a class="navbar-item {% if request.path == logs_url %}is-active{% endif %}" href="{{ logs_url }}">История</a>
+      </div>
+    </div>
+  </div>
+</nav>

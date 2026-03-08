@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}История быстрых расчётов{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title is-4">История быстрых расчётов</h1>
+    <form method="get" class="mb-3">
+      <div class="field has-addons">
+        <div class="control"><input class="input" name="phone" value="{{ phone|default:'' }}" placeholder="Поиск по телефону"></div>
+        <div class="control"><button class="button">Искать</button></div>
+      </div>
+    </form>
+    <table class="table is-fullwidth is-narrow is-hoverable">
+      <thead><tr><th>Дата</th><th>Телефон</th><th>Категория</th><th class="has-text-right">Итого</th><th></th></tr></thead>
+      <tbody>
+        {% for it in items %}
+          <tr>
+            <td>{{ it.created_at|date:"d.m.Y H:i" }}</td>
+            <td>{{ it.phone }}</td>
+            <td>{{ it.get_category_display }}</td>
+            <td class="has-text-right">{{ it.grand_total }}</td>
+            <td class="has-text-right"><a class="button is-small" href="{% url 'quick_quote_detail' it.id %}">Открыть</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="has-text-grey">Пока нет быстрых расчётов</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

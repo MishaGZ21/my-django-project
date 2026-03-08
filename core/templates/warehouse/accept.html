@@ -1,0 +1,482 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% load static %}
+{% block content %}
+<h1 class="title">Принять материал на склад</h1>
+<p class="subtitle">
+  Материал к заказу: <b>{{ order.order_number|unlocalize }}</b> 
+  Клиент: <b>{{ order.customer_name }}</b>, 
+  <a href="tel:{{ order.phone }}">{{ order.phone }}</a>
+</p>
+
+<form method="post" id="accept-form" action="{% url 'warehouse_accept' receipt_id %}">
+  {% csrf_token %}
+  
+  <style>
+  
+  
+    #sig { touch-action: none; -webkit-user-select: none; display:block; }
+	.signature-wrap { overscroll-behavior: contain; }
+    
+
+  
+    /* Заголовок группы — выразительнее */
+    .box .title.is-6.group-title{
+      font-weight: 800;     /* было ~600 в Bulma */
+      letter-spacing: .2px; /* аккуратнее смотрится в жирном */
+      color:#111827;        /* чуть темнее для контраста */
+      margin-bottom:.25rem; /* место для "Нужно:" */
+    }
+    
+    /* (необязательно) тонкий акцент-полоска слева от заголовка */
+    .box.group .title.is-6.group-title{
+      position: relative;
+      padding-left: .6rem;
+    }
+    .box.group .title.is-6.group-title::before{
+      content:"";
+      position:absolute; left:0; top: .2rem; bottom:.2rem;
+      width:4px; border-radius:4px;
+      background: linear-gradient(180deg, #3b82f6 0%, #60a5fa 100%);
+      opacity:.85;
+    }
+  
+  
+  
+  
+    .group{ position:relative; overflow:hidden; }
+    .group::after{
+      content:"";
+      position:absolute; top:10px; right:10px;
+      width:96px; height:96px;         /* размер иконки */
+      background-repeat:no-repeat;
+      background-position:center;
+      background-size:contain;
+      opacity:1;                      /* нежно */
+      pointer-events:none;              /* не перехватывает клики */
+      filter: saturate(0.8) contrast(1.05);
+    }
+    /* крупнее на больших экранах */
+    @media (min-width: 1024px){
+      .group::after{ width:120px; height:120px; }
+    }
+    
+    /* Каждой группе — своя картинка через CSS-переменную */
+    .group{ --bg: none; }
+    .group::after{ background-image: var(--bg); }
+    
+
+  
+  
+  
+  
+  
+    /* компактный, но заметный бейдж «Нужно: …» */
+    .hint-need{
+      display:inline-block;
+      margin-top:.25rem;
+      padding:.2rem .6rem;           /* фон + отступы как у бейджа */
+      border-radius:.5rem;
+      background:#eef2f7;            /* светло-серый фон */
+      color:#1f2937;                 /* тёмно-серый текст */
+      font-size:1rem;                /* крупнее, как просили */
+      line-height:1.2;
+    }
+    .hint-need b{ font-weight:600; font-size: 17px; }
+  
+    /* более крупные инпуты */
+    .input.is-bigger{ height:3.25rem; font-size:1.05rem; }
+    .unit-addon.button.is-static.is-bigger{ height:3.25rem; font-size:1.05rem; padding:0 1rem; }
+  
+    /* карточки-группы */
+    .box{ border-radius:14px; }
+    .group-title{ margin-bottom:.25rem; }
+  
+    /* сетка: по 2 колонки на десктопе, одна — на планшетах/мобилках */
+    .warehouse-grid.columns{ row-gap:1rem; }
+	
+	/* ——— Пилюля-переключатель 'ЕСТЬ/НЕТ' ——— */
+    .pill-toggle{
+      display:inline-flex; gap:0; border:1px solid #d1d5db;
+      border-radius:999px; overflow:hidden; background:#f8fafc;
+    }
+    .pill-toggle input{ position:absolute; inset:0; opacity:0; pointer-events:none; }
+    .pill-toggle label{
+      padding:.65rem 1.1rem; min-width:5.5rem; text-align:center;
+      font-weight:600; font-size:1rem; line-height:1; cursor:pointer; user-select:none;
+    }
+    .pill-toggle input:focus + label{ outline:2px solid #93c5fd; outline-offset:-2px; }
+    .pill-toggle input:checked + label{
+      background:#3b82f6; color:#fff; box-shadow:inset 0 0 0 1px #3b82f6;
+    }
+    .pill-toggle .seg{ border-right:1px solid #e5e7eb; }
+    .pill-toggle .seg:last-child{ border-right:0; }
+	.hint-have { margin-left: 10px; color: #363636; opacity: .9; }
+  </style>
+  
+  <div class="columns warehouse-grid is-multiline">
+    {# ───── ЛДСП 2750×1830 ───── #}
+    {% if fmt_2750 and fmt_2750|floatformat:"2" != "0.00" %}
+    <div class="column is-12-tablet is-6-desktop">
+      <div class="box group group--ldsp275">
+        <h3 class="title is-6 group-title">ЛДСП 2750×1830</h3>
+        <span class="hint-need">Нужно: <b>{{ fmt_2750|floatformat:"0" }}</b> лист.</span>
+        <span class="hint-have">На складе: <b>{{ stock_ldsp_2750|floatformat:"0" }}</b> лист.</span>
+        <div class="field has-addons mt-3">
+          <p class="control is-expanded">
+            <input class="input is-bigger" type="number" step="0.01" min="0" name="qty_ldsp_2750x1830"
+                   placeholder="Сколько привезли" value="{{ draft.qty_ldsp_2750x1830|default:wr.qty_ldsp_2750x1830 }}">
+          </p>
+          <p class="control">
+            <a class="button is-static unit-addon is-bigger">лист.</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  
+    {# ───── ЛДСП 2800×2070 ───── #}
+    {% if fmt_2800 and fmt_2800|floatformat:"2" != "0.00" %}
+    <div class="column is-12-tablet is-6-desktop">
+      <div class="box group group--ldsp280">
+        <h3 class="title is-6 group-title">ЛДСП 2800×2070</h3>
+        <span class="hint-need">Нужно: <b>{{ fmt_2800|floatformat:"0" }}</b> лист.</span>
+        <span class="hint-have">На складе: <b>{{ stock_ldsp_2800|floatformat:"0" }}</b> лист.</span>
+        <div class="field has-addons mt-3">
+          <p class="control is-expanded">
+            <input class="input is-bigger" type="number" step="0.01" min="0" name="qty_ldsp_2800x2070"
+                   placeholder="Сколько привезли" value="{{ draft.qty_ldsp_2800x2070|default:wr.qty_ldsp_2800x2070 }}">
+          </p>
+          <p class="control">
+            <a class="button is-static unit-addon is-bigger">лист.</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  
+    {# ───── ПВХ узкая ───── #}
+    <div class="column is-12-tablet is-6-desktop">
+      <div class="box group group--pvc-narrow">
+        <h3 class="title is-6 group-title">ПВХ кромка узкая</h3>
+        {% if need_pvc_narrow and need_pvc_narrow|floatformat:"2" != "0.00" %}
+          <span class="hint-need">Нужно: <b>{{ need_pvc_narrow|floatformat:"0" }}</b> м.</span>
+          <span class="hint-have">На складе: <b>{{ stock_pvc_narrow|floatformat:"0" }}</b> м.</span>
+        {% endif %}
+        <div class="field has-addons mt-3">
+          <p class="control is-expanded">
+            <input class="input is-bigger" type="number" step="0.01" min="0" name="qty_pvc_narrow_m"
+                   placeholder="Сколько привезли" value="{{ draft.qty_pvc_narrow_m|default:wr.qty_pvc_narrow_m }}">
+          </p>
+          <p class="control">
+            <a class="button is-static unit-addon is-bigger">м</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  
+    {# ───── ПВХ широкая ───── #}
+    <div class="column is-12-tablet is-6-desktop">
+      <div class="box group group--pvc-wide">
+        <h3 class="title is-6 group-title">ПВХ кромка ШИРОКАЯ</h3>
+        {% if need_pvc_wide and need_pvc_wide|floatformat:"2" != "0.00" %}
+          <span class="hint-need">Нужно: <b>{{ need_pvc_wide|floatformat:"0" }}</b> м.</span>
+		  <span class="hint-have">На складе: <b>{{ stock_pvc_wide|floatformat:"0" }}</b> м.</span>
+        {% endif %}
+        <div class="field has-addons mt-3">
+          <p class="control is-expanded">
+            <input class="input is-bigger" type="number" step="0.01" min="0" name="qty_pvc_wide_m"
+                   placeholder="Сколько привезли" value="{{ draft.qty_pvc_wide_m|default:wr.qty_pvc_wide_m }}">
+          </p>
+          <p class="control">
+            <a class="button is-static unit-addon is-bigger">м</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  
+    {# ───── ХДФ ───── #}
+    <div class="column is-12-tablet is-6-desktop">
+      <div class="box group group--hdf">
+        <h3 class="title is-6 group-title">ХДФ</h3>
+        {% if need_hdf and need_hdf|floatformat:"2" != "0.00" %}
+          <span class="hint-need">Нужно: <b>{{ need_hdf|floatformat:"0" }}</b> лист.</span>
+		  <span class="hint-have">На складе: <b>{{ stock_hdf|floatformat:"0" }}</b> лист.</span>
+        {% endif %}
+        <div class="field has-addons mt-3">
+          <p class="control is-expanded">
+            <input class="input is-bigger" type="number" step="0.01" min="0" name="qty_hdf_sheets"
+                   placeholder="Сколько привезли" value="{{ draft.qty_hdf_sheets|default:wr.qty_hdf_sheets }}">
+          </p>
+          <p class="control">
+            <a class="button is-static unit-addon is-bigger">лист.</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  
+    {# ───── Столешница + кромка ───── #}
+    <div class="column is-12-tablet is-6-desktop">
+      <div class="box group group--countertop">
+        <h3 class="title is-6 group-title">Столешница</h3>
+        {% if need_countertop and need_countertop|floatformat:"2" != "0.00" %}
+          <span class="hint-need">Нужно: <b>{{ need_countertop|floatformat:"0" }}</b> шт.</span>
+		  <span class="hint-have">На складе: <b>{{ stock_countertop|floatformat:"0" }}</b> шт.</span>
+        {% endif %}
+        <div class="field has-addons mt-3">
+          <p class="control is-expanded">
+            <input class="input is-bigger" type="number" step="0.01" min="0" name="qty_countertop_pcs"
+                   placeholder="Сколько привезли" value="{{ draft.qty_countertop_pcs|default:wr.qty_countertop_pcs }}">
+          </p>
+          <p class="control">
+            <a class="button is-static unit-addon is-bigger">шт.</a>
+          </p>
+        </div>
+  
+        <div class="field is-grouped is-align-items-center mt-3">
+          <label class="label mr-3">Кромка:</label>
+          <div class="control">
+            <div class="pill-toggle" role="radiogroup" aria-label="Кромка столешницы">
+              {# ЕСТЬ — значение "1" #}
+              <div class="seg">
+                <input type="radio" id="edge_yes" name="countertop_edge_present" value="1"
+                       {% if edge_selected %}checked{% endif %}>
+                <label for="edge_yes">ЕСТЬ</label>
+              </div>
+              {# НЕТ — пустое значение "" (чтобы бэкенд не ломался) #}
+              <div class="seg">
+                <input type="radio" id="edge_no" name="countertop_edge_present" value=""
+                       {% if not edge_selected %}checked{% endif %}>
+                <label for="edge_no">НЕТ</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {# ——— Подпись и кнопки ——— #}
+  <div class="box">
+    <h3 class="title is-6">Подпись</h3>
+    <canvas id="sig" style="border:1px dashed #bbb;width:100%;height:220px;border-radius:10px;"></canvas>
+    <div class="field is-grouped mt-2">
+      <div class="control"><button type="button" class="button is-light" id="sig-clear">Очистить</button></div>
+    </div>
+    <div class="columns">
+      <div class="column">
+        <label class="label">ФИО водителя</label>
+        <input class="input is-bigger" name="driver_name" placeholder="Введите ФИО" value="{{ draft.driver_name|default:wr.driver_name }}">
+      </div>
+      <div class="column">
+        <label class="label">Телефон</label>
+        <input class="input is-bigger" name="driver_phone" placeholder="Например, +7 900 000-00-00" value="{{ draft.driver_phone|default:wr.driver_phone }}">
+      </div>
+    </div>
+  </div>
+  
+  <div class="buttons">
+    <button class="button is-info is-medium"   name="action" value="save"   type="submit">Сохранить</button>
+    <button class="button is-primary is-medium" name="action" value="accept" type="submit" id="accept-btn" disabled>Принять на склад</button>
+    <a class="button is-light is-medium" href="{% url 'warehouse' %}">Назад</a>
+  </div>
+  
+  <input type="hidden" name="signature_png" id="signature_png">
+
+</form>
+
+
+<script>
+
+/* ЕДИНЫЙ БЛОК ПОДПИСИ: без фиксации body, корректные координаты и DPR */
+(function(){
+  const form   = document.getElementById('accept-form');
+  const canvas = document.getElementById('sig');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  // 1) Масштаб под ретину, не меняя CSS-размеров
+  function fitCanvas(){
+    const dpr  = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width  = Math.max(1, Math.round(rect.width  * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);  // единицы — CSS-пиксели
+    ctx.lineWidth = 2;                       // толщина в CSS-пикселях
+    ctx.lineCap   = 'round';
+    ctx.lineJoin  = 'round';
+  }
+  fitCanvas();
+  window.addEventListener('resize', fitCanvas);
+
+  // 2) Корректные координаты (без offsetX/offsetY — iPad глючит)
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const p = (e.touches && e.touches[0]) ? e.touches[0] : e;
+    return { x: p.clientX - rect.left, y: p.clientY - rect.top };
+  }
+
+  // 3) Рисование + гашение скролла ТОЛЬКО внутри канваса
+  let drawing = false;
+
+  function start(e){
+    e.preventDefault(); e.stopPropagation();
+    try { canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId); } catch(_) {}
+    drawing = true;
+    const {x,y} = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+  }
+  function move(e){
+    if(!drawing) return;
+    e.preventDefault(); e.stopPropagation();
+    const {x,y} = getPos(e);
+    ctx.lineTo(x,y);
+    ctx.stroke();
+  }
+  function end(){
+    if(!drawing) return;
+    drawing = false;
+    checkReady();
+  }
+
+  // pointer-события — основные
+  canvas.addEventListener('pointerdown', start, {passive:false});
+  canvas.addEventListener('pointermove', move,   {passive:false});
+  window.addEventListener('pointerup',   end,    {passive:true});
+
+  // дубль для старых iOS: блокируем прокрутку пальцем в зоне канваса
+  ['touchstart','touchmove','touchend','touchcancel'].forEach(ev=>{
+    canvas.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); }, {passive:false});
+  });
+
+  // 4) Очистка
+  document.getElementById('sig-clear')?.addEventListener('click', ()=>{
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    checkReady();
+  });
+
+  // 5) Кнопка "Принять" доступна только при подписи и заполненных ФИО/телефоне
+  function hasInk(){
+    // Быстрая проверка «есть ли штрихи»: пробегаем по канвасу и ищем непустой пиксель
+    const data = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    for (let i=3; i<data.length; i+=4) { if (data[i] !== 0) return true; } // любой ненулевой альфа
+    return false;
+  }
+
+  function checkReady(){
+    const driverFilled = (document.querySelector('input[name="driver_name"]')?.value.trim().length>0)
+                      && (document.querySelector('input[name="driver_phone"]')?.value.trim().length>0);
+    const ok = hasInk() && driverFilled;
+    const btn = document.getElementById('accept-btn');
+    if (btn) btn.disabled = !ok;
+
+    // если есть подпись — кладём в скрытое поле (png)
+    const hidden = document.getElementById('signature_png');
+    if (hidden) hidden.value = hasInk() ? canvas.toDataURL('image/png') : '';
+  }
+
+  // 6) Изменения ФИО/телефона — пересчёт готовности
+  ['driver_name','driver_phone'].forEach(n=>{
+    const el=document.querySelector(`input[name="${n}"]`);
+    if (el) el.addEventListener('input', checkReady);
+  });
+
+  // 7) Автосохранение черновика (оставляем как было)
+  let draftTimer=null;
+  function autosave(){
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(()=>{
+      const fd = new FormData(form);
+      const data = {};
+      fd.forEach((v,k)=>{ if(k!=="csrfmiddlewaretoken") data[k]=v; });
+      fetch("{% url 'warehouse_save_draft' receipt_id %}", {
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+        body: JSON.stringify(data)
+      });
+    }, 1200);
+  }
+  form.addEventListener('input', autosave);
+
+  // 8) Перед submit ещё раз убеждаемся, что подпись в hidden
+  form.addEventListener('submit', ()=>{
+    const hidden = document.getElementById('signature_png');
+    if (hidden && !hidden.value && hasInk()) {
+      hidden.value = canvas.toDataURL('image/png');
+    }
+  });
+})();
+
+function checkReady(){
+  const hasInk = !ctx.getImageData(0,0,canvas.width,canvas.height).data.every(v=>v===0);
+  const driverFilled = document.querySelector('input[name="driver_name"]').value.trim().length>0
+                    && document.querySelector('input[name="driver_phone"]').value.trim().length>0;
+  document.getElementById('accept-btn').disabled = !(hasInk && driverFilled);
+  if(hasInk){
+    document.getElementById('signature_png').value = canvas.toDataURL('image/png');
+  } else {
+    document.getElementById('signature_png').value = '';
+  }
+}
+['driver_name','driver_phone'].forEach(n=>{
+  const el=document.querySelector(`input[name="${n}"]`);
+  el.addEventListener('input', checkReady);
+});
+
+/* ——— Автосохранение черновика на сервер ——— */
+let draftTimer=null;
+function autosave(){
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(()=>{
+    const fd = new FormData(document.getElementById('accept-form'));
+    const data = {};
+    fd.forEach((v,k)=>{ if(k!=="csrfmiddlewaretoken") data[k]=v; });
+    fetch("{% url 'warehouse_save_draft' receipt_id %}", {
+      method: "POST",
+      headers: {"X-CSRFToken": "{{ csrf_token }}"},
+      body: JSON.stringify(data)
+    });
+  }, 1200);
+}
+document.getElementById('accept-form').addEventListener('input', autosave);
+
+
+document.getElementById('accept-form').addEventListener('submit', ()=>{
+  const hidden = document.getElementById('signature_png');
+  if (!hidden.value) {
+    let data = '';
+    try {
+      data = canvas.toDataURL('image/webp', 0.9); // компактнее
+      if (!data || data.indexOf('data:image/webp') !== 0) {
+        data = canvas.toDataURL('image/png');     // fallback
+      }
+    } catch(e) { /* ignore */ }
+    if (data) hidden.value = data;
+  }
+});
+</script>
+
+<script>
+(function(){
+  const canvas = document.getElementById('sig') || document.querySelector('.signature-pad canvas');
+  if (!canvas) return;
+
+  canvas.style.touchAction = 'none';
+  canvas.style.webkitUserSelect = 'none';
+
+  let signing = false;
+  let savedScrollY = 0;
+
+  const preventScroll = (e) => {
+    if (signing) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
+</script>
+
+
+
+{% endblock %}

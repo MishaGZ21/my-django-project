@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Быстрый расчёт — {{ qq.get_category_display }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title is-4">Быстрый расчёт — {{ qq.get_category_display }}</h1>
+    <p class="mb-2"><b>Телефон:</b> {{ qq.phone }} &nbsp; <b>Дата:</b> {{ qq.created_at|date:"d.m.Y H:i" }}</p>
+    <div class="buttons">
+      <a class="button is-link" href="{% url 'quick_quote_pdf' qq.id %}">Скачать PDF</a>
+      <a class="button" href="{% url 'quick_quote_history' %}">К истории</a>
+    </div>
+
+    <div class="columns">
+      <div class="column is-6">
+        <table class="table is-fullwidth is-narrow">
+          <tbody>
+            <tr><th>Обработка материалов</th><td class="has-text-right">{{ qq.amt_processing }}</td></tr>
+            <tr><th>ПВХ (узкая)</th><td class="has-text-right">{{ qq.amt_pvc }}</td></tr>
+            <tr><th>Фасады</th><td class="has-text-right">{{ qq.amt_facades }}</td></tr>
+            <tr><th>Итого услуги</th><td class="has-text-right">{{ qq.amt_services_total }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="column is-6">
+        <table class="table is-fullwidth is-narrow">
+          <tbody>
+            <tr><th>Сумма закупа</th><td class="has-text-right">{{ qq.amt_materials }}</td></tr>
+            <tr><th>Фурнитура min / max / avg</th><td class="has-text-right">{{ qq.furn_min }} / {{ qq.furn_max }} / {{ qq.furn_avg }}</td></tr>
+            <tr><th class="has-text-weight-bold">ИТОГО</th><td class="has-text-right has-text-weight-bold">{{ qq.grand_total }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if qq.facades.all %}
+    <h3 class="title is-6">Фасады</h3>
+    <table class="table is-fullwidth is-narrow is-striped">
+      <thead><tr><th>Тип</th><th class="has-text-right">Площадь, м²</th><th class="has-text-right">Сумма</th></tr></thead>
+      <tbody>
+        {% for f in qq.facades.all %}
+          <tr><td>{{ f.price_item.title }}</td><td class="has-text-right">{{ f.area }}</td><td class="has-text-right">{{ f.cost }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

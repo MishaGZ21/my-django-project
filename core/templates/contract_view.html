@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Договор по заказу №{{ order.order_number }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title">Договор по заказу №{{ order.order_number }}</h1>
+    {% if contract %}
+      <div class="box">
+        <div class="columns is-multiline">
+          <div class="column is-4"><strong>Статус:</strong> {{ contract.get_status_display|default:contract.status }}</div>
+          <div class="column is-4"><strong>Срок сдачи:</strong> {{ contract.due_date|default:"—" }}</div>
+          <div class="column is-4"><strong>Материал:</strong> {{ contract.get_material_type_display|default:contract.material_type }}</div>
+          <div class="column is-4"><strong>ЛДСП (листов):</strong> {{ contract.lds_count|default:"—" }}</div>
+          <div class="column is-4"><strong>Фасады м²:</strong> {{ contract.facades_m2|default:"—" }}</div>
+        </div>
+      </div>
+    {% else %}
+      <article class="message is-warning">
+        <div class="message-body">Договор ещё не создан.</div>
+      </article>
+    {% endif %}
+    <div class="buttons is-right">
+      <a href="{% url 'orders_all' %}" class="button">Назад к списку</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

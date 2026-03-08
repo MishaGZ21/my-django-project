@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Расчёт — {{ order.order_number }}{% endblock %}
+
+{% block content %}
+
+<style>
+/* Override Bulma colors for success light notifications */
+.notification.is-success.is-light {
+  background-color: #effaf5;
+  color: #257953;
+  border-color: #48c78e;
+  border-radius: 4px;
+  border-style: solid;
+  border-width: 0 0 0 4px;
+  padding: 1.25em 1.5em;
+  
+}
+
+.button.is-success {
+    background-color: #485fc7;
+    border-color: transparent;
+    color: #fff;
+	font-size: 1.25rem;
+}
+</style>
+
+
+
+<section class="section">
+  <div class="container">
+    <h1 class="title">Расчёт по заказу {{ order.order_number }}</h1>
+
+
+{% if messages %}
+  {% for message in messages %}
+    {% if 'calc_saved' in message.tags %}
+      <div class="notification is-success is-light">
+        <div class="is-flex is-justify-content-space-between is-align-items-center is-flex-wrap-wrap">
+          <div>{{ message|safe }}</div>
+          <div class="buttons">
+            <a class="button is-small is-success" href="{% url 'payment_new' order.id %}">Оплата</a>
+            <a class="button is-small is-success" target="_blank" href="{% url 'purchase_pdf' order.id %}">Скачать PDF</a>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="notification is-info is-light">{{ message|safe }}</div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+<p class="subtitle">Клиент: {{ order.customer_name }}</p>
+
+    <div class="box">
+      <form id="calc-form" method="post" class="mb-5">
+        {% csrf_token %}
+        {% include "calculation/_form.html" %}
+        <div class="buttons is-right">
+          <button class="button is-link is-light"
+                  type="submit"
+                  name="action"
+                  value="reload_prices"
+                  formnovalidate>
+            Загрузить новые цены
+          </button>
+
+          
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

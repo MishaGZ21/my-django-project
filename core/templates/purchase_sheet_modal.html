@@ -1,0 +1,379 @@
+{% load static %}
+<form method="post" action="" id="purchase-sheet-form">
+  {% csrf_token %}
+  <div class="content">
+    <h2 class="title is-4">Лист закупа — заказ №{{ order.order_number }}</h2>
+  </div>
+
+  <div id="ps-pairs">
+
+<div class="box ps-pair" data-index="1" id="pair-1">
+  <div class="group-header"><span class="group-badge">1</span><span class="group-title">ЛДСП цвет 1</span></div>
+<div class="columns is-vcentered">
+    <div class="column">
+            <label class="label">ЛДСП цвет 1 (Наименование)</label>
+      <div class="control">
+        {% if form.lds_name1 %}{{ form.lds_name1 }}{% else %}<input type="text" name="lds_name1" class="input">{% endif %}
+      </div>
+      <label class="label">ЛДСП цвет 1 (Формат)</label>
+      <div class="control">
+        {% if form.lds_format1 %}{{ form.lds_format1 }}{% else %}<input type="text" name="lds_format1" class="input">{% endif %}
+      </div>
+<label class="label">ЛДСП цвет 1 (листов)</label>
+      <div class="control">
+        {% if form.lds_color1 %}{{ form.lds_color1 }}{% else %}<input type="number" name="lds_color1" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column">
+      <label class="label">ПВХ цвет 1 (метров)</label>
+      <div class="control">
+        {% if form.pvc_color1 %}{{ form.pvc_color1 }}{% else %}<input type="number" name="pvc_color1" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column is-narrow">
+
+    </div>
+  </div>
+</div>
+
+
+<div class="box ps-pair is-hidden" data-index="2" id="pair-2">
+  <div class="columns is-vcentered">
+    <div class="column">
+      <label class="label">ЛДСП цвет 2 (листов)</label>
+      <div class="control">
+        {% if form.lds_color2 %}{{ form.lds_color2 }}{% else %}<input type="number" name="lds_color2" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column">
+      <label class="label">ПВХ цвет 2 (метров)</label>
+      <div class="control">
+        {% if form.pvc_color2 %}{{ form.pvc_color2 }}{% else %}<input type="number" name="pvc_color2" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column is-narrow">
+      <button class="button is-light is-danger ps-remove" data-target="#pair-2" type="button">Удалить</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="box ps-pair is-hidden" data-index="3" id="pair-3">
+  <div class="columns is-vcentered">
+    <div class="column">
+      <label class="label">ЛДСП цвет 3 (листов)</label>
+      <div class="control">
+        {% if form.lds_color3 %}{{ form.lds_color3 }}{% else %}<input type="number" name="lds_color3" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column">
+      <label class="label">ПВХ цвет 3 (метров)</label>
+      <div class="control">
+        {% if form.pvc_color3 %}{{ form.pvc_color3 }}{% else %}<input type="number" name="pvc_color3" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column is-narrow">
+      <button class="button is-light is-danger ps-remove" data-target="#pair-3" type="button">Удалить</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="box ps-pair is-hidden" data-index="4" id="pair-4">
+  <div class="columns is-vcentered">
+    <div class="column">
+      <label class="label">ЛДСП цвет 4 (листов)</label>
+      <div class="control">
+        {% if form.lds_color4 %}{{ form.lds_color4 }}{% else %}<input type="number" name="lds_color4" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column">
+      <label class="label">ПВХ цвет 4 (метров)</label>
+      <div class="control">
+        {% if form.pvc_color4 %}{{ form.pvc_color4 }}{% else %}<input type="number" name="pvc_color4" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column is-narrow">
+      <button class="button is-light is-danger ps-remove" data-target="#pair-4" type="button">Удалить</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="box ps-pair is-hidden" data-index="5" id="pair-5">
+  <div class="columns is-vcentered">
+    <div class="column">
+      <label class="label">ЛДСП цвет 5 (листов)</label>
+      <div class="control">
+        {% if form.lds_color5 %}{{ form.lds_color5 }}{% else %}<input type="number" name="lds_color5" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column">
+      <label class="label">ПВХ цвет 5 (метров)</label>
+      <div class="control">
+        {% if form.pvc_color5 %}{{ form.pvc_color5 }}{% else %}<input type="number" name="pvc_color5" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column is-narrow">
+      <button class="button is-light is-danger ps-remove" data-target="#pair-5" type="button">Удалить</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="box ps-pair is-hidden" data-index="6" id="pair-6">
+  <div class="columns is-vcentered">
+    <div class="column">
+      <label class="label">ЛДСП цвет 6 (листов)</label>
+      <div class="control">
+        {% if form.lds_color6 %}{{ form.lds_color6 }}{% else %}<input type="number" name="lds_color6" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column">
+      <label class="label">ПВХ цвет 6 (метров)</label>
+      <div class="control">
+        {% if form.pvc_color6 %}{{ form.pvc_color6 }}{% else %}<input type="number" name="pvc_color6" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column is-narrow">
+      <button class="button is-light is-danger ps-remove" data-target="#pair-6" type="button">Удалить</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="box ps-pair is-hidden" data-index="7" id="pair-7">
+  <div class="columns is-vcentered">
+    <div class="column">
+      <label class="label">ЛДСП цвет 7 (листов)</label>
+      <div class="control">
+        {% if form.lds_color7 %}{{ form.lds_color7 }}{% else %}<input type="number" name="lds_color7" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column">
+      <label class="label">ПВХ цвет 7 (метров)</label>
+      <div class="control">
+        {% if form.pvc_color7 %}{{ form.pvc_color7 }}{% else %}<input type="number" name="pvc_color7" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column is-narrow">
+      <button class="button is-light is-danger ps-remove" data-target="#pair-7" type="button">Удалить</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="box ps-pair is-hidden" data-index="8" id="pair-8">
+  <div class="columns is-vcentered">
+    <div class="column">
+      <label class="label">ЛДСП цвет 8 (листов)</label>
+      <div class="control">
+        {% if form.lds_color8 %}{{ form.lds_color8 }}{% else %}<input type="number" name="lds_color8" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column">
+      <label class="label">ПВХ цвет 8 (метров)</label>
+      <div class="control">
+        {% if form.pvc_color8 %}{{ form.pvc_color8 }}{% else %}<input type="number" name="pvc_color8" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column is-narrow">
+      <button class="button is-light is-danger ps-remove" data-target="#pair-8" type="button">Удалить</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="box ps-pair is-hidden" data-index="9" id="pair-9">
+  <div class="columns is-vcentered">
+    <div class="column">
+      <label class="label">ЛДСП цвет 9 (листов)</label>
+      <div class="control">
+        {% if form.lds_color9 %}{{ form.lds_color9 }}{% else %}<input type="number" name="lds_color9" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column">
+      <label class="label">ПВХ цвет 9 (метров)</label>
+      <div class="control">
+        {% if form.pvc_color9 %}{{ form.pvc_color9 }}{% else %}<input type="number" name="pvc_color9" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column is-narrow">
+      <button class="button is-light is-danger ps-remove" data-target="#pair-9" type="button">Удалить</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="box ps-pair is-hidden" data-index="10" id="pair-10">
+  <div class="columns is-vcentered">
+    <div class="column">
+      <label class="label">ЛДСП цвет 10 (листов)</label>
+      <div class="control">
+        {% if form.lds_color10 %}{{ form.lds_color10 }}{% else %}<input type="number" name="lds_color10" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column">
+      <label class="label">ПВХ цвет 10 (метров)</label>
+      <div class="control">
+        {% if form.pvc_color10 %}{{ form.pvc_color10 }}{% else %}<input type="number" name="pvc_color10" class="input">{% endif %}
+      </div>
+    </div>
+    <div class="column is-narrow">
+      <button class="button is-light is-danger ps-remove" data-target="#pair-10" type="button">Удалить</button>
+    </div>
+  </div>
+</div>
+
+  </div>
+
+  <div class="field has-text-centered">
+    <button class="button is-rounded is-link" id="ps-add" type="button" title="Добавить ещё пару">
+      <span class="icon"><i class="fas fa-plus"></i></span>
+    </button>
+  </div>
+
+  <div class="columns">
+    <div class="column">
+      <label class="label">Столешница (шт.)</label>
+      <div class="control">{{ form.tabletop_count }}</div>
+      <label class="checkbox mt-2">
+        {{ form.tabletop_length_3m }} 3 метра
+      </label>
+    </div>
+    <div class="column">
+      <label class="label">ХДФ задняя стенка (листов)</label>
+      <div class="control">{{ form.hdf_count }}</div>
+    </div>
+  </div>
+
+  <div class="field is-grouped is-justify-content-flex-end">
+    <div class="control">
+      <button class="button" type="button" id="ps-cancel">Отмена</button>
+    </div>
+    <div class="control">
+      <button class="button is-primary" type="submit">Сохранить и распечатать</button>
+    </div>
+  </div>
+
+  <div class="field has-text-centered mt-3">
+    <button type="button" id="add-pair-btn" class="button is-light is-fullwidth">+ Добавить цвет</button>
+  </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const pairs = Array.from(document.querySelectorAll('#ps-pairs .ps-pair'));
+  function hideAllExceptFirst() {
+    pairs.forEach((el, idx) => {
+      if (idx === 0) {
+        el.classList.remove('is-hidden');
+        el.style.display = '';
+      } else {
+        el.classList.add('is-hidden');
+        el.style.display = 'none';
+      }
+    });
+  }
+  function revealPrefilled() {
+    // если у пары есть какое-то значение, показать её и все предыдущие
+    const hasValue = (el) => {
+      const inputs = el.querySelectorAll('input, select, textarea');
+      for (const inp of inputs) {
+        if (inp.type === 'checkbox' || inp.type === 'radio') {
+          if (inp.checked) return true;
+        } else if (inp.value && String(inp.value).trim() !== '') {
+          return true;
+        }
+      }
+      return false;
+    };
+    let maxIndex = 0;
+    pairs.forEach((el, idx) => { if (hasValue(el)) maxIndex = Math.max(maxIndex, idx); });
+    for (let i = 0; i <= maxIndex; i++) {
+      pairs[i].classList.remove('is-hidden');
+      pairs[i].style.display = '';
+    }
+  }
+  function updateAddButton() {
+    const btn = document.getElementById('add-pair-btn');
+    if (!btn) return;
+    const hidden = pairs.filter(el => el.classList.contains('is-hidden') || el.style.display === 'none');
+    if (hidden.length === 0) {
+      btn.disabled = true;
+      btn.classList.add('is-static');
+      btn.textContent = 'Достигнут лимит (10)';
+    } else {
+      btn.disabled = false;
+      btn.classList.remove('is-static');
+      btn.textContent = '+ Добавить цвет';
+    }
+  }
+  hideAllExceptFirst();
+  revealPrefilled();
+  updateAddButton();
+
+  const btn = document.getElementById('add-pair-btn');
+  if (btn) {
+    btn.addEventListener('click', function() {
+      const nextHidden = pairs.find(el => el.classList.contains('is-hidden') || el.style.display === 'none');
+      if (nextHidden) {
+        nextHidden.classList.remove('is-hidden');
+        nextHidden.style.display = '';
+      }
+      updateAddButton();
+    });
+  }
+});
+</script>
+
+</form>
+
+<script>
+(function(){
+  // hide empty pairs based on initial data
+  function isEmptyPair(pair) {
+    const inputs = pair.querySelectorAll("input");
+    for (const i of inputs) {
+      if (i.value && i.value !== "0") return false;
+    }
+    return true;
+  }
+  const pairs = Array.from(document.querySelectorAll(".ps-pair"));
+  // ensure only the first visible by default
+  for (let idx = 1; idx < pairs.length; idx++) {
+    const p = pairs[idx];
+    if (isEmptyPair(p)) p.classList.add("is-hidden");
+  }
+
+  // Add button logic
+  const addBtn = document.getElementById("ps-add");
+  addBtn.addEventListener("click", () => {
+    const hidden = pairs.find(p => p.classList.contains("is-hidden"));
+    if (hidden) {
+      hidden.classList.remove("is-hidden");
+      const input = hidden.querySelector("input");
+      if (input) input.focus();
+    }
+  });
+
+  // Remove buttons
+  document.querySelectorAll(".ps-remove").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const sel = btn.getAttribute("data-target");
+      const block = document.querySelector(sel);
+      if (!block) return;
+      // clear inputs and hide
+      block.querySelectorAll("input").forEach(i => { i.value = ""; });
+      block.classList.add("is-hidden");
+    });
+  });
+
+  // Close modal by cancel
+  const cancel = document.getElementById("ps-cancel");
+  if (cancel) cancel.addEventListener("click", function(e){
+    e.preventDefault();
+    window.dispatchEvent(new CustomEvent("ajax-modal:close"));
+  });
+})();
+</script>

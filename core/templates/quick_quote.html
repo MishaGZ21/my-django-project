@@ -1,0 +1,429 @@
+{% extends "base.html" %}
+{% load static %}
+{% load formatting %}
+{% block title %}Быстрый расчёт{% endblock %}
+{% block content %}
+<style>
+  :root{
+    --c-ink:#111827; --c-muted:#6b7280; --c-brd:#e5e7eb; --c-bg:#fafafa;
+    --c-card:#ffffff; --c-head:#f3f4f6; --c-accent:#f97316; --c-accent-weak:#ffedd5;
+    --c-dark:#0f172a;
+  }
+
+  /* общий контейнер результатов можно оставить прежний .qq-shell;
+     ниже — стили только для трёх групп */
+  .s-group{
+    background:var(--c-card);
+    border:1px solid var(--c-brd);
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 6px 18px rgba(17,24,39,.05);
+    margin-bottom:1rem;
+  }
+  .s-h{
+    display:flex; align-items:center; gap:.75rem;
+    background:var(--c-head);
+    padding:.85rem 1rem;
+    border-bottom:1px solid var(--c-brd);
+    font-weight:700; color:var(--c-ink);
+  }
+  .s-h::before{
+    content:""; width:6px; height:22px; border-radius:3px; background:var(--c-accent);
+  }
+
+  .s-grid{
+    display:grid; gap:.9rem; padding:1rem;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+
+  .s-card{
+    background:var(--c-card);
+    border:1px solid var(--c-brd);
+    border-radius:12px;
+    padding:.9rem 1rem;
+    display:flex; flex-direction:column; gap:.35rem;
+  }
+  .s-card .t{ font-size:.9rem; color:#000000; }
+  .s-card .v{ font:600 1.22rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--c-ink); text-align:right; }
+  .s-card .sub{ font-size:.88rem; color:var(--c-muted); }
+  .s-card.total{
+    border-color:#fdba74; background:var(--c-accent-weak);
+  }
+
+  .s-note{
+    padding:0 1rem 1rem; color:var(--c-muted); font-size:.9rem;
+  }
+
+  /* финальный ИТОГО */
+  .grand{
+    background:var(--c-dark);
+    color:#fff;
+    border:1px solid var(--c-dark);
+    border-radius:0px;
+    padding:1rem 1.1rem;
+    box-shadow:0 10px 24px rgba(15,23,42,.25);
+  }
+  .grand .cap{ font-weight:800; letter-spacing:.3px; }
+  .grand .sum{ font:700 3rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .grand .eq{ margin-top:.25rem; font-size:.9rem; color:#cbd5e1; }
+  
+  /* ЕДИНЫЙ СТЕК ГРУПП */
+  .s-stack{
+    border:1px solid var(--c-brd);
+    border-radius:14px;          /* общий радиус — даст верх/низ */
+    overflow:hidden;
+    background:var(--c-card);
+  }
+  
+  /* внутри стека: группы без своих бордеров/тени/скруглений/отступов */
+  .s-stack .s-group{
+    margin:0;
+    border:0;
+    border-radius:0;
+    box-shadow:none;
+  }
+  
+  /* между группами — только тонкая линия */
+  .s-stack .s-group + .s-group{
+    border-top:1px solid var(--c-brd);
+  }
+  
+  /* у контейнера результата не нужна внешняя рамка, чтобы не было «двойной» */
+  .qq-shell{ border:0; box-shadow:none; background:transparent; }
+  
+  /* заголовки групп внутри стека — без внешних отступов, плотней к границам */
+  .s-stack .s-h{ margin:0; }
+
+  /* Вводные данные в одну строку с точками-разделителями */
+  .qq-meta.inline{
+    display:flex;
+    align-items:center;
+    gap:1rem 1.4rem;
+    flex-wrap:nowrap;       /* не переносим */
+    white-space:nowrap;     /* не переносим текст */
+    overflow-x:auto;        /* если не влезает — мягкий горизонтальный скролл */
+    scrollbar-width:none;   /* тонкий скролл в Firefox */
+  }
+  .qq-meta.inline::-webkit-scrollbar{ display:none; } /* прячем скроллбар в WebKit */
+  .qq-meta.inline > *{
+    display:inline-flex;
+    align-items:baseline;
+  }
+  .qq-meta.inline > * + *{
+    position:relative;
+    padding-left:1.1rem;
+  }
+  .qq-meta.inline > * + *::before{
+    content:"•";
+    position:absolute;
+    left:0;
+    color:var(--c-muted);
+  }
+  /* ЧИПЫ (справа в заголовке) */
+  .qq-chips{ display:flex; gap:.45rem; flex-wrap:wrap; }
+  .chip{ font-size: .8rem;
+    color: #5d5c5c;
+    background: #fff;
+    border: 1px solid var(--qq-border);
+    padding: .2rem .55rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    font-weight: 600; 
+  }
+  
+  
+   /* МЕТА */
+  .qq-meta{
+    display:grid; gap:.5rem 1.2rem;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    color:var(--qq-muted); font-size:.96rem;
+  }
+  .qq-meta b{ color:var(--qq-text); }
+
+</style>
+
+
+
+
+
+
+
+
+
+
+<section class="section">
+  <div class="container">
+    <h1 class="title is-4">Быстрый расчёт</h1>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="field">
+        <label class="label">Номер телефона <span class="has-text-danger">*</span></label>
+        <div class="control">
+          <input name="phone" value="{{ phone|default:'' }}" class="input" placeholder="+7..." required>
+        </div>
+      </div>
+
+      <div class="tabs is-toggle is-small">
+        <ul>
+          <li class="{% if category == 'kitchen' %}is-active{% endif %}"><a href="#" onclick="switchTab(event,'kitchen')">Кухня</a></li>
+          <li class="{% if category == 'wardrobe' %}is-active{% endif %}"><a href="#" onclick="switchTab(event,'wardrobe')">Шкаф</a></li>
+          <li class="{% if category == 'closet' %}is-active{% endif %}"><a href="#" onclick="switchTab(event,'closet')">Гардероб</a></li>
+          <li class="{% if category == 'misc' %}is-active{% endif %}"><a href="#" onclick="switchTab(event,'misc')">Разное</a></li>
+        </ul>
+      </div>
+      <input type="hidden" name="category" id="id_category" value="{{ category|default:'kitchen' }}">
+
+      <!-- Кухня -->
+      <div class="box tabpane" data-tab="kitchen" {% if category != 'kitchen' %}style="display:none"{% endif %}>
+        <div class="columns">
+          <div class="column">
+            <label class="label">Кол-во ЛДСП (листов)</label>
+            <input class="input" name="qty_ldsp" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="column">
+            <label class="label">Кол-во ХДФ (листов)</label>
+            <input class="input" name="qty_hdf" inputmode="decimal" placeholder="0">
+          </div>
+          <div class="column">
+            <label class="label">Кол-во Столешниц (шт.)</label>
+            <input class="input" name="qty_countertops" inputmode="decimal" placeholder="0">
+          </div>
+        </div>
+        {% include "quick_quote_facades.html" %}
+      </div>
+
+      <!-- Шкаф, Гардероб, Разное -->
+      {% for tab in tabs %}
+        <div class="box tabpane" data-tab="{{ tab }}" {% if category != tab %}style="display:none"{% endif %}>
+          <div class="columns">
+            <div class="column">
+              <label class="label">Кол-во ЛДСП (листов)</label>
+              <input class="input" name="qty_ldsp" inputmode="decimal" placeholder="0">
+            </div>
+            <div class="column">
+              <label class="label">Кол-во ХДФ (листов)</label>
+              <input class="input" name="qty_hdf" inputmode="decimal" placeholder="0">
+            </div>
+            {% if tab == 'misc' %}
+            <div class="column">
+              <label class="label">Кол-во Столешниц (шт.)</label>
+              <input class="input" name="qty_countertops" inputmode="decimal" placeholder="0">
+            </div>
+            {% endif %}
+          </div>
+          {% include "quick_quote_facades.html" %}
+        </div>
+      {% endfor %}
+
+
+      <div class="buttons mt-2">
+        <button class="button is-link" type="submit" name="action" value="calc">Рассчитать</button>
+        {% if result %}
+        <button class="button is-success" type="submit" name="save" value="1">Сохранить в историю</button>
+        {% endif %}
+      </div>
+    </form>
+    
+    {% if result %}
+    <div class="qq-shell mt-5">
+    
+      <!-- ЕДИНЫЙ СТЕК ГРУПП -->
+      <div class="s-stack">
+	    
+
+        <!-- группа 1a: Вводные данные (над детализацией фасадов) -->
+        <div class="s-group">
+          <div class="s-h">
+            Вводные данные
+            <div class="qq-chips" style="margin-left:auto;">
+              <span class="chip">Норма ПВХ: {{ result.pvc_norm|fmt_num }} м/лист</span>
+              {% if result.pvc_meters %}
+                <span class="chip">ПВХ: {{ result.pvc_meters|fmt_num }} м</span>
+              {% endif %}
+            </div>
+          </div>
+        
+          <div class="qq-summary" style="padding: 0 1rem 1rem;">
+            <div class="qq-meta">
+              <span><b>Телефон:</b> {{ result.phone }}</span>
+              <span><b>Категория:</b>
+                {% if result.category == 'kitchen' %}Кухня{% elif result.category == 'wardrobe' %}Шкаф{% elif result.category == 'closet' %}Гардероб{% else %}Разное{% endif %}
+              </span>
+              <span><b>ЛДСП (лист.):</b> {{ result.qty_ldsp|fmt_num }}</span>
+              <span><b>ХДФ (лист.):</b> {{ result.qty_hdf|fmt_num }}</span>
+              <span><b>Столешницы (шт.):</b> {{ result.qty_countertops|fmt_num }}</span>
+              {% if result.facade_area_total %}
+                <span><b>Фасады, м²:</b> {{ result.facade_area_total|fmt_num }}
+                  <span class="qq-note">(≈ {{ result.facade_sheets|fmt_num }} лист.)</span>
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+	
+	    {% if result.facades %}
+        <!-- группа 1b: Детализация фасадов (сразу под услугами, без скруглений) -->
+        <div class="s-group">
+          <div class="s-h">Детализация фасадов</div>
+          <div class="qq-table">
+            <table class="table is-fullwidth is-striped is-hoverable">
+              <thead>
+                <tr>
+                  <th>Фасад</th>
+                  <th class="has-text-right">Площадь, м²</th>
+                  <th class="has-text-right">Сумма</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in result.facades %}
+                <tr>
+                  <td>{{ f.title }}</td>
+                  <td class="has-text-right">{{ f.area|fmt_num }}</td>
+                  <td class="has-text-right">{{ f.cost|fmt_money }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+		
+		
+        <!-- группа 1: Стоимость услуг (верхняя часть) -->
+        <div class="s-group">
+          <div class="s-h">Стоимость услуг</div>
+          <div class="s-grid">
+    
+            <div class="s-card">
+              <div class="t">Обработка материалов</div>
+              <div class="v">{{ result.amt_processing|fmt_money }}</div>
+              <div class="sub">Технология + раскрой + присадка + кромка</div>
+            </div>
+    
+            <div class="s-card">
+              <div class="t">МДФ Фасады</div>
+              <div class="v">{{ result.amt_facades|fmt_money }}</div>
+            </div>
+    
+            <div class="s-card total">
+              <div class="t"><strong>Итого услуги</strong></div>
+              <div class="v">{{ result.amt_services_total|fmt_money }}</div>
+              <div class="sub">= Обработка материалов + МДФ Фасады</div>
+            </div>
+    
+          </div>
+        </div>
+    
+        
+    
+        <!-- группа 2: Стоимость закупа (середина) -->
+        <div class="s-group">
+          <div class="s-h">Стоимость закупа</div>
+          <div class="s-grid">
+    
+            <div class="s-card">
+              <div class="t">Сумма закупа (материалы)</div>
+              <div class="v">{{ result.amt_materials|fmt_money }}</div>
+              {% if result.amt_pvc_materials %}
+                <div class="sub">в т.ч. ПВХ (закуп): {{ result.amt_pvc_materials|fmt_money }}</div>
+              {% endif %}
+            </div>
+    
+            <div class="s-card">
+              <div class="t">Средняя фурнитура</div>
+              <div class="v">{{ result.furn_avg|fmt_money }}</div>
+              <div class="sub">между min и max</div>
+            </div>
+    
+            <div class="s-card total">
+              <div class="t"><strong>Итого закуп</strong></div>
+              <div class="v">{{ result.amt_procure_total|fmt_money }}</div>
+              <div class="sub">= Сумма закупа (материалы) + Средняя фурнитура</div>
+            </div>
+    
+          </div>
+        </div>
+    
+        <!-- группа 3: ИТОГО (нижняя часть) -->
+        <div class="s-group">
+          <div class="grand">
+            <div class="cap">ИТОГО</div>
+            <div class="sum">{{ result.grand_total|fmt_money }}</div>
+            <div class="eq">= Итого услуги + Итого закуп</div>
+          </div>
+        </div>
+    
+      </div> <!-- /s-stack -->
+    
+      <!-- примечание + кнопки уже вне стека -->
+      <div class="s-note">
+        Оплата подтверждает согласие с ТЗ и составом работ. Данный документ не является фискальным чеком.
+      </div>
+    
+      <div class="qq-foot" style="padding:0 1rem 1rem;">
+        <div></div>
+        <div>
+          <button type="submit" name="save" value="1" class="button is-primary">Сохранить в историю</button>
+          <a class="button is-light" href="{% url 'quick_quote_history' %}">История</a>
+        </div>
+      </div>
+    
+    </div>
+    {% endif %}
+
+
+
+
+
+
+    <div class="mt-4">
+      <a class="button is-light" href="{% url 'quick_quote_history' %}">История быстрых расчётов</a>
+    </div>
+  </div>
+</section>
+
+<script>
+function switchTab(e,tab){
+  e.preventDefault();
+  document.getElementById('id_category').value = tab;
+
+  document.querySelectorAll('.tabpane').forEach(pane => {
+    const active = (pane.dataset.tab === tab);
+    pane.style.display = active ? '' : 'none';
+    // отключаем поля скрытых вкладок
+    pane.querySelectorAll('input, select, textarea').forEach(el => el.disabled = !active);
+  });
+
+  document.querySelectorAll('.tabs li').forEach(li => li.classList.remove('is-active'));
+  const map = {kitchen:'Кухня', wardrobe:'Шкаф', closet:'Гардероб', misc:'Разное'};
+  [...document.querySelectorAll('.tabs li a')].forEach(a=>{
+    if(a.innerText.trim()===map[tab]) a.parentElement.classList.add('is-active');
+  });
+}
+
+// при загрузке — отключаем неактивные вкладки
+document.addEventListener('DOMContentLoaded', () => {
+  const active = document.getElementById('id_category').value || 'kitchen';
+  document.querySelectorAll('.tabpane').forEach(pane => {
+    const isActive = (pane.dataset.tab === active);
+    pane.querySelectorAll('input, select, textarea').forEach(el => el.disabled = !isActive);
+  });
+});
+
+// ДОБАВЛЕНИЕ строки фасада — локально для текущей вкладки
+function addFacadeRow(btn){
+  const pane = btn.closest('.tabpane');
+  const wrap = pane.querySelector('.facadeRows');
+  const tpl  = pane.querySelector('.facadeRowTpl');
+  const node = tpl.content.cloneNode(true);
+  wrap.appendChild(node);
+}
+
+// Удаление строки (как было)
+function removeRow(btn){ btn.closest('.columns').remove(); }
+</script>
+
+
+{% endblock %}

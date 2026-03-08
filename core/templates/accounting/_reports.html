@@ -1,0 +1,1052 @@
+<div class="box">
+  <div style="font-size: 20px; font-weight: 700;">Обьем продаж в ТГ.</div></br>
+  <div class="level is-mobile">
+    <div class="level-left">
+      <div class="buttons has-addons mr-3">
+        <button class="button is-small" data-range="week">Неделя</button>
+        <button class="button is-small" data-range="month">Месяц</button>
+        <button class="button is-small" data-range="6m">6 мес.</button>
+        <button class="button is-small" data-range="year">Год</button>
+        <button class="button is-small" data-range="all">Всё время</button>
+      </div>
+
+      
+    </div>
+    <div class="level-right">
+      <span id="js-acc-report-range" class="tag is-light is-small"></span>
+    </div>
+  </div>
+
+  <div>
+    <canvas id="js-acc-report-chart" height="90"></canvas>
+  </div></br>
+  <div class="buttons has-addons">
+        <button class="button is-small" data-bucket="1">1 день</button>
+        <button class="button is-small" data-bucket="3">3 дня</button>
+        <button class="button is-small" data-bucket="7">Неделя</button>
+        <button class="button is-small" data-bucket="30">Месяц</button>
+      </div>
+  <p class="is-size-7 has-text-grey mt-3">
+    Наведите на точку графика, чтобы увидеть список заказов и сумму оплат за выбранный период.
+  </p>
+</div>
+
+<div class="box mt-5">
+  <div style="font-size: 20px; font-weight: 700;">Обьем продаж (Дизайнер)</div></br>
+  <div class="level is-mobile">
+    <div class="level-left">
+      <div class="buttons has-addons mr-3">
+        <button class="button is-small" data-dr-range="week">Неделя</button>
+        <button class="button is-small" data-dr-range="month">Месяц</button>
+        <button class="button is-small" data-dr-range="6m">6 мес.</button>
+        <button class="button is-small" data-dr-range="year">Год</button>
+        <button class="button is-small" data-dr-range="all">Всё время</button>
+      </div>
+
+      
+    </div>
+    <div class="level-right">
+      <span id="js-acc-designers-range" class="tag is-light is-small"></span>
+    </div>
+  </div>
+
+  <div>
+    <canvas id="js-acc-designers-chart" height="110"></canvas>
+  </div>
+  <div class="buttons has-addons">
+        <button class="button is-small" data-dr-bucket="1">1 день</button>
+        <button class="button is-small" data-dr-bucket="3">3 дня</button>
+        <button class="button is-small" data-dr-bucket="7">Неделя</button>
+        <button class="button is-small" data-dr-bucket="30">Месяц</button>
+      </div>
+  <p class="is-size-7 has-text-grey mt-3">
+    На графике показаны суммы оплат по дизайнерам. Наведите на точку линии дизайнера, чтобы увидеть,
+    какие заказы он принял и на какую сумму за выбранный период.
+  </p>
+</div>
+
+<div class="box mt-5">
+  <div class="level is-mobile">
+    <div class="level-left">
+      <h2 class="title is-5 mb-0">Итоги за период</h2>
+    </div>
+  </div>
+
+    <form id="reports-summary-filters" class="field is-grouped is-grouped-multiline mb-4">
+    <div class="field">
+      <label class="label is-small">С</label>
+      <div class="control">
+        <input type="date" name="date_from" class="input is-small">
+      </div>
+    </div>
+    <div class="field">
+      <label class="label is-small">По</label>
+      <div class="control">
+        <input type="date" name="date_to" class="input is-small">
+      </div>
+    </div>
+    <div class="field is-align-self-flex-end">
+      <div class="control">
+        <button type="submit" class="button is-link is-small">
+          Применить
+        </button>
+      </div>
+    </div>
+    <div class="field is-align-self-flex-end">
+      <span id="js-acc-summary-range" class="tag is-light is-small"></span>
+    </div>
+  </form>
+
+  <div class="columns is-multiline">
+    <div class="column is-6-desktop is-12-tablet is-12-mobile">
+      <p class="has-text-weight-semibold is-size-6 mb-1">Сумма заказов, ₸</p>
+      <canvas id="js-acc-summary-amount" width="400" height="80"></canvas>
+    </div>
+    <div class="column is-6-desktop is-12-tablet is-12-mobile">
+      <p class="has-text-weight-semibold is-size-6 mb-1">ЛДСП (листы)</p>
+      <canvas id="js-acc-summary-ldsp" width="400" height="80"></canvas>
+    </div>
+    <div class="column is-6-desktop is-12-tablet is-12-mobile">
+      <p class="has-text-weight-semibold is-size-6 mb-1">МДФ краска, м²</p>
+      <canvas id="js-acc-summary-paint" width="400" height="80"></canvas>
+    </div>
+    <div class="column is-6-desktop is-12-tablet is-12-mobile">
+      <p class="has-text-weight-semibold is-size-6 mb-1">МДФ плёнка, м²</p>
+      <canvas id="js-acc-summary-film" width="400" height="80"></canvas>
+    </div>
+  </div>
+
+  <p class="is-size-7 has-text-grey mt-3">
+    Отображаются суммарные значения только по <strong>оплаченным</strong> заказам за выбранный период:
+    сумма оплат, общее количество листов ЛДСП и квадратура фасадов МДФ (краска и плёнка).
+  </p>
+
+</div>
+
+
+
+
+<section class="section pt-4">
+  <h2 class="title is-5">Отчёт по услугам за период</h2>
+
+  <form id="services-report-form" class="field is-grouped is-grouped-multiline mb-3">
+    <div class="field">
+      <label class="label is-small">Период</label>
+      <div class="control">
+        <div class="select is-small">
+          <select name="period">
+            <option value="day">День</option>
+            <option value="week">Неделя</option>
+            <option value="month" selected>Месяц</option>
+            <option value="quarter">Квартал</option>
+            <option value="halfyear">Полугодие</option>
+            <option value="year">Год</option>
+            <option value="all">Всё время</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label is-small">До даты</label>
+      <div class="control">
+        <input type="date" name="date" class="input is-small">
+      </div>
+    </div>
+
+    <div class="field is-align-self-flex-end">
+      <div class="control">
+        <button type="submit" class="button is-link is-small">
+          Сформировать
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <div class="box">
+    <p class="mb-2 is-size-7 has-text-grey" id="services-report-period-label"></p>
+
+    <div class="table-container">
+      <table class="table is-fullwidth is-striped is-hoverable" id="services-report-table">
+        <thead>
+          <tr>
+            <th>Статья</th>
+            <th class="has-text-right">Сумма, тг</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Обработка материала</td>
+            <td class="has-text-right" data-field="processing">0</td>
+          </tr>
+          <tr>
+            <td>Фасады</td>
+            <td class="has-text-right" data-field="facades">0</td>
+          </tr>
+          <tr>
+            <td>Дизайн</td>
+            <td class="has-text-right" data-field="design">0</td>
+          </tr>
+          <tr>
+            <th>Итого</th>
+            <th class="has-text-right" data-field="total">0</th>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="is-size-7 has-text-grey mt-2">
+    В отчёт попадают только <strong>оплаченные</strong> заказы за выбранный период.
+    Суммы берутся из чеков: «Обработка материала», «Фасады», «Дизайн» и итоговая сумма к оплате.
+  </p>
+</section>
+
+
+
+
+<section class="section pt-4">
+  <h2 class="title is-5">Оплаченные заказы</h2>
+
+  <form id="reports-orders-filters" class="field is-grouped is-grouped-multiline mb-3">
+    <div class="field">
+      <label class="label is-small">С</label>
+      <div class="control">
+        <input type="date" name="date_from" class="input is-small">
+      </div>
+    </div>
+    <div class="field">
+      <label class="label is-small">По</label>
+      <div class="control">
+        <input type="date" name="date_to" class="input is-small">
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label is-small">Сортировка</label>
+      <div class="control">
+        <div class="select is-small">
+          <select name="sort">
+            <option value="date">По дате оплаты</option>
+            <option value="order">По номеру заказа</option>
+            <option value="amount">По сумме оплаты</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label is-small">Направление</label>
+      <div class="control">
+        <div class="select is-small">
+          <select name="dir">
+            <option value="desc">По убыванию</option>
+            <option value="asc">По возрастанию</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="field is-align-self-flex-end">
+      <div class="control">
+        <button type="submit" class="button is-link is-small">
+          Применить
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <div class="table-container">
+    <table class="table is-striped is-hoverable is-fullwidth" id="reports-orders-table">
+      <thead>
+      <tr>
+        <th>№ заказа</th>
+        <th>Клиент</th>
+        <th>Телефон</th>
+        <th>Дата оплаты</th>
+        <th>ЛДСП (листы)</th>
+        <th>МДФ краска, м²</th>
+        <th>МДФ плёнка, м²</th>
+        <th class="has-text-centered">Договор</th>
+        <th>Тип оплаты</th>
+        <th>Сумма, тг</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+{# Подключаем Chart.js один раз (если ещё нигде не подключен) #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script>
+  if (window.ChartDataLabels) {
+    Chart.register(ChartDataLabels);
+  }
+</script>
+
+<script>
+(function() {
+  const form = document.getElementById("reports-orders-filters");
+  const tbody = document.querySelector("#reports-orders-table tbody");
+
+  function renderMethods(methods) {
+    if (!methods || !methods.length) return "—";
+    return methods.map(m => {
+      if (m === "cash") return "💵";
+      if (m === "card") return "💳";
+      if (m === "qr")   return "📱";
+      return m;
+    }).join(" ");
+  }
+  
+  function renderContract(flag) {
+    if (flag === true) return "✅";
+    if (flag === false) return "❌";
+    return "—";
+  }
+  
+  async function loadOrders() {
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData);
+
+    const resp = await fetch("{% url 'accounting_reports_orders_table' %}?" + params.toString(), {
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    if (!resp.ok) {
+      console.error("Failed to load orders table", resp.status);
+      return;
+    }
+
+    const data = await resp.json();
+    tbody.innerHTML = "";
+
+    data.rows.forEach(row => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>
+          <a href="${row.order_url}" class="button is-small is-white has-text-link" target="_blank">
+            ${row.order_number}
+          </a>
+        </td>
+        <td>${row.customer_name || ""}</td>
+        <td>${row.phone || ""}</td>
+        <td>${row.paid_date || ""}</td>
+        <td>${row.ldsp_qty}</td>
+        <td>${row.mdf_paint_m2}</td>
+        <td>${row.mdf_film_m2}</td>
+        <td class="has-text-centered">${renderContract(row.has_contract)}</td>
+        <td>${renderMethods(row.methods)}</td>
+        <td>${row.amount.toLocaleString('ru-RU')}</td>
+        <td>
+          <a href="${row.payment_url}" class="button is-small is-link is-light" target="_blank">
+            Оплата
+          </a>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    loadOrders();
+  });
+
+  // Первичная загрузка без фильтров
+  loadOrders();
+})();
+</script>
+
+
+<script>
+(function() {
+  const form = document.getElementById("services-report-form");
+  const labelEl = document.getElementById("services-report-period-label");
+  const table = document.getElementById("services-report-table");
+
+  if (!form || !table) {
+    return;
+  }
+
+  const cells = {
+    processing: table.querySelector('[data-field="processing"]'),
+    facades: table.querySelector('[data-field="facades"]'),
+    design: table.querySelector('[data-field="design"]'),
+    total: table.querySelector('[data-field="total"]'),
+  };
+
+  function formatTenge(value) {
+    if (value === null || value === undefined) return "0";
+    const intVal = Math.round(value);
+    return intVal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  }
+
+  function formatDateRu(iso) {
+    if (!iso) return "";
+    const [y, m, d] = iso.split("-");
+    return `${d}.${m}.${y}`;
+  }
+
+  function updateFromResponse(data) {
+    if (!data) return;
+
+    if (data.date_from && data.date_to) {
+      if (data.date_from === data.date_to) {
+        labelEl.textContent = "Период: " + formatDateRu(data.date_from);
+      } else {
+        labelEl.textContent =
+          "Период: " +
+          formatDateRu(data.date_from) +
+          " — " +
+          formatDateRu(data.date_to);
+      }
+    } else {
+      labelEl.textContent = "";
+    }
+
+    const s = (data.summary || {});
+    cells.processing.textContent = formatTenge(s.processing || 0);
+    cells.facades.textContent   = formatTenge(s.facades   || 0);
+    cells.design.textContent    = formatTenge(s.design    || 0);
+    cells.total.textContent     = formatTenge(s.total     || 0);
+  }
+
+  async function loadReport(evt) {
+    if (evt) evt.preventDefault();
+
+    const formData = new FormData(form);
+    const params = new URLSearchParams();
+
+    const period = (formData.get("period") || "month").toString();
+    const date   = (formData.get("date")   || "").toString();
+
+    params.set("period", period);
+    if (date) {
+      params.set("date", date);
+    }
+
+    try {
+      const resp = await fetch(
+        "/accounting/reports/services-summary/?" + params.toString(),
+        { headers: { "X-Requested-With": "XMLHttpRequest" } }
+      );
+      if (!resp.ok) {
+        throw new Error("Ошибка загрузки отчёта");
+      }
+      const data = await resp.json();
+      updateFromResponse(data);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // По умолчанию — сегодня как дата конца периода
+  const dateInput = form.querySelector('input[name="date"]');
+  if (dateInput && !dateInput.value) {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
+    dateInput.value = `${y}-${m}-${d}`;
+  }
+
+  form.addEventListener("submit", loadReport);
+
+  // Первый автоматический вызов
+  loadReport();
+})();
+</script>
+
+
+<script>
+(function() {
+  const canvas = document.getElementById("js-acc-report-chart");
+  if (!canvas) return;
+
+  const rangeButtons = document.querySelectorAll("[data-range]");
+  const bucketButtons = document.querySelectorAll("[data-bucket]");
+  const rangeLabel = document.getElementById("js-acc-report-range");
+
+  let currentRange = "month";   // стартуем с месяца
+  let currentBucket = "3";      // и с группировки по 3 дня
+  let chart = null;
+  let lastBuckets = [];
+
+  function labelForRange(r) {
+    switch (r) {
+      case "week":  return "Последняя неделя";
+      case "month": return "Последний месяц";
+      case "6m":    return "Последние 6 месяцев";
+      case "year":  return "Последний год";
+      case "all":   return "За всё время";
+      default:      return "";
+    }
+  }
+
+  function labelForBucket(b) {
+    switch (b) {
+      case "1":  return "по дням";
+      case "3":  return "по 3 дня";
+      case "7":  return "по неделям";
+      case "30": return "по месяцам";
+      default:   return "";
+    }
+  }
+
+  function setActiveButtonGroup(buttons, activeValue, attrName) {
+    buttons.forEach(btn => {
+      if (btn.getAttribute(attrName) === activeValue) {
+        btn.classList.add("is-link", "is-selected");
+      } else {
+        btn.classList.remove("is-link", "is-selected");
+      }
+    });
+  }
+
+  function applyConstraints(range, bucket) {
+    // Ограничение: на недельном диапазоне нельзя использовать "месяц" (30)
+    if (range === "week" && bucket === "30") {
+      return "7"; // принудительно неделя
+    }
+    return bucket;
+  }
+
+  function updateBucketButtonsState(range) {
+    bucketButtons.forEach(btn => {
+      const val = btn.getAttribute("data-bucket");
+      if (range === "week" && val === "30") {
+        btn.setAttribute("disabled", "disabled");
+        btn.classList.add("is-light");
+      } else {
+        btn.removeAttribute("disabled");
+        btn.classList.remove("is-light");
+      }
+    });
+  }
+
+  function updateRangeLabel(range, bucket) {
+    const textRange = labelForRange(range) || "";
+    const textBucket = labelForBucket(bucket) || "";
+    rangeLabel.textContent = [textRange, textBucket].filter(Boolean).join(", ");
+  }
+
+  function loadData(range, bucket) {
+    currentRange = range;
+    currentBucket = applyConstraints(range, bucket || currentBucket);
+
+    updateBucketButtonsState(currentRange);
+
+    const url = new URL("{% url 'accounting_reports_data' %}", window.location.origin);
+    url.searchParams.set("range", currentRange);
+    url.searchParams.set("bucket", currentBucket);
+
+    fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+      .then(resp => resp.json())
+      .then(data => {
+        lastBuckets = data.buckets || [];
+
+        const usedRange = data.range || currentRange;
+        const usedBucket = data.bucket || currentBucket;
+
+        currentRange = usedRange;
+        currentBucket = usedBucket;
+
+        setActiveButtonGroup(rangeButtons, usedRange, "data-range");
+        setActiveButtonGroup(bucketButtons, usedBucket, "data-bucket");
+        updateBucketButtonsState(usedRange);
+        updateRangeLabel(usedRange, usedBucket);
+
+        renderChart(data.labels || [], data.values || []);
+      })
+      .catch(err => {
+        console.error("Ошибка загрузки отчёта:", err);
+      });
+  }
+
+  function renderChart(labels, values) {
+    const ctx = canvas.getContext("2d");
+
+    if (!chart) {
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Оплаты, ₸",
+            data: values,
+            tension: 0.2,
+            fill: false,
+          }]
+        },
+        options: {
+          interaction: {
+            mode: "nearest",
+            intersect: false
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  try {
+                    return value.toLocaleString("ru-RU") + " ₸";
+                  } catch (e) {
+                    return value + " ₸";
+                  }
+                }
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                title: function(ctx) {
+                  const idx = ctx[0].dataIndex;
+                  const bucket = lastBuckets[idx] || {};
+                  return bucket.range || (ctx[0].label || "");
+                },
+                label: function(ctx) {
+                  const idx = ctx.dataIndex;
+                  const bucket = lastBuckets[idx] || {};
+                  const orders = bucket.orders || [];
+                  if (!orders.length) {
+                    return "Нет оплат за период";
+                  }
+                  const lines = orders.map(function(o) {
+                    const num = o.order;
+                    const amt = o.amount || 0;
+                    let amtStr = amt;
+                    try {
+                      amtStr = amt.toLocaleString("ru-RU");
+                    } catch (e) {}
+                    return "#" + num + ": " + amtStr + " ₸";
+                  });
+
+                  let total = bucket.total || 0;
+                  try {
+                    total = total.toLocaleString("ru-RU");
+                  } catch (e) {}
+
+                  lines.push("Итого: " + total + " ₸");
+                  return lines;
+                }
+              }
+            }
+          }
+        }
+      });
+    } else {
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = values;
+      chart.update();
+    }
+  }
+
+  // Клики по диапазону
+  rangeButtons.forEach(btn => {
+    btn.addEventListener("click", function() {
+      const newRange = this.dataset.range;
+      loadData(newRange, currentBucket);
+    });
+  });
+
+  // Клики по периоду (bucket)
+  bucketButtons.forEach(btn => {
+    btn.addEventListener("click", function() {
+      const newBucket = this.dataset.bucket;
+      loadData(currentRange, newBucket);
+    });
+  });
+
+  // стартуем: месяц, по 3 дня
+  loadData(currentRange, currentBucket);
+})();
+</script>
+
+<script>
+(function() {
+  const canvas = document.getElementById("js-acc-designers-chart");
+  if (!canvas) return;
+
+  const rangeButtons = document.querySelectorAll("[data-dr-range]");
+  const bucketButtons = document.querySelectorAll("[data-dr-bucket]");
+  const rangeLabel = document.getElementById("js-acc-designers-range");
+
+  let currentRange = "month";
+  let currentBucket = "3";
+  let chart = null;
+  let lastBuckets = [];
+  let seriesMeta = []; // [{key, name}, ...]
+
+  // палитра цветов для дизайнеров
+  const palette = [
+    "#3366CC", "#DC3912", "#FF9900", "#109618", "#990099",
+    "#0099C6", "#DD4477", "#66AA00", "#B82E2E", "#316395",
+    "#994499", "#22AA99", "#AAAA11", "#6633CC", "#E67300",
+  ];
+
+  function labelForRange(r) {
+    switch (r) {
+      case "week":  return "Неделя";
+      case "month": return "Месяц";
+      case "6m":    return "6 месяцев";
+      case "year":  return "Год";
+      case "all":   return "Всё время";
+      default:      return "";
+    }
+  }
+
+  function labelForBucket(b) {
+    switch (b) {
+      case "1":  return "по дням";
+      case "3":  return "по 3 дня";
+      case "7":  return "по неделям";
+      case "30": return "по месяцам";
+      default:   return "";
+    }
+  }
+
+  function setActiveButtonGroup(buttons, value, attr) {
+    buttons.forEach(btn => {
+      if (btn.getAttribute(attr) === value) {
+        btn.classList.add("is-link", "is-selected");
+      } else {
+        btn.classList.remove("is-link", "is-selected");
+      }
+    });
+  }
+
+  function applyConstraints(range, bucket) {
+    if (range === "week" && bucket === "30") {
+      return "7";
+    }
+    return bucket;
+  }
+
+  function updateBucketButtonsState(range) {
+    bucketButtons.forEach(btn => {
+      const val = btn.getAttribute("data-dr-bucket");
+      if (range === "week" && val === "30") {
+        btn.setAttribute("disabled", "disabled");
+        btn.classList.add("is-light");
+      } else {
+        btn.removeAttribute("disabled");
+        btn.classList.remove("is-light");
+      }
+    });
+  }
+
+  function updateRangeLabel(range, bucket) {
+    const a = labelForRange(range);
+    const b = labelForBucket(bucket);
+    rangeLabel.textContent = [a, b].filter(Boolean).join(", ");
+  }
+
+  function loadData(range, bucket) {
+    currentRange = range;
+    currentBucket = applyConstraints(range, bucket || currentBucket);
+
+    updateBucketButtonsState(currentRange);
+
+    const url = new URL("{% url 'accounting_reports_designers_data' %}", window.location.origin);
+    url.searchParams.set("range", currentRange);
+    url.searchParams.set("bucket", currentBucket);
+
+    fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } })
+      .then(resp => resp.json())
+      .then(data => {
+        lastBuckets = data.buckets || [];
+        const labels = data.labels || [];
+        const series = data.series || [];
+        const usedRange = data.range || currentRange;
+        const usedBucket = data.bucket || currentBucket;
+
+        currentRange = usedRange;
+        currentBucket = usedBucket;
+        seriesMeta = series.map(s => ({ key: s.key, name: s.name }));
+
+        setActiveButtonGroup(rangeButtons, usedRange, "data-dr-range");
+        setActiveButtonGroup(bucketButtons, usedBucket, "data-dr-bucket");
+        updateBucketButtonsState(usedRange);
+        updateRangeLabel(usedRange, usedBucket);
+
+        renderChart(labels, series);
+      })
+      .catch(err => {
+        console.error("Ошибка загрузки отчёта по дизайнерам:", err);
+      });
+  }
+
+  function renderChart(labels, series) {
+    const ctx = canvas.getContext("2d");
+
+    const datasets = series.map((s, idx) => {
+      const color = palette[idx % palette.length];
+      return {
+        label: s.name,
+        data: s.values || [],
+        tension: 0.2,
+        fill: false,
+        borderColor: color,
+        backgroundColor: color,
+      };
+    });
+
+    if (!chart) {
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: datasets,
+        },
+        options: {
+          interaction: {
+            mode: "nearest",
+            intersect: false
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  try {
+                    return value.toLocaleString("ru-RU") + " ₸";
+                  } catch (e) {
+                    return value + " ₸";
+                  }
+                }
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                title: function(ctx) {
+                  const idx = ctx[0].dataIndex;
+                  const bucket = lastBuckets[idx] || {};
+                  return bucket.range || (ctx[0].label || "");
+                },
+                label: function(ctx) {
+                  const dsIndex = ctx.datasetIndex;
+                  const dataIndex = ctx.dataIndex;
+                  const bucket = lastBuckets[dataIndex] || {};
+                  const ds = seriesMeta[dsIndex];
+                  if (!ds) return "";
+
+                  const designers = bucket.designers || [];
+                  const found = designers.find(d => d.key === ds.key);
+                  if (!found) {
+                    return ds.name + ": нет оплат за период";
+                  }
+
+                  const lines = [];
+                  found.orders.forEach(o => {
+                    let amt = o.amount || 0;
+                    try {
+                      amt = amt.toLocaleString("ru-RU");
+                    } catch (e) {}
+                    lines.push("#" + o.order + ": " + amt + " ₸");
+                  });
+
+                  let total = found.total || 0;
+                  try {
+                    total = total.toLocaleString("ru-RU");
+                  } catch (e) {}
+
+                  if (!lines.length) {
+                    lines.push("Нет заказов за период");
+                  }
+                  lines.push("Итого по дизайнеру: " + total + " ₸");
+
+                  // первая строка тултипа — имя дизайнера
+                  return [ds.name].concat(lines);
+                }
+              }
+            },
+            legend: {
+              position: "bottom",
+            }
+          }
+        }
+      });
+    } else {
+      chart.data.labels = labels;
+      chart.data.datasets = datasets;
+      chart.update();
+    }
+  }
+
+  rangeButtons.forEach(btn => {
+    btn.addEventListener("click", function() {
+      const newRange = this.getAttribute("data-dr-range");
+      loadData(newRange, currentBucket);
+    });
+  });
+
+  bucketButtons.forEach(btn => {
+    btn.addEventListener("click", function() {
+      const newBucket = this.getAttribute("data-dr-bucket");
+      loadData(currentRange, newBucket);
+    });
+  });
+
+  // стартуем: месяц, по 3 дня
+  loadData(currentRange, currentBucket);
+})();
+</script>
+
+
+<script>
+(function() {
+  const form = document.getElementById("reports-summary-filters");
+  const rangeLabel = document.getElementById("js-acc-summary-range");
+  const canvases = {
+    amount: document.getElementById("js-acc-summary-amount"),
+    ldsp: document.getElementById("js-acc-summary-ldsp"),
+    paint: document.getElementById("js-acc-summary-paint"),
+    film: document.getElementById("js-acc-summary-film"),
+  };
+
+  if (!form || !canvases.amount) return;
+
+  const charts = {
+    amount: null,
+    ldsp: null,
+    paint: null,
+    film: null,
+  };
+
+  function formatDateLabel(from, to) {
+    if (!from && !to) return "За всё время";
+    if (from && to && from === to) return "За " + from.split("-").reverse().join(".");
+    const f = from ? from.split("-").reverse().join(".") : "...";
+    const t = to ? to.split("-").reverse().join(".") : "...";
+    return f + " — " + t;
+  }
+
+  function createOrUpdateChart(key, value, color, unit) {
+    const canvas = canvases[key];
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    let val = value || 0;
+    let max = val <= 0 ? 1 : val * 1.1;
+
+    if (!charts[key]) {
+      charts[key] = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: [""],
+          datasets: [{
+            data: [val],
+            backgroundColor: color,
+          }]
+        },
+        options: {
+          responsive: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const v = ctx.parsed.y || ctx.parsed.x || 0;
+                  let txt = v;
+                  try {
+                    txt = v.toLocaleString("ru-RU");
+                  } catch (e) {}
+                  return txt + (unit ? " " + unit : "");
+                }
+              }
+            },
+            datalabels: {
+              anchor: "end",
+              align: "end",      // подпись над верхушкой столбика
+              clamp: true,
+              color: "#363636",
+              font: {
+                size: 11,
+                weight: "600",
+              },
+              formatter: function(value) {
+                let v = value || 0;
+                try {
+                  v = v.toLocaleString("ru-RU");
+                } catch (e) {}
+                return v + (unit ? " " + unit : "");
+              }
+            }
+          },
+          scales: {
+            x: {
+              display: false,
+              grid: { display: false },
+            },
+            y: {
+              beginAtZero: true,
+              suggestedMax: max,
+              grid: { display: false },
+              ticks: {
+                maxTicksLimit: 3,
+                callback: function(v) {
+                  try {
+                    return v.toLocaleString("ru-RU");
+                  } catch (e) {
+                    return v;
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+    } else {
+      const chart = charts[key];
+      chart.data.datasets[0].data = [val];
+      chart.options.scales.y.suggestedMax = max;
+      chart.update();
+    }
+  }
+
+  async function loadSummary() {
+    const formData = new FormData(form);
+    const params = new URLSearchParams(formData);
+
+    const resp = await fetch("{% url 'accounting_reports_summary' %}?" + params.toString(), {
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    if (!resp.ok) {
+      console.error("Failed to load summary", resp.status);
+      return;
+    }
+
+    const data = await resp.json();
+
+    rangeLabel.textContent = formatDateLabel(data.date_from, data.date_to);
+
+    const amount = data.total_amount || 0;
+    const ldsp = data.total_ldsp || 0;
+    const paint = data.total_mdf_paint || 0;
+    const film = data.total_mdf_film || 0;
+
+    createOrUpdateChart("amount", amount, "#3366CC", "₸");
+    createOrUpdateChart("ldsp", ldsp, "#109618", "лист.");
+    createOrUpdateChart("paint", paint, "#FF9900", "м²");
+    createOrUpdateChart("film", film, "#DC3912", "м²");
+  }
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    loadSummary();
+  });
+
+  // первая загрузка
+  loadSummary();
+})();
+</script>
+

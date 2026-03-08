@@ -1,0 +1,1243 @@
+{% extends "base.html" %}
+
+{% block title %}График заказов{% endblock %}
+
+{% block content %}
+<style>
+
+  @media screen and (min-width: 1408px) {
+    .container:not(.is-max-desktop):not(.is-max-widescreen) {
+      max-width: 2200px !important;
+    }
+  }
+  
+  @media screen and (min-width: 769px) {
+    .modal-card, .modal-content {
+      width: 750px;
+    }
+  }
+  
+  @media screen and (min-width: 1024px) {
+    .section {
+      padding: 1rem 1rem;
+    }
+  }
+  
+  @media (max-width: 768px){
+    .tiles-grid{
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+  }
+  
+  /* ===== Статусы заказов ===== */
+  .status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  
+  /* ОЖИДАЕТ */
+  .status-waiting {
+    background: #ffed00;
+    color: #000000;
+	border: solid 1px #c9c9c9;
+  }
+  
+  /* КОРРЕКТИРОВКА */
+  .status-correction {
+    background: #f08535;
+    color: #ffffff;
+	border: solid 1px #c9c9c9;
+  }
+  
+  /* СТОП / ОТЛОЖЕН */
+  .status-stop {
+    background: #ff0017;
+    color: #ffffff;
+	border: solid 1px #c9c9c9;
+  }
+  
+  /* ВЫДАН В ЦЕХ */
+  .status-workshop {
+    background: #08eb84;
+    color: #000000;
+	border: solid 1px #c9c9c9;
+  }
+  
+  /* ГОТОВО */
+  .status-ready {
+    background: #0065ff;
+    color: #ffffff;
+	border: solid 1px #c9c9c9;
+  }
+  
+  /* ВЫДАН */
+  .status-issued {
+    background: #ffffff;
+    color: #2aa93a;
+    border: solid 2px #2aa93a;
+  }
+
+  
+  
+  
+  /* --- Tabs: удобнее на планшете --- */
+  .tabs.orders-tabs ul { flex-wrap: wrap; }
+  .tabs.orders-tabs a { padding: .75rem 1.1rem; font-size: 1.05rem; }
+  @media (max-width: 1024px) {
+    .tabs.orders-tabs a { padding: .9rem 1.2rem; font-size: 1.1rem; }
+  }
+
+  /* Таблица */
+  .general-table-wrap thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #fbfbfb;
+    border-top: 1px solid rgba(0,0,0,.06);
+    border-bottom: 2px solid rgba(0,0,0,.10);
+    box-shadow: 0 2px 0 rgba(0,0,0,.04);
+    font-weight: 700;
+    font-size: .95rem;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+  }
+
+  /* Тонкие вертикальные линии между колонками */
+  #generalTable thead th,
+  #generalTable tbody td{
+    border-right: 1px solid rgba(0,0,0,.06);
+  }
+  #generalTable thead th:last-child,
+  #generalTable tbody td:last-child{
+    border-right: none;
+  }
+  
+  /* Разделители блоков (подстрой номера колонок под твою таблицу) */
+  #generalTable thead th:nth-child(3),
+  #generalTable tbody td:nth-child(3){
+    border-right: 2px solid rgba(0,0,0,.10);
+  }
+  
+  #generalTable thead th:nth-child(6),
+  #generalTable tbody td:nth-child(6){
+    border-right: 2px solid rgba(0,0,0,.10);
+  }
+  
+  #generalTable thead th:nth-child(9),
+  #generalTable tbody td:nth-child(9){
+    border-right: 2px solid rgba(0,0,0,.10);
+  }
+  
+  #generalTable thead th:nth-child(12),
+  #generalTable tbody td:nth-child(12){
+    border-right: 2px solid rgba(0,0,0,.10);
+  }
+
+
+  #generalTable td, #generalTable th { white-space: normal; }
+  #generalTable td { vertical-align: top; }
+  #generalTableWrap,
+  #generalTableWrap .box,
+  #generalTableWrap .table-container,
+  .general-table-wrap{
+    width: 100%;
+  }
+
+  .note-cell { min-width: 240px; }
+
+  /* Подсветка строк: красим именно TD, чтобы не конфликтовать с Bulma */
+  tr.row-ok   > td { background: rgba(72, 199, 116, .12) !important; }
+  tr.row-warn > td { background: rgba(255, 221, 87,  .18) !important; }
+  tr.row-bad  > td { background: rgba(241, 70, 104, .14) !important; }
+
+  /* если захочешь потом: готовые сделать "бледнее" */
+  tr.row-done > td { opacity: .6; }
+  
+  .container.is-fluid{
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  .chart-page .container {
+    max-width: none !important;
+    width: 100% !important;
+  }
+  .chart-page-wrap{
+    width: 100%;
+    max-width: 2200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .days-left{
+    display:inline-block;
+    margin-left:6px;
+    padding:2px 8px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:.85rem;
+    line-height:1.1;
+    background: rgba(0,0,0,.04);
+  }
+  .days-pos{ color: #1a7f37; } /* зелёный */
+  .days-neg{ color: #b42318; } /* красный */
+  
+  
+  
+  .tiles-grid{
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, 220px) !important;
+    gap: 12px;
+    justify-content: start;
+    align-content: start;
+  }
+  
+  
+  .tile-ok{   background: #ecfdf3; }  /* мягкий зелёный */
+  .tile-warn{ background: #fffbeb; }  /* мягкий жёлтый */
+  .tile-bad{  background: #fef2f2; }  /* мягкий красный */
+
+  
+  
+  .tile-card{
+    width: 220px;
+    max-width: none;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 14px;
+    padding: 12px 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+    cursor: pointer;
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  
+  .tile-card:hover{
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0,0,0,.10);
+  }
+  
+  .tile-head{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    margin-bottom: 8px;
+  }
+  
+  .tile-num{
+    font-weight: 800;
+    font-size: 1.05rem;
+	color: #000000;
+  }
+  
+  .tile-name{
+    font-weight: 600;
+    color: rgba(0,0,0,.75);
+    margin-bottom: 8px;
+  }
+  
+  .tile-metrics{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  
+  .metric{
+    font-size:.85rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.05);
+    white-space: nowrap;
+  }
+  
+  .tile-deadlines{
+    font-size: .9rem;
+    display:grid;
+    gap: 4px;
+  }
+  
+  .deadline-row{
+    display:flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  
+  .deadline-val{
+    font-weight: 700;
+  }
+  
+  .deadline-days{
+    margin-left:8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 800;
+    background: rgba(0,0,0,.04);
+  }
+  
+</style>
+
+<section class="section chart-page">
+  <div class="container is-fluid">
+    <div class="chart-page-wrap">
+
+      <h1 class="title has-text-centered">График заказов</h1>
+
+      {% if restricted and restricted_text %}
+        <div class="notification is-warning">
+          {{ restricted_text }}
+        </div>
+      {% endif %}
+
+      <div class="tabs orders-tabs is-centered is-toggle is-toggle-rounded is-medium">
+        <ul>
+          {% for t in tabs %}
+            {% if t.allowed %}
+              <li class="{% if t.key == active_tab %}is-active{% endif %}">
+                <a href="?tab={{ t.key }}"><span>{{ t.title }}</span></a>
+              </li>
+            {% else %}
+              <li class="is-disabled">
+                <a href="javascript:void(0)" tabindex="-1" aria-disabled="true" style="opacity:.45; cursor:not-allowed;">
+                  <span>{{ t.title }}</span>
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div style="margin-top: 12px;">
+
+        <div id="generalTableWrap" style="display:none;">
+          <div class="box" style="padding:12px;">
+            <div class="level" style="margin-bottom:10px;">
+              <div class="level-left">
+                <div>
+                  <div class="title is-6" style="margin-bottom:2px;">Общий график</div>
+                  <div class="help" style="margin-top:0;">Просроченные — вверху, готовые — внизу</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-container general-table-wrap">
+              <table class="table is-fullwidth is-hoverable is-narrow" id="generalTable">
+                <thead>
+                  <tr>
+                    <th style="width:75px;">№</th>
+                    <th>Имя</th>
+                    <th style="width:100px;">Дата оформ.</th>
+                    <th style="width:85px;" class="has-text-centered">ЛДСП листы</th>
+                    <th style="width:85px;" class="has-text-centered">Краска м²</th>
+                    <th style="width:85px;" class="has-text-centered">Плёнка м²</th>
+
+                    <th style="min-width:150px;">Срок ЛДСП</th>
+                    <th style="min-width:150px;">Срок Плёнка</th>
+                    <th style="min-width:150px;">Срок Краска</th>
+
+                    <th style="min-width:130px;">Статус  ЛДСП</th>
+                    <th style="min-width:130px;">Статус Плёнка</th>
+                    <th style="min-width:130px;">Статус Краска</th>
+
+                    <th>Примечание</th>
+                    <th style="width:40px;" class="has-text-centered">✏️</th>
+                  </tr>
+                </thead>
+                <tbody id="generalTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+		
+		
+		<div id="viewToggleBar" class="is-flex is-justify-content-flex-end is-align-items-center"
+             style="gap:10px; margin: 8px 0; display:none;">
+          <div class="buttons has-addons">
+            <button id="btnViewTiles" class="button is-small is-link is-light is-selected" type="button">
+              Плитки
+            </button>
+            <button id="btnViewList" class="button is-small is-link is-light" type="button">
+              Список
+            </button>
+          </div>
+        </div>
+        
+        <div id="tilesListWrap" style="display:none;">
+          <div class="table-container">
+            <table class="table is-fullwidth is-striped is-hoverable">
+              <thead>
+                <tr>
+                  <th style="width:90px;">№</th>
+                  <th>Имя</th>
+                  <th style="width:120px;">ЛДСП</th>
+                  <th style="width:120px;">Краска</th>
+                  <th style="width:120px;">Плёнка</th>
+                  <th style="width:210px;">Сроки</th>
+                  <th style="width:170px;">Статусы</th>
+                  <th>Примечание</th>
+                </tr>
+              </thead>
+              <tbody id="tilesListBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+		
+		<div id="tilesWrap" style="display:none;">
+          <div class="box" style="padding:12px;">
+            <div class="title is-6" style="margin-bottom:6px;">Рабочие графики</div>
+            <div class="tiles-grid" id="tilesGrid"></div>
+          </div>
+        </div>
+
+        <div id="canvasWrap">
+          <canvas id="ordersChartCanvas"></canvas>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+<div class="modal" id="orderInfoModal">
+  <div class="modal-background"></div>
+  <div class="modal-card" style="max-width:520px;">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Информация о заказе</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+    <section class="modal-card-body" id="orderInfoBody">
+      Загрузка...
+    </section>
+    <footer class="modal-card-foot">
+      <button class="button" id="orderInfoClose">Закрыть</button>
+    </footer>
+  </div>
+</div>
+
+
+<div class="modal" id="chartEditModal">
+  <div class="modal-background"></div>
+  <div class="modal-card" style="max-width: 760px;">
+    <header class="modal-card-head">
+      <p class="modal-card-title" id="chartEditTitle">Редактирование</p>
+      <button class="delete" aria-label="close"></button>
+    </header>
+
+    <section class="modal-card-body">
+      <div class="columns is-multiline">
+        <div class="column is-4" id="statusBlock_ldsp">
+        <label class="label">Статус ЛДСП</label>
+        <div class="select is-fullwidth">
+          <select id="m_status_ldsp"></select>
+        </div>
+      </div>
+      
+      <div class="column is-4" id="statusBlock_film">
+        <label class="label">Статус Плёнка</label>
+        <div class="select is-fullwidth">
+          <select id="m_status_film"></select>
+        </div>
+      </div>
+      
+      <div class="column is-4" id="statusBlock_paint">
+        <label class="label">Статус Краска</label>
+        <div class="select is-fullwidth">
+          <select id="m_status_paint"></select>
+        </div>
+      </div>
+
+
+        <div class="column is-4 js-tech-hide">
+          <label class="label">Срок ЛДСП (ручной)</label>
+          <input class="input" type="date" id="m_due_ldsp_override">
+          <p class="help">Пусто — считается автоматически</p>
+        </div>
+        <div class="column is-4 js-tech-hide">
+          <label class="label">Срок Плёнка (ручной)</label>
+          <input class="input" type="date" id="m_due_film_override">
+        </div>
+        <div class="column is-4 js-tech-hide">
+          <label class="label">Срок Краска (ручной)</label>
+          <input class="input" type="date" id="m_due_paint_override">
+        </div>
+
+        <div class="column is-4 js-tech-hide">
+          <label class="label">+ дни ЛДСП (раб. дни)</label>
+          <input class="input" type="number" id="m_extra_days_ldsp" value="0">
+        </div>
+        <div class="column is-4 js-tech-hide">
+          <label class="label">+ дни Плёнка (раб. дни)</label>
+          <input class="input" type="number" id="m_extra_days_film" value="0">
+        </div>
+        <div class="column is-4 js-tech-hide">
+          <label class="label">+ дни Краска (раб. дни)</label>
+          <input class="input" type="number" id="m_extra_days_paint" value="0">
+        </div>
+		<div class="column is-12">
+          <label class="label">Примечание</label>
+          <textarea class="textarea" id="m_note" rows="3" placeholder="Комментарий технолога..."></textarea>
+        </div>
+
+        <div class="column is-12 js-tech-hide">
+          <hr>
+          <div class="level">
+            <div class="level-left">
+              <div>
+                <div class="title is-6" style="margin-bottom:4px;">STOP / PLAY</div>
+                <div class="help">Если стоп активен — остаток дней не уменьшается до stop_until</div>
+              </div>
+            </div>
+            <div class="level-right">
+              <div class="field has-addons">
+                <p class="control">
+                  <input class="input" type="number" min="1" id="m_stop_days" placeholder="дней">
+                </p>
+                <p class="control">
+                  <button class="button is-danger" type="button" id="btnStop">Stop</button>
+                </p>
+                <p class="control">
+                  <button class="button is-success" type="button" id="btnPlay">Play</button>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p class="help">Текущий stop_until: <span id="m_stop_until">—</span></p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="modal-card-foot">
+      <button class="button is-primary" id="btnSaveChartRow">Сохранить</button>
+      <button class="button" id="btnCloseChartModal">Закрыть</button>
+    </footer>
+  </div>
+</div>
+
+
+</section>
+
+<script>
+  
+  function renderStatus(statusText){
+    if (!statusText || statusText === "—") {
+      return "<span>—</span>";
+    }
+  
+    let cls = "status ";
+  
+    if (statusText.startsWith("ОТЛОЖЕН") || statusText === "СТОП") {
+      cls += "status-stop";
+    } else if (statusText === "ОЖИДАЕТ") {
+      cls += "status-waiting";
+    } else if (statusText === "КОРРЕКТИРОВКА") {
+      cls += "status-correction";
+    } else if (statusText === "ВЫДАН В ЦЕХ") {
+      cls += "status-workshop";
+    } else if (statusText === "ГОТОВО") {
+      cls += "status-ready";
+    } else if (statusText === "ВЫДАН") {
+      cls += "status-issued";
+    }
+  
+    return `<span class="${cls}">${statusText}</span>`;
+  }
+
+  
+  
+  
+  const activeTab = "{{ active_tab|default:'' }}";
+  const canEdit = {{ can_edit_chart|yesno:"true,false" }};
+
+  function escapeHtml(s) {
+    return (s || "").replace(/[&<>"']/g, m => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[m]));
+  }
+
+
+  async function loadGeneralTable() {
+    const wrap = document.getElementById("generalTableWrap");
+    const body = document.getElementById("generalTableBody");
+    const canvasWrap = document.getElementById("canvasWrap");
+    
+    function daysBadge(val){
+      if (val === null || val === undefined || val === "") return "";
+      const n = Number(val);
+      if (Number.isNaN(n)) return "";
+      const cls = (n > 0) ? "days-left days-pos" : "days-left days-neg";
+      return `<span class="${cls}">${n > 0 ? "+"+n : String(n)}</span>`;
+    }
+
+
+    wrap.style.display = "";
+    canvasWrap.style.display = "none";
+    body.innerHTML = `<tr><td colspan="14">Загрузка…</td></tr>`;
+
+    const resp = await fetch(`/orders/chart-data/?tab=general`, {
+      headers: {"X-Requested-With":"XMLHttpRequest"}
+    });
+
+    if (!resp.ok) {
+      body.innerHTML = `<tr><td colspan="14">Ошибка загрузки</td></tr>`;
+      return;
+    }
+
+    const data = await resp.json();
+    const rows = data.rows || [];
+
+    body.innerHTML = "";
+
+    for (const r of rows) {
+      const tr = document.createElement("tr");
+
+      // сколько рабочих дней осталось до срока ЛДСП
+      const left = (r.ldsp_days_left === null || r.ldsp_days_left === undefined) ? null : Number(r.ldsp_days_left);
+
+      if (left !== null && !Number.isNaN(left)) {
+        if (left <= 2) tr.classList.add("row-bad");
+        else if (left <= 6) tr.classList.add("row-warn");
+        else tr.classList.add("row-ok");   // ✅ всё что 7+ — зелёное
+      }
+
+      const paint = r.paint_m2 ? r.paint_m2 : "—";
+      const film  = r.film_m2 ? r.film_m2 : "—";
+
+      tr.innerHTML = `
+        <td>
+          <a href="javascript:void(0)"
+             class="js-order-info"
+             data-order-id="${r.order_id}"
+             style="font-weight:700;">
+            ${escapeHtml(String(r.order_number ?? ""))}
+          </a>
+        </td>
+        <td>${escapeHtml(r.customer || "")}</td>
+        <td>${escapeHtml(r.created_at || "—")}</td>
+        <td class="has-text-centered">${escapeHtml(String(r.ldsp_qty ?? "—"))}</td>
+        <td class="has-text-centered">${escapeHtml(String(paint))}</td>
+        <td class="has-text-centered">${escapeHtml(String(film))}</td>
+
+        <td>${escapeHtml(r.due_ldsp ?? "—")}${daysBadge(r.ldsp_days_left)}</td>
+        <td>${escapeHtml(r.due_film ?? "—")}${daysBadge(r.film_days_left)}</td>
+        <td>${escapeHtml(r.due_paint ?? "—")}${daysBadge(r.paint_days_left)}</td>
+
+        <td>${renderStatus(r.status_ldsp)}</td>
+        <td>${renderStatus(r.status_film)}</td>
+        <td>${renderStatus(r.status_paint)}</td>
+
+        <td class="note-cell">
+          ${canEdit ? `
+            <textarea class="textarea is-small js-note"
+                      data-order-id="${r.order_id}"
+                      rows="1"
+                      style="min-height:34px; resize:vertical;"
+            >${escapeHtml(r.note || "")}</textarea>
+          ` : escapeHtml(r.note || "")}
+        </td>
+
+        <td class="has-text-centered">
+          ${canEdit ? `<button class="button is-small is-light js-edit-row" data-order-id="${r.order_id}">✏️</button>` : ""}
+        </td>
+      `;
+
+      body.appendChild(tr);
+    }
+
+    if (!rows.length) {
+      body.innerHTML = `<tr><td colspan="14">Нет заказов</td></tr>`;
+    }
+  }
+
+  (async () => {
+    const TILE_TABS = ["technologist", "workshop", "paint", "film"];
+  
+    if (activeTab === "general") {
+      document.getElementById("viewToggleBar").style.display = "none";
+      document.getElementById("tilesListWrap").style.display = "none";
+      await loadGeneralTable();
+    } else {
+      await reloadTilesTab(activeTab);
+    }
+  })();
+
+  function getCookie(name) {
+    const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return v ? v.pop() : '';
+  }
+
+  let noteTimer = null;
+
+  document.addEventListener("input", (e) => {
+    const ta = e.target.closest(".js-note");
+    if (!ta) return;
+
+    if (noteTimer) clearTimeout(noteTimer);
+
+    noteTimer = setTimeout(async () => {
+      const orderId = ta.dataset.orderId;
+      const note = ta.value;
+
+      try {
+        const form = new URLSearchParams();
+        form.append("order_id", orderId);
+        form.append("note", note);
+
+        const resp = await fetch("/orders/chart-note/save/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+            "X-CSRFToken": getCookie("csrftoken"),
+            "X-Requested-With": "XMLHttpRequest",
+          },
+          body: form.toString(),
+        });
+
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+
+      } catch (err) {
+        console.error(err);
+      }
+    }, 500);
+  });
+  
+  
+  
+
+  
+  
+  
+  function openModal(id){
+    document.getElementById(id).classList.add("is-active");
+  }
+  function closeModal(id){
+    document.getElementById(id).classList.remove("is-active");
+  }
+  
+  document.addEventListener("click", async (e) => {
+    const a = e.target.closest(".js-order-info");
+    if (!a) return;
+  
+    const orderId = a.dataset.orderId;
+    const modalId = "orderInfoModal";
+    const body = document.getElementById("orderInfoBody");
+  
+    body.innerHTML = "Загрузка...";
+    openModal(modalId);
+  
+    try{
+      const resp = await fetch(`/orders/info/${orderId}/`, {headers: {"X-Requested-With":"XMLHttpRequest"}});
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      const d = await resp.json();
+  
+      body.innerHTML = `
+        <div class="content">
+          <p><strong>№ заказа:</strong> ${escapeHtml(String(d.order_number ?? ""))}</p>
+          <p><strong>Имя заказчика:</strong> ${escapeHtml(d.customer_name || "")}</p>
+          <p><strong>Фамилия:</strong> ${escapeHtml(d.last_name || "")}</p>
+          <p><strong>ИИН:</strong> ${escapeHtml(d.iin || "")}</p>
+          <p><strong>Телефон:</strong> ${escapeHtml(d.phone || "")}</p>
+        </div>
+      `;
+    }catch(err){
+      console.error(err);
+      body.innerHTML = `<div class="notification is-danger">Ошибка загрузки данных заказа</div>`;
+    }
+  });
+  
+  document.addEventListener("click", (e) => {
+    const modal = document.getElementById("orderInfoModal");
+    if (!modal.classList.contains("is-active")) return;
+  
+    if (e.target.id === "orderInfoClose" ||
+        e.target.classList.contains("modal-background") ||
+        e.target.classList.contains("delete")) {
+      closeModal("orderInfoModal");
+    }
+  });
+
+  
+  
+  
+  
+  let currentEditOrderId = null;
+  
+  const STATUS_OPTIONS = [
+    "ОЖИДАЕТ",
+    "КОРРЕКТИРОВКА",
+    "СТОП",
+    "ВЫДАН В ЦЕХ",
+    "ГОТОВО",
+    "ВЫДАН",
+  ];
+  
+  function fillSelect(sel, value){
+    sel.innerHTML = "";
+    for (const opt of STATUS_OPTIONS){
+      const o = document.createElement("option");
+      o.value = opt;
+      o.textContent = opt;
+      if (opt === value) o.selected = true;
+      sel.appendChild(o);
+    }
+  }
+  
+  
+  let currentEditFlags = { has_ldsp: true, has_film: true, has_paint: true };
+
+  function valPresent(v){
+    if (v === null || v === undefined) return false;
+    if (v === "" || v === "—") return false;
+    const n = Number(v);
+    if (!Number.isNaN(n)) return n > 0;
+    return true;
+  }
+
+  
+  
+  function openModal(id){ document.getElementById(id).classList.add("is-active"); }
+  function closeModal(id){ document.getElementById(id).classList.remove("is-active"); }
+  
+  
+  
+  function applyTechModalVisibility(){
+    const isTech = (activeTab === "technologist");
+  
+    // 1) скрываем лишние поля у технолога
+    document.querySelectorAll(".js-tech-hide").forEach(el => {
+      el.classList.toggle("is-hidden", isTech);
+    });
+  
+    // 2) показываем статусы только по материалам
+    toggleStatusBlock("ldsp",  currentEditFlags.has_ldsp);
+    toggleStatusBlock("film",  currentEditFlags.has_film);
+    toggleStatusBlock("paint", currentEditFlags.has_paint);
+  }
+  
+  function toggleStatusBlock(material, show){
+    const block = document.getElementById(`statusBlock_${material}`);
+    const sel = document.getElementById(`m_status_${material === "paint" ? "paint" : material}`);
+    if (block) block.classList.toggle("is-hidden", !show);
+  
+    // дополнительно отключаем select, чтобы технолог не менял скрытое
+    if (sel) sel.disabled = !show;
+  }
+
+  
+  
+  async function openEditModal(orderId){
+    currentEditOrderId = orderId;
+	
+    const modal = document.getElementById("chartEditModal");
+    modal.dataset.tab = activeTab;  
+  
+    const resp = await fetch(`/orders/chart-row/${orderId}/`, {headers: {"X-Requested-With":"XMLHttpRequest"}});
+    if (!resp.ok) { alert("Ошибка загрузки данных"); return; }
+    const d = await resp.json();
+  
+    document.getElementById("chartEditTitle").textContent = `Редактирование заказа №${d.order_number} — ${d.customer || ""}`;
+  
+    fillSelect(document.getElementById("m_status_ldsp"), d.status_ldsp);
+    fillSelect(document.getElementById("m_status_film"), d.status_film);
+    fillSelect(document.getElementById("m_status_paint"), d.status_paint);
+  
+    document.getElementById("m_due_ldsp_override").value = d.due_ldsp_override || "";
+    document.getElementById("m_due_film_override").value = d.due_film_override || "";
+    document.getElementById("m_due_paint_override").value = d.due_paint_override || "";
+  
+    document.getElementById("m_extra_days_ldsp").value = d.extra_days_ldsp ?? 0;
+    document.getElementById("m_extra_days_film").value = d.extra_days_film ?? 0;
+    document.getElementById("m_extra_days_paint").value = d.extra_days_paint ?? 0;
+  
+    document.getElementById("m_stop_until").textContent = d.stop_until || "—";
+    document.getElementById("m_note").value = d.note || "";
+
+    applyTechModalVisibility();
+
+    openModal("chartEditModal");
+  }
+  
+  async function postEdit(action=null){
+    if (!currentEditOrderId) return;
+  
+    const form = new URLSearchParams();
+    
+    const modal = document.getElementById("chartEditModal");
+    const tab = modal.dataset.tab || activeTab || "general";
+    form.append("tab", tab);
+    form.append("status_ldsp", document.getElementById("m_status_ldsp").value);
+    form.append("status_film", document.getElementById("m_status_film").value);
+    form.append("status_paint", document.getElementById("m_status_paint").value);
+  
+    form.append("due_ldsp_override", document.getElementById("m_due_ldsp_override").value);
+    form.append("due_film_override", document.getElementById("m_due_film_override").value);
+    form.append("due_paint_override", document.getElementById("m_due_paint_override").value);
+  
+    form.append("extra_days_ldsp", document.getElementById("m_extra_days_ldsp").value);
+    form.append("extra_days_film", document.getElementById("m_extra_days_film").value);
+    form.append("extra_days_paint", document.getElementById("m_extra_days_paint").value);
+    form.append("note", document.getElementById("m_note").value);
+  
+    if (action) form.append("action", action);
+  
+    if (action === "stop") {
+      const n = document.getElementById("m_stop_days").value;
+      form.append("stop_days", n);
+    }
+  
+    const resp = await fetch(`/orders/chart-row/${currentEditOrderId}/save/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+        "X-CSRFToken": getCookie("csrftoken"),
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: form.toString(),
+    });
+  
+    if (!resp.ok) { alert("Ошибка сохранения"); return; }
+  
+    // обновляем текущий экран (плитки или таблицу)
+    if (["technologist","workshop","paint","film"].includes(activeTab)) {
+      await loadTiles(activeTab);
+    } else {
+      await loadGeneralTable();
+    }
+  }
+  
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".js-edit-row");
+    if (!btn) return;
+  
+    // В общем графике оставляем всё видимым, но флаги на всякий
+    currentEditFlags = { has_ldsp: true, has_film: true, has_paint: true };
+  
+    openEditModal(btn.dataset.orderId);
+  });
+
+  
+  document.getElementById("btnSaveChartRow")?.addEventListener("click", async () => {
+    await postEdit(null);
+    closeModal("chartEditModal");
+  });
+  
+  document.getElementById("btnStop")?.addEventListener("click", async () => {
+    const n = Number(document.getElementById("m_stop_days").value || 0);
+    if (!n || n < 1) { alert("Укажи дни стопа"); return; }
+    await postEdit("stop");
+    closeModal("chartEditModal");
+  });
+  
+  document.getElementById("btnPlay")?.addEventListener("click", async () => {
+    await postEdit("play");
+    closeModal("chartEditModal");
+  });
+  
+  document.getElementById("btnCloseChartModal")?.addEventListener("click", () => closeModal("chartEditModal"));
+  document.querySelector("#chartEditModal .modal-background")?.addEventListener("click", () => closeModal("chartEditModal"));
+  document.querySelector("#chartEditModal .delete")?.addEventListener("click", () => closeModal("chartEditModal"));
+
+
+
+
+  
+  
+  
+  
+  
+  
+  function isEmptyVal(v){
+    return v === null || v === undefined || v === "" || v === "—" || v === 0 || v === "0";
+  }
+  
+  function urgencyClassFromRow(r){
+    const vals = [];
+    for (const k of ["ldsp_days_left","film_days_left","paint_days_left"]){
+      const v = r[k];
+      if (v === null || v === undefined || v === "") continue;
+      const n = Number(v);
+      if (!Number.isNaN(n)) vals.push(n);
+    }
+    if (!vals.length) return "";
+    const minLeft = Math.min(...vals);
+    if (minLeft <= 2) return "tile-bad";
+    if (minLeft <= 6) return "tile-warn";
+    return "tile-ok";
+  }
+  
+  function daysBadge(v){
+    if (v === null || v === undefined || v === "") return "";
+    const n = Number(v);
+    if (Number.isNaN(n)) return "";
+    const cls = (n > 0) ? "deadline-days days-pos" : "deadline-days days-neg";
+    return `<span class="${cls}">${n > 0 ? "+"+n : String(n)}</span>`;
+  }
+  
+  function statusForTab(r, tab){
+    if (tab === "paint") return r.status_paint;
+    if (tab === "film") return r.status_film;
+    if (tab === "workshop") return r.status_ldsp;
+    // technologist — показываем ldsp как “главный”
+    return r.status_ldsp;
+  }
+  
+  async function loadTiles(tabKey){
+    const wrap = document.getElementById("tilesWrap");
+    const grid = document.getElementById("tilesGrid");
+    const tableWrap = document.getElementById("generalTableWrap");
+    const canvasWrap = document.getElementById("canvasWrap");
+  
+    wrap.style.display = "";
+    if (tableWrap) tableWrap.style.display = "none";
+    if (canvasWrap) canvasWrap.style.display = "none";
+  
+    grid.innerHTML = "<div class='notification is-light'>Загрузка...</div>";
+  
+    const resp = await fetch(`/orders/chart-data/?tab=${encodeURIComponent(tabKey)}`, {
+      headers: {"X-Requested-With":"XMLHttpRequest"}
+    });
+  
+    if (!resp.ok){
+      grid.innerHTML = "<div class='notification is-danger'>Ошибка загрузки</div>";
+      return;
+    }
+  
+    const data = await resp.json();
+    const tiles = data.tiles || [];
+  
+    if (!tiles.length){
+      grid.innerHTML = "<div class='notification is-light'>Нет заказов</div>";
+      return;
+    }
+  
+    grid.innerHTML = "";
+    for (const r of tiles){
+      const el = document.createElement("div");
+      el.className = "tile-card js-tile " + urgencyClassFromRow(r);
+      el.dataset.orderId = r.order_id;
+      el.dataset.hasLdsp  = valPresent(r.ldsp_qty) ? "1" : "0";
+      el.dataset.hasFilm  = valPresent(r.film_m2)  ? "1" : "0";
+      el.dataset.hasPaint = valPresent(r.paint_m2) ? "1" : "0";
+
+  
+      // метрики — показываем только если есть значение
+      const metrics = [];
+      if (!isEmptyVal(r.ldsp_qty)) metrics.push(`<span class="metric">ЛДСП: ${escapeHtml(String(r.ldsp_qty))}</span>`);
+      if (!isEmptyVal(r.paint_m2)) metrics.push(`<span class="metric">Краска: ${escapeHtml(String(r.paint_m2))} м²</span>`);
+      if (!isEmptyVal(r.film_m2))  metrics.push(`<span class="metric">Плёнка: ${escapeHtml(String(r.film_m2))} м²</span>`);
+      const metricsHtml = metrics.length ? `<div class="tile-metrics">${metrics.join("")}</div>` : "";
+  
+      // сроки — скрываем пустые
+      const deadlines = [];
+      if (!isEmptyVal(r.due_ldsp) && r.due_ldsp !== "—") deadlines.push(
+        `<div class="deadline-row"><span>ЛДСП</span><span class="deadline-val">${escapeHtml(r.due_ldsp)} ${daysBadge(r.ldsp_days_left)}</span></div>`
+      );
+      if (!isEmptyVal(r.due_film) && r.due_film !== "—") deadlines.push(
+        `<div class="deadline-row"><span>Плёнка</span><span class="deadline-val">${escapeHtml(r.due_film)} ${daysBadge(r.film_days_left)}</span></div>`
+      );
+      if (!isEmptyVal(r.due_paint) && r.due_paint !== "—") deadlines.push(
+        `<div class="deadline-row"><span>Краска</span><span class="deadline-val">${escapeHtml(r.due_paint)} ${daysBadge(r.paint_days_left)}</span></div>`
+      );
+  
+      const st = statusForTab(r, tabKey);
+  
+      el.innerHTML = `
+        <div class="tile-head">
+          <div class="tile-num">№ ${escapeHtml(String(r.order_number ?? ""))}</div>
+          <div>${renderStatus(st)}</div>
+        </div>
+  
+        <div class="tile-name">${escapeHtml(r.customer || "")}</div>
+  
+        ${metricsHtml}
+  
+        <div class="tile-deadlines">
+          ${deadlines.join("")}
+        </div>
+      `;
+  
+      grid.appendChild(el);
+    }
+  }
+
+  document.addEventListener("click", (e) => {
+    const tile = e.target.closest(".js-tile");
+    if (!tile) return;
+  
+    const orderId = tile.dataset.orderId;
+    if (!orderId) return;
+  
+    // ✅ запоминаем наличие материалов для модалки
+    currentEditFlags = {
+      has_ldsp:  tile.dataset.hasLdsp === "1",
+      has_film:  tile.dataset.hasFilm === "1",
+      has_paint: tile.dataset.hasPaint === "1",
+    };
+  
+    openEditModal(orderId);
+  });
+  
+  
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest(".js-open-tile");
+    if (!a) return;
+  
+    currentEditFlags = {
+      has_ldsp:  a.dataset.hasLdsp === "1",
+      has_film:  a.dataset.hasFilm === "1",
+      has_paint: a.dataset.hasPaint === "1",
+    };
+  
+    openEditModal(a.dataset.orderId);
+  });
+
+
+
+  function isTilesTab(tab){
+    return ["technologist","workshop","paint","film"].includes(tab);
+  }
+  
+  function viewKey(tab){ return `chart_view_${tab}`; }
+  
+  function getViewMode(tab){
+    return localStorage.getItem(viewKey(tab)) || "tiles";
+  }
+  
+  function setViewMode(tab, mode){
+    localStorage.setItem(viewKey(tab), mode);
+  }
+  
+  function updateToggleButtons(mode){
+    const btnTiles = document.getElementById("btnViewTiles");
+    const btnList  = document.getElementById("btnViewList");
+    if (!btnTiles || !btnList) return;
+  
+    btnTiles.classList.toggle("is-selected", mode === "tiles");
+    btnList.classList.toggle("is-selected", mode === "list");
+  }
+  
+  async function reloadTilesTab(tab){
+    const bar  = document.getElementById("viewToggleBar");
+    const wrapTiles = document.getElementById("tilesWrap");
+    const wrapList  = document.getElementById("tilesListWrap");
+  
+    if (!isTilesTab(tab)){
+      if (bar) bar.style.display = "none";
+      if (wrapList) wrapList.style.display = "none";
+      return;
+    }
+  
+    if (bar) bar.style.display = "";
+  
+    const mode = getViewMode(tab);
+    updateToggleButtons(mode);
+  
+    if (mode === "list"){
+      if (wrapTiles) wrapTiles.style.display = "none";
+      if (wrapList)  wrapList.style.display = "";
+      await loadTilesList(tab);
+    } else {
+      if (wrapList)  wrapList.style.display = "none";
+      if (wrapTiles) wrapTiles.style.display = "";
+      await loadTiles(tab);
+    }
+  }
+  
+  document.getElementById("btnViewTiles")?.addEventListener("click", async () => {
+    setViewMode(activeTab, "tiles");
+    await reloadTilesTab(activeTab);
+  });
+  
+  document.getElementById("btnViewList")?.addEventListener("click", async () => {
+    setViewMode(activeTab, "list");
+    await reloadTilesTab(activeTab);
+  });
+
+
+
+  async function loadTilesList(tabKey){
+    const body = document.getElementById("tilesListBody");
+    if (!body) return;
+  
+    body.innerHTML = `<tr><td colspan="8">Загрузка…</td></tr>`;
+  
+    const resp = await fetch(`/orders/chart-data/?tab=${encodeURIComponent(tabKey)}`, {
+      headers: {"X-Requested-With":"XMLHttpRequest"}
+    });
+  
+    if (!resp.ok){
+      body.innerHTML = `<tr><td colspan="8">Ошибка загрузки</td></tr>`;
+      return;
+    }
+  
+    const data = await resp.json();
+    const rows = data.tiles || [];
+  
+    if (!rows.length){
+      body.innerHTML = `<tr><td colspan="8">Нет заказов</td></tr>`;
+      return;
+    }
+  
+    body.innerHTML = "";
+  
+    for (const r of rows){
+      const tr = document.createElement("tr");
+  
+      // ✅ фон как у плиток (если у тебя уже есть функция urgencyClassFromRow)
+      if (typeof urgencyClassFromRow === "function"){
+        tr.className = urgencyClassFromRow(r);
+      }
+  
+      // сроки коротко
+      const parts = [];
+      if (r.due_ldsp && r.due_ldsp !== "—") parts.push(`ЛДСП: ${r.due_ldsp}${daysBadgeSafe(r.ldsp_days_left)}`);
+      if (r.due_film && r.due_film !== "—") parts.push(`ПЛ: ${r.due_film}${daysBadgeSafe(r.film_days_left)}`);
+      if (r.due_paint && r.due_paint !== "—") parts.push(`КР: ${r.due_paint}${daysBadgeSafe(r.paint_days_left)}`);
+  
+      // статусы компактно
+      const st = [];
+      if (r.status_ldsp && r.status_ldsp !== "—") st.push(`Л: ${renderStatus(r.status_ldsp)}`);
+      if (r.status_film && r.status_film !== "—") st.push(`П: ${renderStatus(r.status_film)}`);
+      if (r.status_paint && r.status_paint !== "—") st.push(`К: ${renderStatus(r.status_paint)}`);
+  
+      tr.innerHTML = `
+        <td>
+          <a href="javascript:void(0)" class="js-open-tile"
+             data-order-id="${r.order_id}"
+             data-has-ldsp="${valPresent(r.ldsp_qty) ? "1":"0"}"
+             data-has-film="${valPresent(r.film_m2) ? "1":"0"}"
+             data-has-paint="${valPresent(r.paint_m2) ? "1":"0"}">
+            № ${escapeHtml(String(r.order_number))}
+          </a>
+        </td>
+        <td>${escapeHtml(r.customer || "")}</td>
+        <td>${escapeHtml(String(r.ldsp_qty || "—"))}</td>
+        <td>${escapeHtml(String(r.paint_m2 || "—"))}</td>
+        <td>${escapeHtml(String(r.film_m2 || "—"))}</td>
+        <td>${parts.join("<br>") || "—"}</td>
+        <td>${st.join("<br>") || "—"}</td>
+        <td>${escapeHtml(r.note || "")}</td>
+      `;
+  
+      body.appendChild(tr);
+    }
+  }
+  
+  // безопасный бейдж дней (если у тебя есть daysBadge — используем)
+  function daysBadgeSafe(n){
+    if (typeof daysBadge === "function") return daysBadge(n);
+    if (n === null || n === undefined) return "";
+    const num = Number(n);
+    if (Number.isNaN(num)) return "";
+    const cls = (num <= 0) ? "has-text-danger" : "has-text-success";
+    return ` <span class="${cls}">(${num})</span>`;
+  }
+
+
+
+</script>
+
+{% endblock %}

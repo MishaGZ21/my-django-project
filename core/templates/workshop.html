@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Цех{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="title">Цех</h1>
+    <p class="subtitle">Эта страница пока пустая. Здесь будет список заданий/производства.</p>
+    <div class="buttons is-right">
+      <a href="{% url 'orders_all' %}" class="button">К заказам</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

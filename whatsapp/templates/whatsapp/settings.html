@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}WhatsApp — настройки{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'whatsapp/whatsapp_light.css' %}">
+  <link rel="stylesheet" href="{% static 'whatsapp/whatsapp_light_extra.css' %}">
+{% endblock %}
+{% block content %}
+{% include "whatsapp/_subnav.html" %}
+<section class="section">
+  <h1 class="title is-4">Настройки</h1>
+  <p class="subtitle is-6">Секреты (TOKEN/PHONE_NUMBER_ID) берём из .env; ниже — операционные параметры.</p>
+
+  <div class="columns">
+    <div class="column is-two-thirds">
+      <form method="post" class="box">
+        {% csrf_token %}
+        <div class="field">
+          <label class="checkbox">
+            {{ form.enabled }} Включить отправку WhatsApp
+          </label>
+        </div>
+        <div class="field">
+          <label class="label">Номера руководителей (через запятую)</label>
+          <div class="control">{{ form.manager_numbers }}</div>
+        </div>
+        <div class="field">
+          <label class="label">Язык шаблонов</label>
+          <div class="control">{{ form.lang }}</div>
+        </div>
+        <div class="field">
+          <label class="checkbox">
+            {{ form.use_db_templates }} Использовать шаблоны из БД
+          </label>
+        </div>
+        <div class="field">
+          <button class="button is-link">Сохранить</button>
+        </div>
+      </form>
+    </div>
+    <div class="column">
+      <div class="box">
+        <h3 class="title is-6">Состояние Cloud API</h3>
+        <ul>
+          <li>Отправка сообщений: <strong>{{ form.instance.enabled|yesno:"включена,выключена" }}</strong></li>
+          <li>Настроено: <strong>{{ env.configured|yesno:"да,нет" }}</strong></li>
+          <li>PHONE_NUMBER_ID: <code>{{ env.phone_number_id }}</code></li>
+          <li>ACCESS_TOKEN задан: <strong>{{ env.access_token_set|yesno:"да,нет" }}</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,4 @@
+После обновления моделей добавлены поля lds_color5..10 и pvc_color5..10.
+Запустите:
+python manage.py makemigrations core
+python manage.py migrate

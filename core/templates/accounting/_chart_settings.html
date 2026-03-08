@@ -1,0 +1,165 @@
+<h2 class="title is-5">Настройки графиков заказов</h2>
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="notification is-light">
+    Настройки применяются <strong>только к новым заказам</strong> — по дате подписания договора.
+    Старые заказы сохраняют сроки, действовавшие на момент подписания.
+  </div>
+
+  {# ===== Общий график ===== #}
+  <div class="box">
+    <div class="level">
+      <div class="level-left">
+        <div>
+          <div class="title is-6">Общий график</div>
+          <p class="help">Действует с: {{ cfg_map.general.effective_from|date:"d.m.Y" }}</p>
+        </div>
+      </div>
+      <div class="level-right">
+        <label class="checkbox">
+          <input type="checkbox" name="general_enabled" value="1" {% if cfg_map.general.enabled %}checked{% endif %}>
+          Включено
+        </label>
+      </div>
+    </div>
+
+    <div class="columns is-multiline">
+      <div class="column is-4">
+        <label class="label">ЛДСП (раб. дни)</label>
+        <input class="input" type="number" min="1" max="365" name="general_days_ldsp" value="{{ cfg_map.general.days_ldsp }}">
+      </div>
+      <div class="column is-4">
+        <label class="label">Плёнка (раб. дни)</label>
+        <input class="input" type="number" min="1" max="365" name="general_days_film" value="{{ cfg_map.general.days_film }}">
+      </div>
+      <div class="column is-4">
+        <label class="label">Краска (раб. дни)</label>
+        <input class="input" type="number" min="1" max="365" name="general_days_paint" value="{{ cfg_map.general.days_paint }}">
+      </div>
+    </div>
+  </div>
+
+  {# ===== График Технолог ===== #}
+  <div class="box">
+    <div class="level">
+      <div class="level-left">
+        <div>
+          <div class="title is-6">График ТЕХНОЛОГ</div>
+          <p class="help">Действует с: {{ cfg_map.technologist.effective_from|date:"d.m.Y" }}</p>
+        </div>
+      </div>
+      <div class="level-right">
+        <label class="checkbox">
+          <input type="checkbox" name="technologist_enabled" value="1" {% if cfg_map.technologist.enabled %}checked{% endif %}>
+          Включено
+        </label>
+      </div>
+    </div>
+
+    <div class="columns is-multiline">
+      <div class="column is-4">
+        <label class="label">ЛДСП (раб. дни)</label>
+        <input class="input" type="number" min="1" max="365" name="technologist_days_ldsp" value="{{ cfg_map.technologist.days_ldsp }}">
+      </div>
+      <div class="column is-4">
+        <label class="label">Плёнка (раб. дни)</label>
+        <input class="input" type="number" min="1" max="365" name="technologist_days_film" value="{{ cfg_map.technologist.days_film }}">
+      </div>
+      <div class="column is-4">
+        <label class="label">Краска (раб. дни)</label>
+        <input class="input" type="number" min="1" max="365" name="technologist_days_paint" value="{{ cfg_map.technologist.days_paint }}">
+      </div>
+    </div>
+  </div>
+
+  {# ===== График Цех ===== #}
+  <div class="box">
+    <div class="level">
+      <div class="level-left">
+        <div>
+          <div class="title is-6">График ЦЕХ</div>
+          <p class="help">Действует с: {{ cfg_map.workshop.effective_from|date:"d.m.Y" }}</p>
+        </div>
+      </div>
+      <div class="level-right">
+        <label class="checkbox">
+          <input type="checkbox" name="workshop_enabled" value="1" {% if cfg_map.workshop.enabled %}checked{% endif %}>
+          Включено
+        </label>
+      </div>
+    </div>
+
+    <div class="columns is-multiline">
+      <div class="column is-4">
+        <label class="label">ЛДСП (раб. дни)</label>
+        <input class="input" type="number" min="1" max="365" name="workshop_days_ldsp" value="{{ cfg_map.workshop.days_ldsp }}">
+      </div>
+      <div class="column is-4">
+        <label class="label">Плёнка (раб. дни)</label>
+        <input class="input" type="number" min="1" max="365" name="workshop_days_film" value="{{ cfg_map.workshop.days_film }}">
+      </div>
+      <div class="column is-4">
+        <label class="label">Краска (раб. дни)</label>
+        <input class="input" type="number" min="1" max="365" name="workshop_days_paint" value="{{ cfg_map.workshop.days_paint }}">
+      </div>
+    </div>
+  </div>
+
+  {# ===== График Краска ===== #}
+  <div class="box">
+    <div class="level">
+      <div class="level-left">
+        <div>
+          <div class="title is-6">График КРАСКА</div>
+          <p class="help">Действует с: {{ cfg_map.paint.effective_from|date:"d.m.Y" }}</p>
+        </div>
+      </div>
+      <div class="level-right">
+        <label class="checkbox">
+          <input type="checkbox" name="paint_enabled" value="1" {% if cfg_map.paint.enabled %}checked{% endif %}>
+          Включено
+        </label>
+      </div>
+    </div>
+
+    <div class="columns is-multiline">
+      <div class="column is-4">
+        <label class="label">Краска (раб. дни)</label>
+        <input class="input" type="number" min="1" max="365" name="paint_days_paint" value="{{ cfg_map.paint.days_paint }}">
+      </div>
+    </div>
+  </div>
+
+  {# ===== График Плёнка ===== #}
+  <div class="box">
+    <div class="level">
+      <div class="level-left">
+        <div>
+          <div class="title is-6">График ПЛЁНКА</div>
+          <p class="help">Действует с: {{ cfg_map.film.effective_from|date:"d.m.Y" }}</p>
+        </div>
+      </div>
+      <div class="level-right">
+        <label class="checkbox">
+          <input type="checkbox" name="film_enabled" value="1" {% if cfg_map.film.enabled %}checked{% endif %}>
+          Включено
+        </label>
+      </div>
+    </div>
+
+    <div class="columns is-multiline">
+      <div class="column is-4">
+        <label class="label">Плёнка (раб. дни)</label>
+        <input class="input" type="number" min="1" max="365" name="film_days_film" value="{{ cfg_map.film.days_film }}">
+      </div>
+    </div>
+  </div>
+
+  <div class="field is-grouped">
+    <div class="control">
+      <button class="button is-primary" type="submit">Сохранить</button>
+    </div>
+  </div>
+</form>

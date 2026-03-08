@@ -1,0 +1,1466 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Договор — Заказ №{{ order.number|default:order.order_id }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'contracts/css/contract.css' %}?v=5.0.2">
+<style>
+  /* Узкая подправка: держим компактность карточек ЛДСП */
+  .ldsp-grid .ldsp-stat{ max-width:380px; }
+
+  /* Форма-строки внутри спецификации: метка → control → примечание → [+] */
+  .formline{display:flex;align-items:center;gap:12px;margin:10px 0;}
+  .formline .field__label{min-width:100px;color:#5b5b5b;white-space:nowrap;}
+  .formline select.input{min-width:200px;max-width:250px}
+  
+  /* Примечание делаем шире */
+  .formline .input--note{
+    flex:1 1 360px;
+  }
+  
+  /* Поле цвета (RAL / код плёнки) */
+  .formline .input--color{
+    min-width:180px;
+    max-width:260px;
+  }
+  
+  /* Квадратура — очень узкое поле, 3–4 символа */
+  .formline .input--area{
+    width:45px;          /* было 70px */
+    flex:0 0 auto;
+    text-align:center;
+    padding-left:0;
+    padding-right:0;
+    min-width:60px;
+  }
+
+  /* Вернуть «стрелочки» у <select> */
+  select.input{appearance:auto;-webkit-appearance:auto;background-image:initial;padding-right:28px}
+
+  /* Кнопки внизу карточки подгруппы */
+  .grp-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+
+  /* Мини-кнопка «плюс» для добавления строки */
+  .btn-mini{padding:6px 10px;font-size:13px;line-height:1;border-radius:8px}
+  .btn-mini.btn-secondary{background:#f1f5f9;border:1px solid #e2e8f0}
+  
+  /* Точечная правка размеров в МДФ-строках */
+  .formline .input--note{
+    flex: 1 1 380px !important;   /* примечание шире */
+  }
+  
+  .formline .input--color{
+    min-width: 170px !important;
+    max-width: 230px !important;
+  }
+  
+  /* квадратура м² — узенькое поле на 3–4 символа */
+  .formline .input--area{
+    flex: 0 0 45px !important;
+    max-width: 45px !important;
+    width: 45px !important;
+    text-align: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="contract-wrapper{% if pdf_mode %} contract-pdf compact{% endif %}">
+
+  <div class="container mx-auto">
+
+    {# ====== Шапка ====== #}
+    <section class="header header--brandband">
+      <div class="header__col header__col--left">
+        {% for line in header_left_lines %}<div class="header__line-txt">{{ line }}</div>{% endfor %}
+      </div>
+      <div class="header__col header__col--center">
+        <img src="{% static 'img/logo.png' %}" alt="WoodDecor" class="header__logo">
+      </div>
+      <div class="header__col header__col--right">
+        {% for line in header_right_lines %}<div class="header__line-txt header__line-txt--right">{{ line }}</div>{% endfor %}
+      </div>
+    </section>
+    <div class="header__underline"></div>
+
+    <h1 class="doc-title">Бланк заказа №{{ order.number|default:order.order_id }}</h1>
+
+    {# ====== 1. Информация ====== #}
+    <section class="card info-card">
+      <h3 class="section-title"><span class="section-badge">1</span> Информация</h3>
+      <div class="info-wrap">
+        <table class="info-table">
+          <colgroup><col class="label-col"><col class="value-col"><col class="label-col"><col class="value-col"></colgroup>
+          <tbody>
+            <tr>
+              <th>Дата оплаты услуг:</th>
+              <td class="value">{% if order.payments.last_service_payment_date %}{{ order.payments.last_service_payment_date|date:"d.m.Y" }}{% else %}&mdash;{% endif %}</td>
+              <th>Дата завоза материалов:</th>
+              <td class="value">{% if order.warehouse.last_receipt_date %}{{ order.warehouse.last_receipt_date|date:"d.m.Y" }}{% else %}&mdash;{% endif %}</td>
+            </tr>
+            <tr>
+              <th>Заказчик:</th><td class="value">{{ order.customer.name|default:"—" }}</td>
+              <th>Тел.:</th><td class="value">{{ order.customer.phone|default:"—" }}</td>
+            </tr>
+            <tr>
+              <th>Сумма заказа <em>(тг.)</em>:</th><td class="value strong">{{ order.payments.total_paid|floatformat:"0" }}</td>
+              <th>Услуги дизайнера <em>(тг.)</em>:</th><td class="value">{{ order.payments.designer_paid_total|floatformat:"0" }}</td>
+            </tr>
+            <tr>
+              <th>Фасады покраска <em>(тг.)</em>:</th><td class="value">
+                {% with ps=order.facades.payment_status|default:'' %}
+                  {% if ps == 'NOT_SPECIFIED' %}
+                    0
+                  {% elif ps == 'NOT_PAID' %}
+                    НЕ оплачено
+                  {% else %}
+                    {{ order.facades.paint_cost|default_if_none:0|floatformat:"0" }}
+                  {% endif %}
+                {% endwith %}
+              </td>
+              <th>Фасады плёнка <em>(тг.)</em>:</th><td class="value">
+                {% with ps=order.facades.payment_status|default:'' %}
+                  {% if ps == 'NOT_SPECIFIED' %}
+                    0
+                  {% elif ps == 'NOT_PAID' %}
+                    НЕ оплачено
+                  {% else %}
+                    {{ order.facades.film_cost|default_if_none:0|floatformat:"0" }}
+                  {% endif %}
+                {% endwith %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    {# ====== 2. Материалы ====== #}
+    <section class="card card--section card--materials">
+      <div class="section-title"><span class="section-badge">2</span> Материалы</div>
+
+      <div class="materials-accepted" id="warehouseChips">
+        <div class="subttl with-icon"><span class="dot dot-green"></span> Принято на складе</div>
+        {% if order.warehouse.materials %}
+          <ul class="chip-list flat">
+            {% for m in order.warehouse.materials %}
+              <li class="chip">
+                <span class="chip-title">{{ m.name }}</span>
+                {% if m.size %}<span class="chip-sep">•</span><span class="chip-size">{{ m.size }}</span>{% endif %}
+                <span class="chip-qty">{{ m.qty }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="empty muted">Нет данных о материалах на складе.</div>
+        {% endif %}
+      </div>
+
+      <div class="mat-card warn">
+        <div class="subttl with-icon"><span class="dot dot-pink"></span> Распределение материалов для заказа</div>
+
+        <div id="ldspSummary" class="ldsp-grid ldsp-3col">
+          {% for row in order.warehouse.ldsp_summary %}
+            <div class="ldsp-stat" data-size="{{ row.size }}" data-stock="{{ row.stock|default:0 }}">
+              <div class="ldsp-h">{{ row.size }}</div>
+              <div class="ldsp-row"><span>Склад:</span><b class="js-stock">{{ row.stock|default:0 }}</b><span>л.</span></div>
+              <div class="ldsp-row"><span>Распределено:</span><b class="js-allocated">0</b><span>л.</span></div>
+              <div class="ldsp-row"><span>Остаток:</span><b class="js-balance">{{ row.stock|default:0 }}</b><span>л.</span></div>
+              <div class="ldsp-warn" aria-live="polite">Листов на складе недостаточно</div>
+            </div>
+          {% endfor %}
+
+          {# --- МДФ / Фасады (широкая правая карточка) --- #}
+          <div class="card mdf-card">
+            <div class="card-header">МДФ / Фасады</div>
+            <div class="card-body">
+{% with ps=order.facades.payment_status|default:'' %}
+{% if ps == 'NOT_SPECIFIED' %}
+  <div class="text-muted">МДФ в заказе отсутствует</div>
+{% elif ps == 'NOT_PAID' %}
+  <div class="text-muted">Фасады не оплачены</div>
+{% else %}
+  {% if order.facades.items %}
+    {% for it in order.facades.items %}
+      <div class="mdf-row {% if it.category == 'краска' %}mdf-paint{% else %}mdf-film{% endif %}">
+        <span class="mdf-name">{{ it.profile }}</span>
+        <span class="mdf-dot">•</span>
+        <span class="mdf-cat">{% if it.category == 'краска' %}(краска){% else %}(плёнка){% endif %}</span>
+        <span class="mdf-area">{{ it.area|floatformat:"2" }} м²</span>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="text-muted">Фасады оплачены</div>
+  {% endif %}
+{% endif %}
+{% endwith %}
+            </div>
+          </div>
+        </div>
+
+        <div id="matRows" class="mat-rows">
+          <div class="mat-row group--card" data-row>
+            <div class="col col--fmt">
+              <label class="lbl">Формат</label>
+              <select class="inp js-format">
+                {% for row in order.warehouse.ldsp_summary %}
+                  <option value="{{ row.size }}">{{ row.size }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col col--color">
+              <label class="lbl">Цвет ЛДСП</label>
+              <input class="inp js-color" type="text" placeholder="Напр.: Дуб Сонома">
+            </div>
+            <div class="col col--qty">
+              <label class="lbl">Кол-во листов</label>
+              <div class="qty">
+                <button type="button" class="qty-btn btn-minus" aria-label="Уменьшить">−</button>
+                <input type="number" class="inp qty-inp js-qty" value="0" min="0" step="1">
+                <button type="button" class="qty-btn btn-plus" aria-label="Увеличить">+</button>
+              </div>
+            </div>
+            <button type="button" class="btn-del" title="Удалить строку" aria-label="Удалить строку">×</button>
+          </div>
+        </div>
+
+        <div class="mat-actions">
+          <button type="button" class="btn-secondary" id="btnAddMaterial">+ Добавить материал</button>
+        </div>
+
+        <p class="muted mt-1" id="matHelp">
+          Укажите формат, цвет и количество листов. Сумма по каждому формату не должна превышать объём, принятый на складе.
+        </p>
+      </div>
+    </section>
+
+    <div id="nextActions" class="next-actions">
+      <button id="btnNext" class="btn-next" type="button">Далее</button>
+      <span id="saveHint" class="save-hint" style="display:none;">Сохранено</span>
+    </div>
+
+    {# ====== 3. Спецификация ====== #}
+    <section id="specSection" class="card section" style="display:none;">
+      <div class="section-title">
+        <span class="section-badge">3</span> Спецификация
+      </div>
+    
+      <!-- Сообщение о сохранении бланка -->
+      <div id="specSaveMessage" class="save-hint" style="display:none; margin: 4px 0 10px 32px;">
+        Бланк сохранён !
+      </div>
+    
+      <form method="post" id="contractForm">
+        {% csrf_token %}
+        <input type="hidden" name="spec_json" id="specJsonField">
+        <input type="hidden" name="materials_alloc_json" id="materialsAllocField">
+
+        <div class="spec-actions">
+          <button type="button" class="btn-primary" id="btnContractSave">Сохранить</button>
+          <button type="button" id="btnSpecAdd" class="btn-secondary">+ Добавить</button>
+          <a href="{% url 'contract_pdf' order.order_id %}"
+             class="btn-secondary"
+             id="btn-contract-pdf"
+             target="_blank"
+             rel="noopener">
+            Распечатать / Сохранить
+          </a>
+        </div>
+
+        <div id="specList" class="spec-list"></div>
+      </form>
+    </section>
+  </div> {# /.container #}
+</div> {# /.contract-wrapper #}
+
+
+{# Начальные данные договора из БД для JS #}
+<script>
+  window.__CONTRACT_SPEC_INITIAL = {{ contract_spec_json|default:"[]"|safe }};
+  window.__CONTRACT_MATERIALS_ALLOC_INITIAL = {{ contract_materials_alloc_json|default:"[]"|safe }};
+</script>
+
+
+{# ========= JS: Материалы (распределение) ========= #}
+<script>
+(function(){
+  function parseChips(){
+    const wrap = document.getElementById('warehouseChips');
+    const chips = wrap ? wrap.querySelectorAll('.chip') : [];
+    const out = {};
+    chips.forEach(ch=>{
+      const t = ch.textContent.replace(/\s+/g,' ').trim();
+      const mFmt = t.match(/(2750×1830|2800×2070)/);
+      const mQty = t.match(/(\d+)\s*л/);
+      if(mFmt && mQty){ out[mFmt[1]]=(out[mFmt[1]]||0) + parseInt(mQty[1],10); }
+    });
+    return out;
+  }
+
+  function ensureSummary(){
+    const grid = document.getElementById('ldspSummary');
+    if(!grid) return;
+    if(!grid.querySelector('.ldsp-stat[data-size]')){
+      const allowed = parseChips();
+      grid.querySelectorAll('.ldsp-stat[data-size]').forEach(n=>n.remove());
+      Object.keys(allowed).forEach(fmt=>{
+        const stock = allowed[fmt]||0;
+        const el = document.createElement('div');
+        el.className='ldsp-stat';
+        el.dataset.size = fmt;
+        el.dataset.stock = stock;
+        el.innerHTML = `
+          <div class="ldsp-h">${fmt}</div>
+          <div class="ldsp-row"><span>Склад:</span><b class="js-stock">${stock}</b><span>л.</span></div>
+          <div class="ldsp-row"><span>Распределено:</span><b class="js-allocated">0</b><span>л.</span></div>
+          <div class="ldsp-row"><span>Остаток:</span><b class="js-balance">${stock}</b><span>л.</span></div>
+          <div class="ldsp-warn" aria-live="polite">Листов на складе недостаточно</div>`;
+        grid.appendChild(el);
+      });
+      const fmts = Object.keys(allowed);
+      document.querySelectorAll('.js-format').forEach(sel=>{
+        if(sel.options.length) return;
+        fmts.forEach(f=>{
+          const o=document.createElement('option'); o.value=f; o.textContent=f; sel.appendChild(o);
+        });
+      });
+    }
+  }
+
+  function recalc(){
+    const sum = {};
+    document.querySelectorAll('#ldspSummary .ldsp-stat[data-size]').forEach(c=>{
+      sum[c.dataset.size] = {stock:+(c.dataset.stock||0), allocated:0};
+    });
+
+    document.querySelectorAll('#matRows [data-row]').forEach(r=>{
+      const f = r.querySelector('.js-format')?.value;
+      const q = parseInt(r.querySelector('.js-qty')?.value||'0',10)||0;
+      if(f && sum[f]) sum[f].allocated += q;
+    });
+
+    document.querySelectorAll('#ldspSummary .ldsp-stat[data-size]').forEach(box=>{
+      const f = box.dataset.size;
+      const s = sum[f] || {stock:0,allocated:0};
+      const bal = s.stock - s.allocated;
+      box.querySelector('.js-stock').textContent     = s.stock;
+      box.querySelector('.js-allocated').textContent = s.allocated;
+      box.querySelector('.js-balance').textContent   = bal;
+
+      const over  = s.allocated > s.stock;
+      const empty = s.stock === 0;
+      const ok    = !over && (empty || bal === 0);
+
+      box.classList.toggle('over', over);
+      box.classList.toggle('ok',   ok);
+      box.classList.toggle('ldsp-empty', empty);
+
+      const warn = box.querySelector('.ldsp-warn');
+      if(warn) warn.style.display = over ? 'block' : 'none';
+    });
+
+    if (window.contractAlloc && typeof window.contractAlloc.toggleNextVisibility === 'function') {
+      window.contractAlloc.toggleNextVisibility();
+    }
+  }
+
+  const rowsBox = document.getElementById('matRows');
+  const proto   = rowsBox.querySelector('[data-row]');
+
+  function addRow(){
+    const clone = proto.cloneNode(true);
+    clone.querySelector('.js-color').value = '';
+    clone.querySelector('.js-qty').value   = 0;
+    rowsBox.appendChild(clone);
+    recalc();
+  }
+
+  ensureSummary();
+  recalc();
+
+  document.addEventListener('input', e=>{
+    if(e.target.matches('.js-qty, .js-format')) recalc();
+  });
+
+  document.addEventListener('click', e=>{
+    if(e.target.id === 'btnAddMaterial'){ addRow(); }
+    if(e.target.closest('.btn-plus')){
+      const r=e.target.closest('[data-row]'); const i=r.querySelector('.js-qty');
+      i.value=(parseInt(i.value||'0',10)+1); recalc();
+    }
+    if(e.target.closest('.btn-minus')){
+      const r=e.target.closest('[data-row]'); const i=r.querySelector('.js-qty');
+      i.value=Math.max(0,parseInt(i.value||'0',10)-1); recalc();
+    }
+    if(e.target.closest('.btn-del')){ e.target.closest('[data-row]')?.remove(); recalc(); }
+  });
+
+  window.__matRowsProto = proto.cloneNode(true);
+  window.__getLdspColors = function(){
+    const colors = new Set();
+    document.querySelectorAll('#matRows .js-color').forEach(inp=>{
+      const v = (inp.value||'').trim();
+      if(v) colors.add(v);
+    });
+    return Array.from(colors);
+  }
+})();
+</script>
+
+{# ========= JS: сохранение/восстановление + «Далее» ========= #}
+<script>
+(function(){
+  const orderId    = {{ order.order_id|default:0 }};
+  const storageKey = 'contract_alloc_' + orderId;
+
+  const MAT_CONTAINER_SEL = '#matRows';
+  const ROW_SEL           = '[data-row]';
+
+  function getContainer(){ return document.querySelector(MAT_CONTAINER_SEL); }
+
+  function collectRows(){
+    const rows = Array.from(getContainer().querySelectorAll(ROW_SEL));
+    return rows.map(r=>{
+      const sel   = r.querySelector('.js-format');
+      const color = r.querySelector('.js-color');
+      const qty   = r.querySelector('.js-qty');
+      return {
+        format: sel   ? sel.value : '',
+        color:  color ? color.value : '',
+        qty:    qty   ? (parseInt(qty.value||'0',10)||0) : 0
+      };
+    });
+  }
+
+  function restoreRows(){
+    try{
+      const arr = Array.isArray(window.__CONTRACT_MATERIALS_ALLOC_INITIAL)
+        ? window.__CONTRACT_MATERIALS_ALLOC_INITIAL
+        : [];
+      if(!arr.length) return;
+
+      const cont  = getContainer();
+      const proto = window.__matRowsProto ? window.__matRowsProto.cloneNode(true)
+                   : cont.querySelector(ROW_SEL)?.cloneNode(true);
+      if(!cont || !proto) return;
+
+      cont.querySelectorAll(ROW_SEL).forEach(el=>el.remove());
+
+      arr.forEach(d=>{
+        const row  = proto.cloneNode(true);
+        const sel  = row.querySelector('.js-format');
+        const col  = row.querySelector('.js-color');
+        const qty  = row.querySelector('.js-qty');
+
+        if(sel) sel.value = d.format || (sel.options[0]?.value || '');
+        if(col) col.value = d.color  || '';
+        if(qty) qty.value = d.qty    || 0;
+
+        cont.appendChild(row);
+
+        if(qty) qty.dispatchEvent(new Event('input', {bubbles:true}));
+      });
+    }catch(e){ console.warn('restoreRows', e); }
+  }
+
+  function allFormatsSatisfied() {
+    const cards = document.querySelectorAll('#ldspSummary .ldsp-stat[data-size]');
+    if (cards.length === 0) return true;
+    return Array.from(cards).every(card => {
+      const stock     = parseInt(card.dataset.stock || '0', 10) || 0;
+      const allocated = parseInt((card.querySelector('.js-allocated')?.textContent || '0').replace(/[^\d-]/g,''), 10) || 0;
+      const over      = allocated > stock;
+      const balance   = stock - allocated;
+      return stock === 0 || (!over && balance === 0);
+    });
+  }
+
+  function toggleNextVisibility(){
+    const box = document.getElementById('nextActions');
+    if(!box) return;
+    box.classList.toggle('show', allFormatsSatisfied());
+  }
+
+  function saveRows(){
+    try{
+      // раньше сохраняли в localStorage; теперь только показываем подсказку,
+      // сами данные уйдут в БД при нажатии кнопки «Сохранить» в блоке Спецификация
+      const hint = document.getElementById('saveHint');
+      if(hint){ hint.style.display='inline'; setTimeout(()=>hint.style.display='none', 1200); }
+    }catch(e){ console.warn('saveRows', e); }
+  }
+
+  document.addEventListener('click', (e)=>{
+    if(e.target && e.target.id === 'btnNext'){
+      saveRows();
+      const spec = document.getElementById('specSection');
+      if(spec) spec.style.display = 'block';
+      spec?.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', restoreRows);
+
+  window.contractAlloc = { save: saveRows, restore: restoreRows, toggleNextVisibility, collect: collectRows };
+  toggleNextVisibility();
+})();
+</script>
+
+{# datalist для полей цвета МДФ #}
+<datalist id="mdfPaintColorList"></datalist>
+<datalist id="mdfFilmColorList"></datalist>
+
+{# ВНЕШНИЕ СПИСКИ ЦВЕТОВ (NCS и Kira) #}
+<script src="{% static 'contracts/js/mdf_paint_colors.js' %}"></script>
+<script src="{% static 'contracts/js/mdf_film_colors.js' %}"></script>
+
+<!-- ========= JS: СПЕЦИФИКАЦИЯ (persist selects + stable colors) ========= -->
+<script>
+(function(){
+  const orderId      = Number({{ order.order_id|default:0 }}) || 0;
+  {% with ps=order.facades.payment_status|default:'' %}
+  const HAS_MDF = {% if ps == 'NOT_PAID' or ps == 'NOT_SPECIFIED' %}
+      false
+  {% elif order.facades.items %}
+      true
+  {% else %}
+      false
+  {% endif %};
+
+  const MDF_PAINT = [
+    {% if ps != 'NOT_PAID' and ps != 'NOT_SPECIFIED' %}
+      {% for it in order.facades.items %}
+        {% if it.category == 'краска' %}
+          "{{ it.profile|escapejs }}",
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  ];
+
+  const MDF_FILM = [
+    {% if ps != 'NOT_PAID' and ps != 'NOT_SPECIFIED' %}
+      {% for it in order.facades.items %}
+        {% if it.category == 'плёнка' %}
+          "{{ it.profile|escapejs }}",
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  ];
+  {% endwith %}
+  
+    // --- Флаг «грязности» спецификации и управление кнопкой PDF ---
+  window.__CONTRACT_SPEC_DIRTY = false;
+
+  function updatePrintButtonState(){
+    const btn = document.getElementById('btn-contract-pdf');
+    if (!btn) return;
+
+    const hasGroups = !!document.querySelector('#specList .group--section');
+    const dirty     = !!window.__CONTRACT_SPEC_DIRTY;
+
+    // Кнопка видна только если есть подгруппы и изменений нет
+    const shouldShow = hasGroups && !dirty;
+    btn.style.display = shouldShow ? '' : 'none';
+  }
+
+  // чтобы можно было дергать снаружи (на всякий случай)
+  window.updatePrintButtonState = updatePrintButtonState;
+
+  /* Внешние справочники цветов */
+  const NCS_COLORS  = (window.NCS_COLORS  || []);  // все цвета NCS
+  const KIRA_FILMS  = (window.KIRA_FILMS  || []);  // все плёнки Kira
+
+  const LS_KEY_MDF_PAINT_COLORS = "wd_spec_mdf_paint_colors";
+  const LS_KEY_MDF_FILM_COLORS  = "wd_spec_mdf_film_colors";
+  const COLOR_ADD_LABEL = "+ Добавить…";
+
+  const specListEl = document.getElementById('specList');
+
+  function paletteIndex(i){ return (typeof i === 'number' && isFinite(i)) ? (i % 5) : 0; }
+  function escapeHtml(s){ return (s||'').replace(/[&<>"]/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+  function setOptions(select, arr){
+    if (!select) return;
+    const uniq = Array.from(new Set(arr||[]));
+    const prev = select.value;
+    select.innerHTML = '<option value=""></option>' + uniq.map(v=>`<option value="${v}">${v}</option>`).join('');
+    if (prev) {
+      let has = Array.from(select.options).some(o=>o.value===prev);
+      if (!has) {
+        const o = document.createElement('option'); o.value = prev; o.textContent = prev;
+        select.appendChild(o);
+      }
+      select.value = prev;
+    }
+  }
+  function ensureOptionSelected(select, value){
+    if (!select || !value) return;
+    let has = Array.from(select.options).some(o=>o.value===value);
+    if (!has) {
+      const o = document.createElement('option');
+      o.value = value; o.textContent = value;
+      select.appendChild(o);
+    }
+    select.value = value;
+  }
+
+  function fillLdspSelects(scope){
+    const colors = (window.__getLdspColors ? window.__getLdspColors() : []);
+    scope.querySelectorAll('.js-ldsp-body, .js-ldsp-fas').forEach(s=> {
+      const cur = s.value;
+      const merged = Array.from(new Set([...(colors||[]), ...(cur ? [cur] : [])]));
+      setOptions(s, merged);
+      if (cur) s.value = cur;
+    });
+  }
+
+  /* ==== Цвета МДФ (каталоги + локальные добавленные) ==== */
+
+  function getColorList(kind) {
+    const base = kind === "paint" ? NCS_COLORS : KIRA_FILMS;
+    const lsKey = kind === "paint" ? LS_KEY_MDF_PAINT_COLORS : LS_KEY_MDF_FILM_COLORS;
+
+    let extra = [];
+    try {
+      extra = JSON.parse(localStorage.getItem(lsKey) || "[]");
+    } catch(e) { extra = []; }
+
+    const all = Array.from(new Set([...(base || []), ...(extra || [])]));
+    return all.filter(Boolean);
+  }
+
+  function fillColorDatalist(datalistEl, values) {
+    if (!datalistEl) return;
+    datalistEl.innerHTML = "";
+    (values || []).forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      datalistEl.appendChild(opt);
+    });
+    const optAdd = document.createElement("option");
+    optAdd.value = COLOR_ADD_LABEL;
+    datalistEl.appendChild(optAdd);
+  }
+
+  function fillMdfColorDatalists(){
+    fillColorDatalist(
+      document.getElementById('mdfPaintColorList'),
+      getColorList("paint")
+    );
+    fillColorDatalist(
+      document.getElementById('mdfFilmColorList'),
+      getColorList("film")
+    );
+  }
+
+  // 1) Явный выбор "+ Добавить…"
+  function handleColorAddByLabel(input, kind){
+    if (input.value !== COLOR_ADD_LABEL) return;
+
+    const title = (kind === "paint")
+      ? "Введите новый цвет краски (код NCS)"
+      : "Введите новый цвет плёнки Kira";
+
+    const val = (prompt(title) || "").trim();
+    if (!val) {
+      input.value = "";
+      return;
+    }
+
+    const lsKey = kind === "paint" ? LS_KEY_MDF_PAINT_COLORS : LS_KEY_MDF_FILM_COLORS;
+    let extra = [];
+    try {
+      extra = JSON.parse(localStorage.getItem(lsKey) || "[]");
+    } catch(e){ extra = []; }
+
+    if (!extra.includes(val)) {
+      extra.push(val);
+      localStorage.setItem(lsKey, JSON.stringify(extra));
+    }
+
+    fillMdfColorDatalists();
+    input.value = val;
+  }
+
+  // 2) Добавление уже введённого вручную значения (по change/blur)
+  function maybeSaveTypedColor(input, kind){
+    const current = (input.value || "").trim();
+    if (!current) return;
+    if (current === COLOR_ADD_LABEL) return;
+
+    // если уже есть в списке — не спрашиваем
+    const all = getColorList(kind);
+    if (all.includes(current)) return;
+
+    // защита от двойного вызова (change + blur) для одного и того же значения
+    const last = input.dataset.lastColorAsked || "";
+    if (last === current) return;
+    input.dataset.lastColorAsked = current;
+
+    const msg = (kind === "paint")
+      ? `Добавить "${current}" в список цветов краски (NCS)?`
+      : `Добавить "${current}" в список плёнок Kira?`;
+
+    if (!confirm(msg)) return;
+
+    const lsKey = kind === "paint" ? LS_KEY_MDF_PAINT_COLORS : LS_KEY_MDF_FILM_COLORS;
+    let extra = [];
+    try {
+      extra = JSON.parse(localStorage.getItem(lsKey) || "[]");
+    } catch(e){ extra = []; }
+
+    if (!extra.includes(current)) {
+      extra.push(current);
+      localStorage.setItem(lsKey, JSON.stringify(extra));
+    }
+
+    fillMdfColorDatalists();
+    // значение оставляем в инпуте как есть
+  }
+
+  // modal
+  let modal;
+  function ensureModal(){
+    if (modal) return modal;
+    const root = document.createElement('div');
+    root.className = 'modal'; root.id = 'specModal'; root.setAttribute('aria-hidden','true');
+    root.innerHTML = [
+      '<div class="modal__backdrop"></div>',
+      '<div class="modal__dialog" role="dialog" aria-modal="true" aria-labelledby="specModalTitle">',
+      '  <div class="modal__header" id="specModalTitle">Новая подгруппа</div>',
+      '  <div class="modal__body">',
+      '    <label class="field__label">Наименование подгруппы</label>',
+      '    <input type="text" class="input input--xl" id="specNameInput" placeholder="Напр.: Кухня">',
+      '  </div>',
+      '  <div class="modal__footer">',
+      '    <button type="button" class="btn-secondary" id="specCancel">Отмена</button>',
+      '    <button type="button" class="btn-primary" id="specCreate">Сохранить</button>',
+      '  </div>',
+      '</div>'
+    ].join('');
+    document.body.appendChild(root);
+
+    const inp = root.querySelector('#specNameInput');
+    function open(){ root.classList.add('show'); inp.value=''; setTimeout(()=>inp.focus(), 0); }
+    function close(){ root.classList.remove('show'); }
+
+    root.addEventListener('click', (e)=>{
+      if (e.target.classList.contains('modal__backdrop') || e.target.id === 'specCancel') close();
+    });
+    root.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter') { e.preventDefault(); root.querySelector('#specCreate').click(); }
+      if (e.key === 'Escape') close();
+    });
+    root.querySelector('#specCreate').addEventListener('click', ()=>{
+      const val = (inp.value||'').trim();
+      if (!val){ inp.focus(); return; }
+      createGroup(val);
+      close();
+    });
+
+    modal = {open, close};
+    return modal;
+  }
+
+  function addRemoveBtn(line){
+    if (!line.querySelector('.js-del-line')) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'btn-mini btn-danger js-del-line';
+      del.textContent = '–';
+      line.appendChild(del);
+    }
+  }
+
+  function makeFormline(kind, label, withPlus){
+    const line = document.createElement('div');
+    line.className = 'formline';
+    line.dataset.kind = kind;
+
+    // Базовый селект (для ЛДСП и МДФ)
+    let controlHtml = '';
+    if (kind === 'ldsp-body') controlHtml = '<select class="input js-ldsp-body"></select>';
+    else if (kind === 'ldsp-fas') controlHtml = '<select class="input js-ldsp-fas"></select>';
+    else if (kind === 'mdf-paint') controlHtml = '<select class="input js-mdf-paint"></select>';
+    else if (kind === 'mdf-film')  controlHtml = '<select class="input js-mdf-film"></select>';
+
+    // Класс для поля примечания
+    const noteClass = (kind==='ldsp-body') ? 'js-ldsp-body-note'
+                   : (kind==='ldsp-fas')  ? 'js-ldsp-fas-note'
+                   : (kind==='mdf-paint') ? 'js-mdf-paint-note'
+                   :                        'js-mdf-film-note';
+
+    // Для МДФ: [Лейбл] [селект профиль] [поиск по цветам] [Примечание] [м²] [+]
+    if (kind === 'mdf-paint') {
+      line.innerHTML = [
+        `<div class="field__label">${escapeHtml(label)}</div>`,
+        controlHtml,
+        '<input class="input input--color js-mdf-paint-color" list="mdfPaintColorList" placeholder="Цвет краски">',
+        `<input class="input input--note ${noteClass}" placeholder="Примечание">`,
+        '<input class="input input--area js-mdf-paint-area" type="text" placeholder="м²">',
+        withPlus ? '<button type="button" class="btn-mini btn-secondary js-add-line" data-kind="mdf-paint">+</button>' : ''
+      ].join('');
+    } else if (kind === 'mdf-film') {
+      line.innerHTML = [
+        `<div class="field__label">${escapeHtml(label)}</div>`,
+        controlHtml,
+        '<input class="input input--color js-mdf-film-color" list="mdfFilmColorList" placeholder="Цвет плёнки">',
+        `<input class="input input--note ${noteClass}" placeholder="Примечание">`,
+        '<input class="input input--area js-mdf-film-area" type="text" placeholder="м²">',
+        withPlus ? '<button type="button" class="btn-mini btn-secondary js-add-line" data-kind="mdf-film">+</button>' : ''
+      ].join('');
+    } else {
+      // ЛДСП: [Лейбл] [селект] [Примечание] [+]
+      line.innerHTML = [
+        `<div class="field__label">${escapeHtml(label)}</div>`,
+        controlHtml,
+        `<input class="input input--note ${noteClass}" placeholder="Примечание">`,
+        withPlus ? `<button type="button" class="btn-mini btn-secondary js-add-line" data-kind="${kind}">+</button>` : ''
+      ].join('');
+    }
+
+    if (kind === 'ldsp-body' || kind === 'ldsp-fas') fillLdspSelects(line);
+    if (kind === 'mdf-paint') setOptions(line.querySelector('.js-mdf-paint'), MDF_PAINT);
+    if (kind === 'mdf-film')  setOptions(line.querySelector('.js-mdf-film'),  MDF_FILM);
+    return line;
+  }
+
+  function collectLines(card, kind){
+    const out = [];
+
+    card.querySelectorAll(`.formline[data-kind="${kind}"]`).forEach(l => {
+      let value = '';
+      let note  = '';
+      let color = '';
+      let area  = '';
+
+      if (kind === 'ldsp-body') {
+        value = l.querySelector('.js-ldsp-body')?.value || '';
+        note  = l.querySelector('.js-ldsp-body-note')?.value || '';
+      } else if (kind === 'ldsp-fas') {
+        value = l.querySelector('.js-ldsp-fas')?.value  || '';
+        note  = l.querySelector('.js-ldsp-fas-note')?.value  || '';
+      } else if (kind === 'mdf-paint') {
+        value = l.querySelector('.js-mdf-paint')?.value || '';
+        note  = l.querySelector('.js-mdf-paint-note')?.value || '';
+        color = l.querySelector('.js-mdf-paint-color')?.value || '';
+        area  = l.querySelector('.js-mdf-paint-area')?.value || '';
+      } else if (kind === 'mdf-film') {
+        value = l.querySelector('.js-mdf-film')?.value || '';
+        note  = l.querySelector('.js-mdf-film-note')?.value || '';
+        color = l.querySelector('.js-mdf-film-color')?.value || '';
+        area  = l.querySelector('.js-mdf-film-area')?.value || '';
+      }
+
+      if (value || note || color || area) {
+        out.push({ value, note, color, area });
+      }
+    });
+
+    return out;
+  }
+
+  function applyLines(card, kind, list){
+    const box = (kind === 'ldsp-body' || kind === 'ldsp-fas')
+      ? card.querySelector('.ldsp-lines')
+      : card.querySelector('.mdf-lines');
+  
+    if (!box) return;
+  
+    if (!Array.isArray(list)) {
+      list = [];
+    }
+  
+    // Подписи по умолчанию, если не найдём их в DOM
+    const FALLBACK_LABEL = {
+      'ldsp-body': 'Цвет ЛДСП корпус',
+      'ldsp-fas' : 'Цвет ЛДСП фасады',
+      'mdf-paint': 'МДФ краска',
+      'mdf-film' : 'МДФ плёнка',
+    };
+  
+    // Пробуем взять существующую строку этого типа (или любую строку),
+    // чтобы вытащить из неё текст label
+    let first = box.querySelector(`.formline[data-kind="${kind}"]`) ||
+                box.querySelector('.formline');
+  
+    let labelText = FALLBACK_LABEL[kind] || '';
+    if (first) {
+      const labelEl = first.querySelector('.field__label');
+      if (labelEl && labelEl.textContent.trim()) {
+        labelText = labelEl.textContent;
+      }
+    }
+  
+    // Удаляем ТОЛЬКО строки нужного типа, остальные (других типов) не трогаем
+    box.querySelectorAll(`.formline[data-kind="${kind}"]`).forEach(el => el.remove());
+  
+    // Если в списке пусто — оставляем одну пустую строку
+    if (!list.length) {
+      const line = makeFormline(kind, labelText, true);
+      box.appendChild(line);
+      return;
+    }
+  
+    // Восстанавливаем данные построчно
+    list.forEach((data, idx) => {
+      const line = makeFormline(kind, labelText, true);
+      box.appendChild(line);
+  
+      if (kind === 'ldsp-body') {
+        const s = line.querySelector('.js-ldsp-body');
+        if (s) {
+          ensureOptionSelected(s, data.value || '');
+          s.value = data.value || '';
+        }
+        const n = line.querySelector('.js-ldsp-body-note');
+        if (n) n.value = data.note || '';
+      }
+  
+      if (kind === 'ldsp-fas') {
+        const s = line.querySelector('.js-ldsp-fas');
+        if (s) {
+          ensureOptionSelected(s, data.value || '');
+          s.value = data.value || '';
+        }
+        const n = line.querySelector('.js-ldsp-fas-note');
+        if (n) n.value = data.note || '';
+      }
+  
+      if (kind === 'mdf-paint') {
+        const s = line.querySelector('.js-mdf-paint');
+        if (s) {
+          ensureOptionSelected(s, data.value || '');
+          s.value = data.value || '';
+        }
+        const n = line.querySelector('.js-mdf-paint-note');
+        if (n) n.value = data.note || '';
+        const c = line.querySelector('.js-mdf-paint-color');
+        if (c) c.value = data.color || '';
+        const a = line.querySelector('.js-mdf-paint-area');
+        if (a) a.value = (data.area != null ? data.area : '');
+      }
+  
+      if (kind === 'mdf-film') {
+        const s = line.querySelector('.js-mdf-film');
+        if (s) {
+          ensureOptionSelected(s, data.value || '');
+          s.value = data.value || '';
+        }
+        const n = line.querySelector('.js-mdf-film-note');
+        if (n) n.value = data.note || '';
+        const c = line.querySelector('.js-mdf-film-color');
+        if (c) c.value = data.color || '';
+        const a = line.querySelector('.js-mdf-film-area');
+        if (a) a.value = (data.area != null ? data.area : '');
+      }
+  
+      if (idx > 0) addRemoveBtn(line);
+    });
+  }
+
+  function renderGroupCard(g){
+    const wrap = document.createElement('div');
+    const colorIdx = (typeof g.colorIndex === 'number' && isFinite(g.colorIndex)) ? g.colorIndex : document.querySelectorAll('#specList .group--section').length;
+    wrap.className = `group--section group--card color-${paletteIndex(colorIdx)}`;
+    wrap.dataset.gid = g.id;
+    wrap.dataset.colorIndex = String(colorIdx);
+
+    const hasMdf = !!(HAS_MDF && (MDF_PAINT.length || MDF_FILM.length));
+
+    wrap.innerHTML = [
+      `<div class="subsection-title"><span class="dot"></span> ${escapeHtml(g.name)}</div>`,
+      '<div class="group group--inner group--ldsp">',
+      '  <div class="group__title">ЛДСП</div>',
+      '  <div class="lines ldsp-lines"></div>',
+      '</div>',
+      `<div class="group group--inner group--mdf" ${hasMdf ? '' : 'style="display:none"'}>`,
+      '  <div class="group__title">МДФ</div>',
+      '  <div class="lines mdf-lines"></div>',
+      '</div>',
+      '<div class="group group--inner">',
+      '  <div class="group__title">Фурнитура и доп.</div>',
+      '  <div class="formline">',
+      '    <div class="field__label">Фурнитура</div>',
+      '    <select class="input js-hw"><option>Boyard</option><option>Blum</option><option>Boyard/Blum</option></select>',
+      '    <input class="input input--note js-hw-note" placeholder="Примечание по фурнитуре">',
+      '  </div>',
+      '  <div class="formline">',
+      '    <div class="field__label">Дополнительно</div>',
+      '    <textarea class="input input--textarea js-extra" rows="2" placeholder="Свободное поле для особенностей"></textarea>',
+      '  </div>',
+      '</div>',
+      '<div class="group group--inner group--detail">',
+      '  <div class="group__title">Дополнительные строки</div>',
+      '  <div class="hardware-rows js-free-rows"></div>',
+      '  <div class="actions"><button type="button" class="btn-secondary js-add-free">+ Добавить строку</button></div>',
+      '</div>',
+      '<div class="group group--inner">',
+      '  <div class="group__title">Опции</div>',
+      '  <div class="pill-row">',
+      '    <button type="button" class="pill" data-key="gola"><span></span>GOLA-профиль</button>',
+      '    <button type="button" class="pill" data-key="tipon"><span></span>Tip-On</button>',
+      '    <button type="button" class="pill" data-key="legs"><span></span>Рег. ножки</button>',
+      '    <button type="button" class="pill" data-key="nonstd"><span></span>Не станд. изделие</button>',
+      '  </div>',
+      '</div>',
+      '<div class="grp-actions">',
+      '  <button type="button" class="btn-danger js-del-group">Удалить группу</button>',
+      '</div>'
+    ].join('');
+
+    const ldspBox = wrap.querySelector('.ldsp-lines');
+    ldspBox.appendChild(makeFormline('ldsp-body','Цвет ЛДСП корпус', true));
+    ldspBox.appendChild(makeFormline('ldsp-fas','Цвет ЛДСП фасады',  true));
+
+    const mdfBox = wrap.querySelector('.mdf-lines');
+    if (hasMdf){
+      mdfBox.appendChild(makeFormline('mdf-paint','МДФ краска', true));
+      mdfBox.appendChild(makeFormline('mdf-film','МДФ плёнка',   true));
+    }
+
+    (function addInitFree(){
+      const box = wrap.querySelector('.js-free-rows');
+      const row = document.createElement('div');
+      row.className = 'freefields__row';
+      row.innerHTML = '<input class="input js-free-name" placeholder="Наименование">'
+                    + '<input class="input js-free-desc" placeholder="Описание">'
+                    + '<div style="display:flex; gap:8px; align-items:center;">'
+                    + '  <input type="number" class="input input--short js-free-qty" placeholder="Кол-во" min="0" step="1" value="1">'
+                    + '</div>';
+      box.appendChild(row);
+    })();
+
+    wrap.addEventListener('click', (e)=>{
+      const t = e.target;
+      if (t.classList.contains('js-add-free')) { 
+        const box = wrap.querySelector('.js-free-rows');
+        const row = document.createElement('div');
+        row.className = 'freefields__row';
+        row.innerHTML = '<input class="input js-free-name" placeholder="Наименование">'
+                      + '<input class="input js-free-desc" placeholder="Описание">'
+                      + '<div style="display:flex; gap:8px; align-items:center;">'
+                      + '  <input type="number" class="input input--short js-free-qty" placeholder="Кол-во" min="0" step="1" value="1">'
+                      + '  <button type="button" class="btn-secondary js-del-free">×</button>'
+                      + '</div>';
+        box.appendChild(row);
+        saveSpec();
+        return;
+      }
+      if (t.classList.contains('js-del-free')) { t.closest('.freefields__row')?.remove(); saveSpec(); return; }
+      if (t.classList.contains('pill')) { t.classList.toggle('is-on'); saveSpec(); return; }
+      if (t.classList.contains('js-del-group')) { wrap.remove(); saveSpec(); return; }
+      if (t.classList.contains('js-add-line')) {
+        const kind  = t.getAttribute('data-kind');
+        const row   = t.closest('.formline');
+        const labelText = row.querySelector('.field__label').textContent;
+        const clone = makeFormline(kind, labelText, true);
+        row.after(clone);
+        addRemoveBtn(clone);
+        saveSpec();
+        return;
+      }
+      if (t.classList.contains('js-del-line')) {
+        const line = t.closest('.formline');
+        const kind = line?.dataset?.kind;
+        const container = (kind==='ldsp-body'||kind==='ldsp-fas')
+          ? wrap.querySelector('.ldsp-lines')
+          : wrap.querySelector('.mdf-lines');
+        const sameKindCount = container.querySelectorAll(`.formline[data-kind="${kind}"]`).length;
+        if (sameKindCount > 1) {
+          line.remove();
+          saveSpec();
+        }
+        return;
+      }
+    });
+    return wrap;
+  }
+
+  function genId(){ return 'g'+Math.random().toString(36).slice(2,9); }
+
+  function createGroup(name){
+    const nextIdx = document.querySelectorAll('#specList .group--section').length;
+    const card = renderGroupCard({ id: genId(), name, colorIndex: nextIdx });
+    specListEl.appendChild(card);
+    saveSpec();
+    card.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function collectSpec(){
+    const groups = [];
+    specListEl.querySelectorAll('.group--section').forEach(card=>{
+      const g = {
+        id: card.dataset.gid,
+        name: card.querySelector('.subsection-title')?.textContent.trim(),
+        toggles: {},
+        colorIndex: parseInt(card.dataset.colorIndex||'0',10) || 0
+      };
+
+      g.ldsp_body_list = collectLines(card,'ldsp-body');
+      g.ldsp_fas_list  = collectLines(card,'ldsp-fas');
+      if (HAS_MDF){
+        g.mdf_paint_list = collectLines(card,'mdf-paint');
+        g.mdf_film_list  = collectLines(card,'mdf-film');
+      }
+
+      g.hardware      = card.querySelector('.js-hw')?.value || '';
+      g.hardware_note = card.querySelector('.js-hw-note')?.value || '';
+      g.extra         = card.querySelector('.js-extra')?.value || '';
+
+      g.free = [];
+      card.querySelectorAll('.js-free-rows .freefields__row').forEach(r=>{
+        g.free.push({
+          name: r.querySelector('.js-free-name')?.value || '',
+          desc: r.querySelector('.js-free-desc')?.value || '',
+          qty:  parseInt(r.querySelector('.js-free-qty')?.value||'0',10)||0
+        });
+      });
+
+      card.querySelectorAll('.pill').forEach(p=>{
+        g.toggles[p.getAttribute('data-key')] = p.classList.contains('is-on');
+      });
+
+      groups.push(g);
+    });
+    return groups;
+  }
+
+  function saveSpec(){
+    try {
+      // держим последнюю собранную спецификацию в памяти
+      window.__CONTRACT_SPEC_LAST = collectSpec();
+  
+      // любые изменения в спецификации делают её «грязной»
+      window.__CONTRACT_SPEC_DIRTY = true;
+      updatePrintButtonState();
+  
+      // Если что-то поменяли — надпись «Бланк сохранён» должна пропасть
+      const msg = document.getElementById('specSaveMessage');
+      if (msg) {
+        msg.style.display = 'none';
+      }
+    } catch (e) {
+      console.warn('saveSpec', e);
+    }
+  }
+
+  function renderGroupFromData(g){
+    const card = renderGroupCard(g);
+
+    if (g.ldsp_body_list) applyLines(card,'ldsp-body', g.ldsp_body_list);
+    if (g.ldsp_fas_list)  applyLines(card,'ldsp-fas',  g.ldsp_fas_list);
+    if (HAS_MDF){
+      if (g.mdf_paint_list) applyLines(card,'mdf-paint', g.mdf_paint_list);
+      if (g.mdf_film_list)  applyLines(card,'mdf-film',  g.mdf_film_list);
+    }
+
+    // Подстраховка: гарантируем, что у каждой группы
+    // есть хотя бы по одной строке каждого типа.
+    (function ensureCoreLines(){
+      const ldspBox = card.querySelector('.ldsp-lines');
+      if (ldspBox) {
+        if (!ldspBox.querySelector('.formline[data-kind="ldsp-body"]')) {
+          ldspBox.appendChild(makeFormline('ldsp-body','Цвет ЛДСП корпус', true));
+        }
+        if (!ldspBox.querySelector('.formline[data-kind="ldsp-fas"]')) {
+          ldspBox.appendChild(makeFormline('ldsp-fas','Цвет ЛДСП фасады', true));
+        }
+      }
+      if (HAS_MDF) {
+        const mdfBox = card.querySelector('.mdf-lines');
+        if (mdfBox) {
+          if (!mdfBox.querySelector('.formline[data-kind="mdf-paint"]')) {
+            mdfBox.appendChild(makeFormline('mdf-paint','МДФ краска', true));
+          }
+          if (!mdfBox.querySelector('.formline[data-kind="mdf-film"]')) {
+            mdfBox.appendChild(makeFormline('mdf-film','МДФ плёнка', true));
+          }
+        }
+      }
+    })();
+
+    const box = card.querySelector('.js-free-rows'); box.innerHTML = '';
+    (g.free||[]).forEach(f=>{
+      const row = document.createElement('div');
+      row.className = 'freefields__row';
+      row.innerHTML = '<input class="input js-free-name" placeholder="Наименование">'
+                    + '<input class="input js-free-desc" placeholder="Описание">'
+                    + '<div style="display:flex; gap:8px; align-items:center;">'
+                    + '  <input type="number" class="input input--short js-free-qty" placeholder="Кол-во" min="0" step="1" value="1">'
+                    + '  <button type="button" class="btn-secondary js-del-free">×</button>'
+                    + '</div>';
+      box.appendChild(row);
+      row.querySelector('.js-free-name').value = f.name||'';
+      row.querySelector('.js-free-desc').value = f.desc||'';
+      row.querySelector('.js-free-qty').value  = f.qty||0;
+    });
+
+    if (g.hardware)      { const s=card.querySelector('.js-hw'); if(s) s.value=g.hardware; }
+    if (g.hardware_note) { const n=card.querySelector('.js-hw-note'); if(n) n.value=g.hardware_note; }
+    if (g.extra)         { const t=card.querySelector('.js-extra'); if(t) t.value=g.extra; }
+
+    card.querySelectorAll('.pill').forEach(p=>{
+      const key = p.getAttribute('data-key');
+      if(g.toggles && g.toggles[key]) p.classList.add('is-on');
+    });
+    // 🟢 после генерации DOM — ПЕРЕД applyLines сделаем подгрузку списков
+    fillLdspSelects(card);                 // ЛДСП
+    setOptions(card.querySelector('.js-mdf-film'),  MDF_FILM);  // МДФ плёнка
+    setOptions(card.querySelector('.js-mdf-paint'), MDF_PAINT); // МДФ краска
+    return card;
+  }
+
+
+
+  function restoreSpec(){
+    try{
+      const initial = Array.isArray(window.__CONTRACT_SPEC_INITIAL)
+        ? window.__CONTRACT_SPEC_INITIAL
+        : [];
+      
+  
+      specListEl.innerHTML = '';
+	  
+      if (!initial.length) {
+        // нет подгрупп — просто обновим видимость кнопки PDF
+        window.__CONTRACT_SPEC_DIRTY = false;
+        updatePrintButtonState();
+        return;
+      }
+	
+      initial.forEach(gRaw => {
+        const g = { ...gRaw };
+  
+        function ensureArr(prop){
+          if (!Array.isArray(g[prop])) g[prop] = [];
+        }
+  
+        ensureArr('ldsp_body_list');
+        ensureArr('ldsp_fas_list');
+        if (HAS_MDF){
+          ensureArr('mdf_paint_list');
+          ensureArr('mdf_film_list');
+        }
+        if (!Array.isArray(g.free)) g.free = [];
+  
+        // создаём КАРТОЧКУ ОДИН РАЗ,
+        // внутри renderGroupFromData уже вызывается applyLines(...)
+        const card = renderGroupFromData(g);
+        specListEl.appendChild(card);
+      });
+  
+      document
+        .querySelectorAll('#specList .group--section')
+        .forEach(fillLdspSelects);
+		
+      window.__CONTRACT_SPEC_DIRTY = false;
+      updatePrintButtonState();
+    } catch(e){
+      console.warn('restoreSpec', e);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const btn = document.getElementById('btnSpecAdd');
+    if (btn) {
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        ensureModal().open();
+      });
+    }
+  
+    // Заполняем datalist'ы цветов
+    fillMdfColorDatalists();  // NCS + Kira + сохранённые
+  
+    // Восстанавливаем спецификацию из JSON
+    restoreSpec();
+  
+    // Если есть хотя бы одна подгруппа, сразу показываем блок «Спецификация»
+    const hasGroups = !!document.querySelector('#specList .group--section');
+    if (hasGroups) {
+      const specSection = document.getElementById('specSection');
+      if (specSection) {
+        specSection.style.display = 'block';
+        specSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  
+    // --- Новое: показать «Бланк сохранён» после успешного сохранения ---
+    const msg = document.getElementById('specSaveMessage');
+    if (msg) {
+      let shouldShow = false;
+  
+      try {
+        const flag = sessionStorage.getItem('contract_spec_saved');
+        if (flag === '1') {
+          shouldShow = true;
+          sessionStorage.removeItem('contract_spec_saved');
+        }
+      } catch (err) {
+        console.warn('sessionStorage get failed', err);
+      }
+  
+      msg.style.display = shouldShow ? '' : 'none';
+    }
+  });
+
+  // 1) change: либо выбрали "+ Добавить…", либо ввели новый текст и поменяли значение
+  document.addEventListener("change", function(e){
+    const t = e.target;
+    if (t.classList.contains("js-mdf-paint-color")) {
+      if (t.value === COLOR_ADD_LABEL) {
+        handleColorAddByLabel(t, "paint");
+      } else {
+        maybeSaveTypedColor(t, "paint");
+      }
+    } else if (t.classList.contains("js-mdf-film-color")) {
+      if (t.value === COLOR_ADD_LABEL) {
+        handleColorAddByLabel(t, "film");
+      } else {
+        maybeSaveTypedColor(t, "film");
+      }
+    }
+  });
+
+  // 2) blur: если вручную набрали цвет и просто ушли табом/кликом
+  document.addEventListener("blur", function(e){
+    const t = e.target;
+    if (t.classList.contains("js-mdf-paint-color")) {
+      maybeSaveTypedColor(t, "paint");
+    } else if (t.classList.contains("js-mdf-film-color")) {
+      maybeSaveTypedColor(t, "film");
+    }
+  }, true);
+
+  // Автосохранение
+  ['input','change','click'].forEach(evt=>{
+    document.addEventListener(evt, (e)=>{
+      if (e.target && e.target.closest && e.target.closest('#specList')) saveSpec();
+    });
+  });
+
+  window.contractSpec = {
+    collect: collectSpec,
+    restore: restoreSpec,
+  };
+})();
+</script>
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const btnPdf = document.getElementById("btn-contract-pdf");
+    if (!btnPdf) return;
+
+    // На всякий случай обновим видимость сразу после загрузки страницы
+    if (typeof window.updatePrintButtonState === 'function') {
+        window.updatePrintButtonState();
+    }
+
+    btnPdf.addEventListener("click", function (e) {
+        e.preventDefault();
+
+        const hasGroups = !!document.querySelector('#specList .group--section');
+        const dirty     = !!window.__CONTRACT_SPEC_DIRTY;
+
+        // Защита: нельзя печатать, если нет подгрупп или есть несохранённые изменения
+        if (!hasGroups || dirty) {
+            alert('Сначала сохраните спецификацию кнопкой «Сохранить» в блоке «Спецификация».');
+            return;
+        }
+
+        let spec = [];
+        if (window.contractSpec && typeof window.contractSpec.collect === "function") {
+            try {
+                spec = window.contractSpec.collect() || [];
+            } catch (err) {
+                console.warn("collectSpec for pdf failed", err);
+            }
+        }
+
+        let url = this.getAttribute("href") || "";
+        if (spec && spec.length) {
+            const qs = "spec=" + encodeURIComponent(JSON.stringify(spec));
+            if (url.indexOf("?") === -1) {
+                url += "?" + qs;
+            } else {
+                url += "&" + qs;
+            }
+        }
+
+        window.open(url, "_blank", "noopener");
+    });
+});
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  const form       = document.getElementById("contractForm");
+  const btnSave    = document.getElementById("btnContractSave");
+  const specField  = document.getElementById("specJsonField");
+  const allocField = document.getElementById("materialsAllocField");
+
+  if (!form || !btnSave || !specField || !allocField) {
+    console.warn("contract: form or fields not found");
+    return;
+  }
+
+  btnSave.addEventListener("click", function (e) {
+    e.preventDefault();
+
+    let spec = [];
+    if (window.contractSpec && typeof window.contractSpec.collect === "function") {
+      try {
+        spec = window.contractSpec.collect() || [];
+      } catch (err) {
+        console.warn("collectSpec for save failed", err);
+        spec = [];
+      }
+    }
+
+
+    let alloc = [];
+    if (window.contractAlloc && typeof window.contractAlloc.collect === "function") {
+      try {
+        alloc = window.contractAlloc.collect() || [];
+      } catch (err) {
+        console.warn("collectAlloc for save failed", err);
+        alloc = [];
+      }
+    }
+
+    try {
+      specField.value = JSON.stringify(spec || []);
+    } catch (err) {
+      console.warn("stringify spec failed", err);
+      specField.value = "[]";
+    }
+
+    try {
+      allocField.value = JSON.stringify(alloc || []);
+    } catch (err) {
+      console.warn("stringify alloc failed", err);
+      allocField.value = "[]";
+    }
+    
+    try {
+      sessionStorage.setItem('contract_spec_saved', '1');
+    } catch (err) {
+      console.warn('sessionStorage set failed', err);
+    }
+
+    form.submit();
+  });
+});
+</script>
+
+
+
+{% endblock %}
