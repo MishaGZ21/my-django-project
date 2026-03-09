@@ -87,11 +87,11 @@ tr.row-done > td { opacity:.6; }
 /* ===== ПЛИТКИ ===== */
 .tiles-grid {
   display:grid !important;
-  grid-template-columns:repeat(auto-fill, 260px) !important;
+  grid-template-columns:repeat(auto-fill, 220px) !important;
   gap:14px; justify-content:start; align-content:start;
 }
 .tile-card {
-  width:260px; max-width:none; border-radius:16px; padding:14px;
+  width:220px; max-width:none; border-radius:16px; padding:14px;
   box-shadow:0 1px 3px rgba(0,0,0,.08); cursor:pointer;
   transition:transform .1s ease, box-shadow .1s ease;
   border:1.5px solid rgba(0,0,0,.07); background:#fff;
@@ -152,23 +152,22 @@ tr.row-done > td { opacity:.6; }
   font-size:.82rem; font-weight:600; color:#222; margin-left:2px;
 }
 
-/* Нижняя строка: срок + статус-бейдж */
-.mat-bottom {
-  display:flex; align-items:center; justify-content:space-between;
-  gap:4px; flex-wrap:nowrap; min-width:0;
+/* Дата + дни */
+.mat-date {
+  font-size:.73rem; color:#777; font-weight:500;
+  display:flex; align-items:center; gap:4px;
+  margin: 3px 0 4px;
 }
-.mat-due {
-  font-size:.72rem; color:#777; font-weight:500;
-  display:flex; align-items:center; gap:3px;
-  white-space:nowrap; flex-shrink:1; min-width:0;
-}
-.mat-due.is-overdue { color:#c0392b; font-weight:700; }
-.mat-due.is-soon    { color:#e67e22; font-weight:700; }
+.mat-date.is-overdue { color:#c0392b; font-weight:700; }
+.mat-date.is-soon    { color:#e67e22; font-weight:700; }
 
+/* Статус — отдельная строка */
+.mat-status-line { display:flex; }
 .mat-status-badge {
-  display:inline-flex; align-items:center; gap:2px;
-  padding:2px 7px; border-radius:7px; font-size:.68rem;
-  font-weight:800; white-space:nowrap; line-height:1.4; flex-shrink:0;
+  display:inline-flex; align-items:center; gap:3px;
+  padding:3px 10px; border-radius:8px; font-size:.72rem;
+  font-weight:800; white-space:nowrap; line-height:1.4;
+  width:100%; justify-content:center;
 }
 
 /* Цвета статусов */
@@ -513,10 +512,10 @@ function renderMatRow(label, icon, qty, status, due, daysLeft, isInteger) {
   const meta = matStatusMeta(status);
   const n = (daysLeft !== null && daysLeft !== undefined) ? Number(daysLeft) : null;
   const dueCls = n !== null ? (n <= 0 ? "is-overdue" : n <= 5 ? "is-soon" : "") : "";
-  const dueStr = (due && due !== "—")
-    ? `<span class="mat-due ${dueCls}">📅 ${escapeHtml(due)} ${daysBadge(daysLeft)}</span>`
-    : `<span class="mat-due">—</span>`;
   const qtyStr = fmtQty(qty, isInteger);
+  const dueStr = (due && due !== "—")
+    ? `<div class="mat-date ${dueCls}">📅 ${escapeHtml(due)} ${daysBadge(daysLeft)}</div>`
+    : "";
 
   return `
     <div class="mat-row">
@@ -525,8 +524,8 @@ function renderMatRow(label, icon, qty, status, due, daysLeft, isInteger) {
         <span class="mat-label">${label}</span>
         <span class="mat-qty">${escapeHtml(qtyStr)}</span>
       </div>
-      <div class="mat-bottom">
-        ${dueStr}
+      ${dueStr}
+      <div class="mat-status-line">
         <span class="mat-status-badge ${meta.cls}">${meta.icon} ${escapeHtml(meta.label)}</span>
       </div>
     </div>`;
