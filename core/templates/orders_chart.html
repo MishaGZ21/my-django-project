@@ -130,45 +130,53 @@ tr.row-done > td { opacity:.6; }
 }
 
 /* ===== СТРОКИ МАТЕРИАЛОВ ===== */
-.mat-rows { display:flex; flex-direction:column; gap:5px; margin-bottom:10px; }
+.mat-rows { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+
 .mat-row {
-  display:grid; grid-template-columns:auto 1fr auto;
-  align-items:center; gap:6px;
-  padding:5px 8px; border-radius:8px; background:rgba(0,0,0,.03);
-  font-size:.82rem;
-}
-.mat-icon {
-  font-size:1rem; line-height:1; width:20px; text-align:center;
-}
-.mat-info {
-  display:flex; flex-direction:column; gap:1px; min-width:0;
-}
-.mat-label {
-  font-weight:700; font-size:.75rem; color:#555; text-transform:uppercase;
-  letter-spacing:.03em;
-}
-.mat-qty  { font-size:.8rem; color:#333; }
-.mat-status-badge {
-  display:inline-flex; align-items:center; gap:3px;
-  padding:3px 8px; border-radius:8px; font-size:.72rem;
-  font-weight:800; white-space:nowrap; line-height:1.2;
+  border-radius:10px; background:rgba(0,0,0,.04);
+  padding:7px 10px; font-size:.82rem;
 }
 
-/* Цвета статусов для mat-status-badge */
+/* Верхняя строка: иконка + название + кол-во */
+.mat-top {
+  display:flex; align-items:center; gap:6px; margin-bottom:4px;
+}
+.mat-icon {
+  font-size:.95rem; line-height:1; flex-shrink:0;
+}
+.mat-label {
+  font-weight:800; font-size:.78rem; color:#444;
+  text-transform:uppercase; letter-spacing:.04em; flex-shrink:0;
+}
+.mat-qty {
+  font-size:.82rem; font-weight:600; color:#222; margin-left:2px;
+}
+
+/* Нижняя строка: срок + статус-бейдж */
+.mat-bottom {
+  display:flex; align-items:center; justify-content:space-between; gap:6px;
+}
+.mat-due {
+  font-size:.75rem; color:#777; font-weight:500;
+  display:flex; align-items:center; gap:4px; flex-shrink:0;
+}
+.mat-due.is-overdue { color:#c0392b; font-weight:700; }
+.mat-due.is-soon    { color:#e67e22; font-weight:700; }
+
+.mat-status-badge {
+  display:inline-flex; align-items:center; gap:3px;
+  padding:3px 9px; border-radius:8px; font-size:.72rem;
+  font-weight:800; white-space:nowrap; line-height:1.3; flex-shrink:0;
+}
+
+/* Цвета статусов */
 .ms-waiting    { background:#fff9c4; color:#7a6800; border:1px solid #ffe566; }
 .ms-correction { background:#fff0e6; color:#b84000; border:1px solid #ffc89a; }
 .ms-stop       { background:#ffe0e3; color:#9b0010; border:1px solid #ffaab2; }
 .ms-workshop   { background:#e6eeff; color:#0038ad; border:1px solid #aabfff; }
 .ms-ready      { background:#e6faf0; color:#006b35; border:1px solid #7de0a8; }
 .ms-issued     { background:#f5fff8; color:#2aa93a; border:2px solid #2aa93a; }
-.ms-none       { background:#f0f0f0; color:#999; border:1px solid #ddd; }
-
-/* Срок рядом со статусом на плитке */
-.mat-due {
-  font-size:.72rem; color:#888; font-weight:500; margin-top:1px;
-}
-.mat-due.is-overdue { color:#c0392b; font-weight:700; }
-.mat-due.is-soon    { color:#e67e22; font-weight:700; }
+.ms-none       { background:#f0f0f0; color:#999;    border:1px solid #ddd; }
 
 /* ===== ПРОГРЕСС-БАР ===== */
 .tile-progress {
@@ -494,19 +502,23 @@ function urgencyClass(r) {
 function renderMatRow(label, icon, qty, status, due, daysLeft) {
   if (!valPresent(qty)) return "";   // материала нет — не показываем строку
   const meta = matStatusMeta(status);
-  const dueCls = daysLeft !== null && daysLeft !== undefined
-    ? (Number(daysLeft) <= 0 ? "is-overdue" : Number(daysLeft) <= 5 ? "is-soon" : "")
-    : "";
+  const n = (daysLeft !== null && daysLeft !== undefined) ? Number(daysLeft) : null;
+  const dueCls = n !== null ? (n <= 0 ? "is-overdue" : n <= 5 ? "is-soon" : "") : "";
   const dueStr = (due && due !== "—")
-    ? `<div class="mat-due ${dueCls}">${escapeHtml(due)} ${daysBadge(daysLeft)}</div>` : "";
+    ? `<span class="mat-due ${dueCls}">📅 ${escapeHtml(due)} ${daysBadge(daysLeft)}</span>`
+    : `<span class="mat-due">—</span>`;
+
   return `
     <div class="mat-row">
-      <div class="mat-icon">${icon}</div>
-      <div class="mat-info">
-        <div class="mat-label">${label}: <span style="font-weight:500;text-transform:none;">${escapeHtml(String(qty))}</span></div>
-        ${dueStr}
+      <div class="mat-top">
+        <span class="mat-icon">${icon}</span>
+        <span class="mat-label">${label}</span>
+        <span class="mat-qty">${escapeHtml(String(qty))}</span>
       </div>
-      <div><span class="mat-status-badge ${meta.cls}">${meta.icon} ${escapeHtml(meta.label)}</span></div>
+      <div class="mat-bottom">
+        ${dueStr}
+        <span class="mat-status-badge ${meta.cls}">${meta.icon} ${escapeHtml(meta.label)}</span>
+      </div>
     </div>`;
 }
 
