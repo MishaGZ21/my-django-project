@@ -154,19 +154,21 @@ tr.row-done > td { opacity:.6; }
 
 /* Нижняя строка: срок + статус-бейдж */
 .mat-bottom {
-  display:flex; align-items:center; justify-content:space-between; gap:6px;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:4px; flex-wrap:nowrap; min-width:0;
 }
 .mat-due {
-  font-size:.75rem; color:#777; font-weight:500;
-  display:flex; align-items:center; gap:4px; flex-shrink:0;
+  font-size:.72rem; color:#777; font-weight:500;
+  display:flex; align-items:center; gap:3px;
+  white-space:nowrap; flex-shrink:1; min-width:0;
 }
 .mat-due.is-overdue { color:#c0392b; font-weight:700; }
 .mat-due.is-soon    { color:#e67e22; font-weight:700; }
 
 .mat-status-badge {
-  display:inline-flex; align-items:center; gap:3px;
-  padding:3px 9px; border-radius:8px; font-size:.72rem;
-  font-weight:800; white-space:nowrap; line-height:1.3; flex-shrink:0;
+  display:inline-flex; align-items:center; gap:2px;
+  padding:2px 7px; border-radius:7px; font-size:.68rem;
+  font-weight:800; white-space:nowrap; line-height:1.4; flex-shrink:0;
 }
 
 /* Цвета статусов */
@@ -499,7 +501,14 @@ function urgencyClass(r) {
 }
 
 /* ───── РЕНДЕР СТРОКИ МАТЕРИАЛА ───── */
-function renderMatRow(label, icon, qty, status, due, daysLeft) {
+function fmtQty(qty, isInteger) {
+  if (qty === null || qty === undefined || qty === "" || qty === "—") return "—";
+  const n = parseFloat(qty);
+  if (isNaN(n)) return String(qty);
+  return isInteger ? String(Math.round(n)) : n.toString();
+}
+
+function renderMatRow(label, icon, qty, status, due, daysLeft, isInteger) {
   if (!valPresent(qty)) return "";   // материала нет — не показываем строку
   const meta = matStatusMeta(status);
   const n = (daysLeft !== null && daysLeft !== undefined) ? Number(daysLeft) : null;
@@ -507,13 +516,14 @@ function renderMatRow(label, icon, qty, status, due, daysLeft) {
   const dueStr = (due && due !== "—")
     ? `<span class="mat-due ${dueCls}">📅 ${escapeHtml(due)} ${daysBadge(daysLeft)}</span>`
     : `<span class="mat-due">—</span>`;
+  const qtyStr = fmtQty(qty, isInteger);
 
   return `
     <div class="mat-row">
       <div class="mat-top">
         <span class="mat-icon">${icon}</span>
         <span class="mat-label">${label}</span>
-        <span class="mat-qty">${escapeHtml(String(qty))}</span>
+        <span class="mat-qty">${escapeHtml(qtyStr)}</span>
       </div>
       <div class="mat-bottom">
         ${dueStr}
@@ -649,9 +659,9 @@ async function loadTiles(tabKey) {
 
     /* строки материалов */
     const matHtml =
-      renderMatRow("ЛДСП",   "🪵", r.ldsp_qty,  r.status_ldsp,  r.due_ldsp,  r.ldsp_days_left)  +
-      renderMatRow("Краска", "🎨", r.paint_m2,  r.status_paint, r.due_paint, r.paint_days_left) +
-      renderMatRow("Плёнка", "🎞️", r.film_m2,  r.status_film,  r.due_film,  r.film_days_left);
+      renderMatRow("ЛДСП",   "🪵", r.ldsp_qty,  r.status_ldsp,  r.due_ldsp,  r.ldsp_days_left,  true)  +
+      renderMatRow("Краска", "🎨", r.paint_m2,  r.status_paint, r.due_paint, r.paint_days_left, false) +
+      renderMatRow("Плёнка", "🎞️", r.film_m2,  r.status_film,  r.due_film,  r.film_days_left,  false);
 
     el.innerHTML = `
       <div class="tile-head">
