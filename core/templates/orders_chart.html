@@ -608,6 +608,15 @@ function updateBadge(tab,count){
   if(b) b.textContent=count||0;
 }
 
+/* ─── ПЕРЕКЛЮЧАТЕЛЬ ПЛИТКИ/СПИСОК ─── */
+const TILE_TABS=new Set(["technologist","workshop","paint","film"]);
+function getMode(tab){return localStorage.getItem("cv_"+tab)||"tiles";}
+function setMode(tab,m){localStorage.setItem("cv_"+tab,m);}
+function syncToggleBtns(mode){
+  document.getElementById("btnViewTiles").classList.toggle("active",mode==="tiles");
+  document.getElementById("btnViewList" ).classList.toggle("active",mode==="list");
+}
+
 /* ─── ИНИЦИАЛИЗАЦИЯ ─── */
 (async()=>{
   if(activeTab==="general"){
@@ -621,13 +630,6 @@ function updateBadge(tab,count){
 })();
 
 /* ─── ПЕРЕКЛЮЧАТЕЛЬ ПЛИТКИ/СПИСОК ─── */
-const TILE_TABS=new Set(["technologist","workshop","paint","film"]);
-function getMode(tab){return localStorage.getItem("cv_"+tab)||"tiles";}
-function setMode(tab,m){localStorage.setItem("cv_"+tab,m);}
-function syncToggleBtns(mode){
-  document.getElementById("btnViewTiles").classList.toggle("active",mode==="tiles");
-  document.getElementById("btnViewList" ).classList.toggle("active",mode==="list");
-}
 
 async function reloadTab(tab){
   const bar=document.getElementById("viewToggleBar");
