@@ -2,195 +2,210 @@
 {% block title %}График заказов{% endblock %}
 {% block content %}
 <style>
-@media screen and (min-width:1408px){.container:not(.is-max-desktop):not(.is-max-widescreen){max-width:2200px!important}}
-@media screen and (min-width:769px){.modal-card,.modal-content{width:780px}}
+/* ── СБРОС ОТСТУПОВ ── */
 @media screen and (min-width:1024px){.section{padding:.75rem 1rem}}
-@media (max-width:768px){.tiles-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))!important}}
+@media screen and (min-width:1408px){.container:not(.is-max-desktop):not(.is-max-widescreen){max-width:2400px!important}}
+.container.is-fluid{margin:0!important}
+.chart-page .container{max-width:none!important;width:100%!important}
+.chart-wrap{width:100%;max-width:2400px;margin:auto}
 
-.chart-page-title{font-size:1.6rem;font-weight:800;letter-spacing:-.03em;color:#1a1a2e;text-align:center;margin-bottom:1.2rem}
+/* ── ЗАГОЛОВОК ── */
+.page-title{font-size:1.5rem;font-weight:900;color:#1e293b;text-align:center;margin-bottom:1rem;letter-spacing:-.02em}
 
 /* ── ВКЛАДКИ ── */
-.tabs.orders-tabs ul{flex-wrap:wrap;border-bottom:none!important;gap:6px;justify-content:center}
-.tabs.orders-tabs li a{padding:.5rem 1.2rem;font-size:.88rem;font-weight:700;border-radius:999px;border:2px solid #e2e8f0!important;background:#fff;color:#64748b;transition:all .15s;letter-spacing:.01em;line-height:1.4}
-.tabs.orders-tabs li:not(.is-active) a:hover{border-color:#94a3b8!important;background:#f8fafc;color:#334155}
-.tabs.orders-tabs li.is-active a{background:#1e40af!important;border-color:#1e40af!important;color:#fff!important;box-shadow:0 4px 14px rgba(30,64,175,.28)}
-.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:rgba(0,0,0,.18);color:#fff;border-radius:999px;font-size:.68rem;font-weight:900;margin-left:6px;vertical-align:middle}
-.is-active .tab-badge{background:rgba(255,255,255,.28);color:#fff}
-
-/* ── СТАТУС ЧИПЫ (таблица) ── */
-.status{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:.71rem;font-weight:800;white-space:nowrap;line-height:1}
-.status::before{content:"";width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.status-waiting{background:#fefce8;color:#713f12;border:1.5px solid #fde047}.status-waiting::before{background:#eab308}
-.status-correction{background:#fff7ed;color:#7c2d12;border:1.5px solid #fed7aa}.status-correction::before{background:#f97316}
-.status-stop{background:#fef2f2;color:#7f1d1d;border:1.5px solid #fca5a5}.status-stop::before{background:#ef4444}
-.status-workshop{background:#eff6ff;color:#1e3a8a;border:1.5px solid #93c5fd}.status-workshop::before{background:#3b82f6}
-.status-ready{background:#f0fdf4;color:#14532d;border:1.5px solid #86efac}.status-ready::before{background:#22c55e}
-.status-issued{background:#f0fdf4;color:#166534;border:1.5px solid #4ade80}.status-issued::before{background:#16a34a}
-
-/* ── ОБЩИЙ ГРАФИК — ТАБЛИЦА ── */
-.general-table-wrap,#generalTableWrap,#generalTableWrap .box,#generalTableWrap .table-container{width:100%}
-#generalTable{border-collapse:separate;border-spacing:0;font-size:.83rem;width:100%}
-
-#generalTable thead tr.mat-group-header th{padding:5px 10px;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;border-bottom:1px solid rgba(0,0,0,.05)}
-#generalTable thead tr.mat-group-header th.g-ldsp{background:#eff6ff;color:#1e40af}
-#generalTable thead tr.mat-group-header th.g-film{background:#f5f3ff;color:#5b21b6}
-#generalTable thead tr.mat-group-header th.g-paint{background:#fff7ed;color:#9a3412}
-#generalTable thead tr.mat-group-header th.g-info{background:#f8fafc;color:#64748b}
-
-#generalTable thead tr.col-header th{position:sticky;top:0;z-index:2;background:#fff;padding:8px 10px;font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;white-space:nowrap}
-#generalTable tbody td{padding:9px 10px;vertical-align:middle;border-bottom:1px solid #f1f5f9;color:#1e293b}
-#generalTable tbody tr:hover td{background:#f8fafc!important}
-
-tr.row-bad td{background:rgba(254,242,242,.6)!important}
-tr.row-warn td{background:rgba(254,252,232,.6)!important}
-tr.row-ok td{background:rgba(240,253,244,.5)!important}
-tr.row-done td{opacity:.5}
-.note-cell{min-width:200px}
-
-/* ── ДНИ-БЕЙДЖ ── */
-.days-left{display:inline-flex;align-items:center;margin-left:5px;padding:1px 7px;border-radius:999px;font-weight:800;font-size:.73rem;line-height:1.4}
-.days-pos{background:#dcfce7;color:#15803d}
-.days-neg{background:#fee2e2;color:#b91c1c}
-
-/* ── LAYOUT ── */
-.container.is-fluid{margin-left:0!important;margin-right:0!important}
-.chart-page .container{max-width:none!important;width:100%!important}
-.chart-page-wrap{width:100%;max-width:2200px;margin:auto}
-
-/* ── ПЛИТКИ СЕТКА ── */
-.tiles-grid{display:grid!important;grid-template-columns:repeat(auto-fill,260px)!important;gap:16px;justify-content:start;align-content:start}
-
-/* ── ПЛИТКА ── */
-.tile-card{width:260px;border-radius:14px;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.05);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;background:#fff;position:relative;overflow:hidden}
-.tile-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.13),0 0 0 1px rgba(0,0,0,.06)}
-.tile-card::before{content:"";display:block;height:5px;width:100%;position:absolute;top:0;left:0}
-.tile-ok::before{background:linear-gradient(90deg,#22c55e,#4ade80)}
-.tile-warn::before{background:linear-gradient(90deg,#eab308,#fbbf24)}
-.tile-bad::before{background:linear-gradient(90deg,#ef4444,#f87171)}
-
-/* Тело */
-.tile-inner{padding:18px 14px 12px}
-.tile-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
-.tile-num{font-size:1.15rem;font-weight:900;color:#0f172a;letter-spacing:-.03em;line-height:1}
-.tile-urgency-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
-.tile-ok .tile-urgency-dot{background:#22c55e}
-.tile-warn .tile-urgency-dot{background:#eab308}
-.tile-bad .tile-urgency-dot{background:#ef4444}
-.tile-name{font-size:.82rem;font-weight:600;color:#64748b;margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* ── СТРОКИ МАТЕРИАЛОВ ── */
-.mat-rows{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
-.mat-row{border-radius:10px;padding:9px 11px;background:#f8fafc;border:1px solid #e2e8f0}
-.mat-row.m-ldsp{border-left:3px solid #3b82f6;background:#f0f7ff;border-color:#dbeafe}
-.mat-row.m-paint{border-left:3px solid #f97316;background:#fff8f0;border-color:#fed7aa}
-.mat-row.m-film{border-left:3px solid #8b5cf6;background:#faf5ff;border-color:#e9d5ff}
-.mat-top{display:flex;align-items:center;gap:5px;margin-bottom:5px}
-.mat-icon{font-size:.88rem;line-height:1;flex-shrink:0}
-.mat-label{font-weight:800;font-size:.68rem;color:#475569;text-transform:uppercase;letter-spacing:.07em;flex-shrink:0}
-.mat-qty{font-size:1.2rem;font-weight:900;color:#0f172a;margin-left:3px;letter-spacing:-.02em;line-height:1}
-.mat-date{font-size:.71rem;color:#94a3b8;font-weight:600;display:flex;align-items:center;gap:4px;margin:4px 0}
-.mat-date.is-overdue{color:#dc2626;font-weight:700}
-.mat-date.is-soon{color:#d97706;font-weight:700}
-.mat-status-line{display:flex}
-.mat-status-badge{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:4px 10px;border-radius:8px;font-size:.7rem;font-weight:800;white-space:nowrap;width:100%}
-.ms-waiting{background:#fefce8;color:#713f12;border:1.5px solid #fde047}
-.ms-correction{background:#fff7ed;color:#7c2d12;border:1.5px solid #fed7aa}
-.ms-stop{background:#fef2f2;color:#7f1d1d;border:1.5px solid #fca5a5}
-.ms-workshop{background:#eff6ff;color:#1e3a8a;border:1.5px solid #bfdbfe}
-.ms-ready{background:#f0fdf4;color:#14532d;border:1.5px solid #bbf7d0}
-.ms-issued{background:#f0fdf4;color:#166534;border:1.5px solid #4ade80}
-.ms-none{background:#f8fafc;color:#94a3b8;border:1.5px solid #e2e8f0}
-
-/* ── ЦВЕТА МАТЕРИАЛОВ ── */
-.color-rows{display:flex;flex-direction:column;gap:5px;margin-top:10px;padding-top:10px;border-top:1.5px dashed #e2e8f0}
-.color-row{background:#f8fafc;border-radius:8px;padding:7px 10px;border:1px solid #e2e8f0}
-.color-name{font-size:.79rem;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:5px;margin-bottom:3px}
-.color-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block}
-.color-meta{display:flex;justify-content:space-between;align-items:center;gap:6px}
-.color-m2{font-size:.75rem;color:#334155;font-weight:700}
-.color-fresa{font-size:.68rem;color:#64748b;background:#e2e8f0;padding:2px 7px;border-radius:4px;white-space:nowrap}
-
-/* ── ПРИМЕЧАНИЕ ── */
-.tile-note{margin:8px 0 2px;padding:7px 10px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;font-size:.74rem;color:#78350f;font-style:italic;line-height:1.5;display:flex;gap:5px;align-items:flex-start}
-.tile-note-icon{flex-shrink:0;font-style:normal}
-
-/* ── ПРОГРЕСС ── */
-.tile-progress{margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9}
-.progress-label{display:flex;justify-content:space-between;font-size:.67rem;color:#94a3b8;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-.progress-track{height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden}
-.progress-fill{height:100%;border-radius:99px;transition:width .4s ease;background:linear-gradient(90deg,#22c55e,#4ade80)}
-.progress-fill.pf-warn{background:linear-gradient(90deg,#eab308,#fbbf24)}
-.progress-fill.pf-zero{background:#e2e8f0}
-
-/* ── СПИСОК ── */
-#tilesListWrap .table td{vertical-align:middle}
+.tab-bar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:18px}
+.tab-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:999px;font-size:.85rem;font-weight:700;color:#64748b;background:#f1f5f9;border:2px solid transparent;cursor:pointer;text-decoration:none;transition:all .15s;line-height:1}
+.tab-btn:hover{background:#e2e8f0;color:#334155}
+.tab-btn.active{background:#1e40af;color:#fff;box-shadow:0 4px 14px rgba(30,64,175,.3)}
+.tab-btn.disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border-radius:999px;font-size:.65rem;font-weight:900;background:rgba(0,0,0,.15);color:inherit;line-height:1}
+.tab-btn.active .tab-badge{background:rgba(255,255,255,.3)}
 
 /* ── ПЕРЕКЛЮЧАТЕЛЬ ПЛИТКИ/СПИСОК ── */
-#viewToggleBar .buttons.has-addons .button{border-radius:8px!important;font-size:.78rem;font-weight:700;border:1.5px solid #e2e8f0!important;padding:.4rem .8rem}
-#viewToggleBar .button.is-selected{background:#1e40af!important;color:#fff!important;border-color:#1e40af!important}
+.view-bar{display:flex;justify-content:flex-end;margin-bottom:10px;gap:6px}
+.view-btn{padding:5px 14px;border-radius:8px;font-size:.78rem;font-weight:700;border:2px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;transition:all .15s}
+.view-btn.active{background:#1e40af;color:#fff;border-color:#1e40af}
+
+/* ── ОБЩИЙ ГРАФИК — ТАБЛИЦА ── */
+.gen-box{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:14px;overflow:hidden}
+.gen-subtitle{font-size:.75rem;color:#94a3b8;margin-top:2px}
+.gen-scroll{overflow-x:auto;margin-top:10px}
+.gen-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.82rem}
+.gen-table thead tr.gh th{padding:5px 10px;font-size:.62rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;text-align:center;border-bottom:1px solid #e2e8f0}
+.gen-table thead tr.gh th.h-info{background:#f8fafc;color:#94a3b8}
+.gen-table thead tr.gh th.h-ldsp{background:#eff6ff;color:#1d4ed8}
+.gen-table thead tr.gh th.h-film{background:#f5f3ff;color:#6d28d9}
+.gen-table thead tr.gh th.h-paint{background:#fff7ed;color:#c2410c}
+.gen-table thead tr.ch th{padding:7px 10px;font-size:.65rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;white-space:nowrap;background:#fff;position:sticky;top:0;z-index:2}
+.gen-table tbody td{padding:8px 10px;border-bottom:1px solid #f1f5f9;color:#1e293b;vertical-align:middle}
+.gen-table tbody tr:hover td{background:#f8fafc!important}
+tr.rb td{background:rgba(254,242,242,.7)!important}
+tr.rw td{background:rgba(254,252,232,.7)!important}
+tr.ro td{background:rgba(240,253,244,.5)!important}
+tr.rd td{opacity:.45}
+.note-cell{min-width:180px}
+
+/* ── СТАТУС ЧИПЫ (таблица) ── */
+.s-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:.69rem;font-weight:800;white-space:nowrap}
+.s-chip::before{content:"";width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.sc-w{background:#fefce8;color:#713f12;border:1.5px solid #fde047}.sc-w::before{background:#eab308}
+.sc-c{background:#fff7ed;color:#7c2d12;border:1.5px solid #fed7aa}.sc-c::before{background:#f97316}
+.sc-s{background:#fef2f2;color:#7f1d1d;border:1.5px solid #fca5a5}.sc-s::before{background:#ef4444}
+.sc-ws{background:#eff6ff;color:#1e3a8a;border:1.5px solid #93c5fd}.sc-ws::before{background:#3b82f6}
+.sc-r{background:#f0fdf4;color:#14532d;border:1.5px solid #86efac}.sc-r::before{background:#22c55e}
+.sc-i{background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7}.sc-i::before{background:#10b981}
+
+/* ── ДНИ-БЕЙДЖ ── */
+.db{display:inline-flex;align-items:center;margin-left:5px;padding:1px 6px;border-radius:999px;font-weight:800;font-size:.7rem;line-height:1.4;white-space:nowrap}
+.db-pos{background:#dcfce7;color:#15803d}
+.db-neg{background:#fee2e2;color:#b91c1c}
+
+/* ── ПЛИТКИ — СЕТКА ── */
+.tiles-grid{display:grid;grid-template-columns:repeat(auto-fill,230px);gap:14px;justify-content:start}
+@media(max-width:768px){.tiles-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
+
+/* ── ПЛИТКА ── */
+.tile{width:230px;border-radius:14px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08),0 0 0 1.5px rgba(0,0,0,.06);cursor:pointer;transition:transform .15s,box-shadow .15s;overflow:hidden;display:flex;flex-direction:column}
+.tile:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.14),0 0 0 1.5px rgba(0,0,0,.08)}
+
+/* Цветная полоска сверху */
+.tile-stripe{height:5px;width:100%;flex-shrink:0}
+.t-ok  .tile-stripe{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.t-warn .tile-stripe{background:linear-gradient(90deg,#eab308,#fbbf24)}
+.t-bad  .tile-stripe{background:linear-gradient(90deg,#ef4444,#f87171)}
+
+/* Шапка */
+.tile-head{padding:12px 13px 4px}
+.tile-num{font-size:1.1rem;font-weight:900;color:#0f172a;letter-spacing:-.03em;line-height:1;margin-bottom:2px}
+.tile-name{font-size:.79rem;font-weight:600;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Материалы */
+.tile-mats{padding:8px 13px;display:flex;flex-direction:column;gap:7px;flex:1}
+.mat{border-radius:9px;padding:8px 10px}
+.mat.m-ldsp {background:#eff6ff;border:1.5px solid #bfdbfe;border-left:3px solid #3b82f6}
+.mat.m-paint{background:#fff7ed;border:1.5px solid #fed7aa;border-left:3px solid #f97316}
+.mat.m-film {background:#f5f3ff;border:1.5px solid #ddd6fe;border-left:3px solid #8b5cf6}
+.mat-top{display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.mat-ico{font-size:.85rem;flex-shrink:0}
+.mat-lbl{font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:#475569;flex-shrink:0}
+.mat-qty{font-size:1.15rem;font-weight:900;color:#0f172a;margin-left:3px;letter-spacing:-.02em;line-height:1}
+.mat-date{font-size:.69rem;color:#94a3b8;font-weight:600;display:flex;align-items:center;gap:3px;margin:3px 0 5px}
+.mat-date.ov{color:#dc2626;font-weight:800}
+.mat-date.sn{color:#d97706;font-weight:700}
+.mat-badge{display:inline-flex;align-items:center;justify-content:center;gap:3px;padding:3px 8px;border-radius:7px;font-size:.66rem;font-weight:800;white-space:nowrap;width:100%}
+.mb-w {background:#fefce8;color:#713f12;border:1.5px solid #fde047}
+.mb-c {background:#fff7ed;color:#7c2d12;border:1.5px solid #fed7aa}
+.mb-s {background:#fef2f2;color:#7f1d1d;border:1.5px solid #fca5a5}
+.mb-ws{background:#eff6ff;color:#1e3a8a;border:1.5px solid #bfdbfe}
+.mb-r {background:#f0fdf4;color:#14532d;border:1.5px solid #bbf7d0}
+.mb-i {background:#ecfdf5;color:#065f46;border:1.5px solid #6ee7b7}
+.mb-n {background:#f8fafc;color:#94a3b8;border:1.5px solid #e2e8f0}
+
+/* Цвета краски/плёнки */
+.colors-block{padding:0 13px;margin-top:2px;display:flex;flex-direction:column;gap:4px;padding-bottom:4px}
+.color-row{background:#f8fafc;border-radius:7px;padding:5px 9px;border:1px solid #e2e8f0;display:flex;flex-direction:column;gap:2px}
+.color-name{font-size:.75rem;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:4px}
+.color-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.color-meta{display:flex;justify-content:space-between;align-items:center;gap:4px}
+.color-m2{font-size:.7rem;color:#334155;font-weight:700}
+.color-fresa{font-size:.65rem;color:#64748b;background:#e2e8f0;padding:1px 6px;border-radius:4px}
+
+/* Прогресс */
+.tile-prog{padding:8px 13px 10px;margin-top:auto}
+.prog-labels{display:flex;justify-content:space-between;font-size:.63rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.prog-track{height:5px;background:#e2e8f0;border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width .4s}
+.pf-ok  {background:linear-gradient(90deg,#22c55e,#4ade80)}
+.pf-warn{background:linear-gradient(90deg,#eab308,#fbbf24)}
+.pf-zero{background:#e2e8f0}
+
+/* Примечание */
+.tile-note{margin:4px 13px 10px;padding:6px 9px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 7px 7px 0;font-size:.71rem;color:#78350f;font-style:italic;line-height:1.5;display:flex;gap:5px}
+.tile-note-ico{flex-shrink:0;font-style:normal}
+
+/* ── СПИСОК ── */
+.list-box{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden}
+.list-table{width:100%;border-collapse:collapse;font-size:.81rem}
+.list-table thead th{padding:9px 10px;font-size:.65rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;background:#f8fafc;white-space:nowrap}
+.list-table tbody td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.list-table tbody tr:hover td{background:#f8fafc}
+.lr-bad td{background:rgba(254,242,242,.6)!important}
+.lr-warn td{background:rgba(254,252,232,.6)!important}
+
+/* ── TILES BOX HEADER ── */
+.tiles-box{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:14px}
+.tiles-box-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.tiles-box-title{font-weight:800;font-size:.95rem;color:#1e293b}
+.tiles-counter{font-size:.78rem;font-weight:700;color:#64748b;background:#f1f5f9;padding:4px 12px;border-radius:999px}
+
+@media screen and (min-width:769px){.modal-card,.modal-content{width:780px}}
 </style>
 
 <section class="section chart-page">
 <div class="container is-fluid">
-<div class="chart-page-wrap">
+<div class="chart-wrap">
 
-  <div class="chart-page-title">График заказов</div>
+  <div class="page-title">График заказов</div>
 
   {% if restricted and restricted_text %}
   <div class="notification is-warning" style="margin-bottom:12px;">{{ restricted_text }}</div>
   {% endif %}
 
   <!-- Вкладки -->
-  <div style="display:flex;justify-content:center;margin-bottom:16px;">
-  <div class="orders-tabs-wrap">
+  <div class="tab-bar">
     {% for t in tabs %}
     {% if t.allowed %}
     <a href="?tab={{ t.key }}"
-       class="tab-btn {% if t.key == active_tab %}is-active{% endif %}">
+       class="tab-btn {% if t.key == active_tab %}active{% endif %}">
       <span>{{ t.title }}</span>
-      <span class="tab-count" id="badge_{{ t.key }}">—</span>
+      <span class="tab-badge" id="badge_{{ t.key }}">—</span>
     </a>
     {% else %}
-    <span class="tab-btn is-disabled">{{ t.title }}</span>
+    <span class="tab-btn disabled">{{ t.title }}</span>
     {% endif %}
     {% endfor %}
   </div>
+
+  <!-- Переключатель Плитки/Список -->
+  <div class="view-bar" id="viewToggleBar" style="display:none;">
+    <button id="btnViewTiles" class="view-btn active" type="button">⬜ Плитки</button>
+    <button id="btnViewList"  class="view-btn" type="button">☰ Список</button>
   </div>
 
   <!-- Общий график (таблица) -->
   <div id="generalTableWrap" style="display:none;">
-    <div class="gen-wrap">
-      <div class="gen-header">
+    <div class="gen-box">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
         <div>
-          <div class="gen-header-title">Общий график</div>
-          <div class="gen-header-sub">Просроченные — вверху · Готовые — внизу</div>
+          <strong>Общий график</strong>
+          <div class="gen-subtitle">Просроченные — вверху · Готовые — внизу</div>
         </div>
       </div>
-      <div class="gen-table-scroll">
+      <div class="gen-scroll">
         <table class="gen-table" id="generalTable">
           <thead>
-            <tr class="mat-group-header">
-              <th colspan="3" class="g-info" style="text-align:left;">Заказ</th>
-              <th colspan="3" class="g-ldsp">🪵 ЛДСП</th>
-              <th colspan="3" class="g-film">🎞️ Плёнка</th>
-              <th colspan="3" class="g-paint">🎨 Краска</th>
-              <th colspan="2" class="g-info">Прочее</th>
+            <tr class="gh">
+              <th colspan="3" class="h-info" style="text-align:left;">Заказ</th>
+              <th colspan="3" class="h-ldsp">🪵 ЛДСП</th>
+              <th colspan="3" class="h-film">🎞️ Плёнка</th>
+              <th colspan="3" class="h-paint">🎨 Краска</th>
+              <th colspan="2" class="h-info">Прочее</th>
             </tr>
-            <tr class="col-header">
+            <tr class="ch">
               <th style="width:70px;">№</th>
               <th>Имя</th>
-              <th style="width:90px;">Дата</th>
-              <th style="width:65px;" class="has-text-centered">Листов</th>
-              <th style="min-width:115px;">Срок</th>
-              <th style="min-width:105px;">Статус</th>
-              <th style="width:60px;" class="has-text-centered">м²</th>
-              <th style="min-width:115px;">Срок</th>
-              <th style="min-width:105px;">Статус</th>
-              <th style="width:60px;" class="has-text-centered">м²</th>
-              <th style="min-width:115px;">Срок</th>
-              <th style="min-width:105px;">Статус</th>
-              <th>Примечание</th>
-              <th style="width:36px;"></th>
+              <th style="width:85px;">Дата</th>
+              <th style="width:60px;text-align:center;">Листов</th>
+              <th style="min-width:110px;">Срок</th>
+              <th style="min-width:100px;">Статус</th>
+              <th style="width:55px;text-align:center;">м²</th>
+              <th style="min-width:110px;">Срок</th>
+              <th style="min-width:100px;">Статус</th>
+              <th style="width:55px;text-align:center;">м²</th>
+              <th style="min-width:110px;">Срок</th>
+              <th style="min-width:100px;">Статус</th>
+              <th class="note-cell">Примечание</th>
+              <th style="width:34px;"></th>
             </tr>
           </thead>
           <tbody id="generalTableBody"></tbody>
@@ -199,26 +214,20 @@ tr.row-done td{opacity:.5}
     </div>
   </div>
 
-  <!-- Переключатель Плитки/Список -->
-  <div id="viewToggleBar" class="view-toggle-bar" style="display:none;">
-    <button id="btnViewTiles" class="view-btn is-selected" type="button">⬜ Плитки</button>
-    <button id="btnViewList"  class="view-btn" type="button">☰ Список</button>
-  </div>
-
   <!-- Список -->
   <div id="tilesListWrap" style="display:none;">
-    <div class="list-wrap">
-      <div class="gen-table-scroll">
+    <div class="list-box">
+      <div style="overflow-x:auto;">
         <table class="list-table">
           <thead>
             <tr>
               <th style="width:80px;">№</th>
               <th>Клиент</th>
-              <th style="width:110px;">ЛДСП</th>
-              <th style="width:110px;">Краска</th>
-              <th style="width:110px;">Плёнка</th>
-              <th style="width:200px;">Сроки</th>
-              <th style="width:160px;">Статусы</th>
+              <th style="width:100px;">ЛДСП</th>
+              <th style="width:100px;">Краска</th>
+              <th style="width:100px;">Плёнка</th>
+              <th style="width:190px;">Сроки</th>
+              <th style="width:150px;">Статусы</th>
               <th>Примечание</th>
             </tr>
           </thead>
@@ -230,9 +239,9 @@ tr.row-done td{opacity:.5}
 
   <!-- Плитки -->
   <div id="tilesWrap" style="display:none;">
-    <div class="tiles-outer">
-      <div class="tiles-top-bar">
-        <div class="tiles-section-title">Задания в работе</div>
+    <div class="tiles-box">
+      <div class="tiles-box-head">
+        <div class="tiles-box-title" id="tilesTitle">Задания в работе</div>
         <div class="tiles-counter" id="tilesCountTag" style="display:none;">
           Заказов: <span id="tilesCount">0</span>
         </div>
@@ -242,6 +251,7 @@ tr.row-done td{opacity:.5}
   </div>
 
   <div id="canvasWrap"><canvas id="ordersChartCanvas"></canvas></div>
+
 </div>
 </div>
 </section>
@@ -249,7 +259,7 @@ tr.row-done td{opacity:.5}
 <!-- Модалка: инфо о заказе -->
 <div class="modal" id="orderInfoModal">
   <div class="modal-background"></div>
-  <div class="modal-card" style="max-width:520px;">
+  <div class="modal-card" style="max-width:500px;">
     <header class="modal-card-head">
       <p class="modal-card-title">Информация о заказе</p>
       <button class="delete" aria-label="close"></button>
@@ -261,10 +271,10 @@ tr.row-done td{opacity:.5}
   </div>
 </div>
 
-<!-- Модалка: редактирование строки графика -->
+<!-- Модалка: редактирование -->
 <div class="modal" id="chartEditModal">
   <div class="modal-background"></div>
-  <div class="modal-card" style="max-width:760px;">
+  <div class="modal-card" style="max-width:740px;">
     <header class="modal-card-head">
       <p class="modal-card-title" id="chartEditTitle">Редактирование</p>
       <button class="delete" aria-label="close"></button>
@@ -283,28 +293,28 @@ tr.row-done td{opacity:.5}
           <label class="label">Статус Краска</label>
           <div class="select is-fullwidth"><select id="m_status_paint"></select></div>
         </div>
-        <div class="column is-4 js-tech-hide">
+        <div class="column is-4 js-extra">
           <label class="label">Срок ЛДСП (ручной)</label>
           <input class="input" type="date" id="m_due_ldsp_override">
-          <p class="help">Пусто — считается автоматически</p>
+          <p class="help">Пусто — рассчитывается автоматически</p>
         </div>
-        <div class="column is-4 js-tech-hide">
+        <div class="column is-4 js-extra">
           <label class="label">Срок Плёнка (ручной)</label>
           <input class="input" type="date" id="m_due_film_override">
         </div>
-        <div class="column is-4 js-tech-hide">
+        <div class="column is-4 js-extra">
           <label class="label">Срок Краска (ручной)</label>
           <input class="input" type="date" id="m_due_paint_override">
         </div>
-        <div class="column is-4 js-tech-hide">
+        <div class="column is-4 js-extra">
           <label class="label">+ дни ЛДСП (раб. дни)</label>
           <input class="input" type="number" id="m_extra_days_ldsp" value="0">
         </div>
-        <div class="column is-4 js-tech-hide">
+        <div class="column is-4 js-extra">
           <label class="label">+ дни Плёнка (раб. дни)</label>
           <input class="input" type="number" id="m_extra_days_film" value="0">
         </div>
-        <div class="column is-4 js-tech-hide">
+        <div class="column is-4 js-extra">
           <label class="label">+ дни Краска (раб. дни)</label>
           <input class="input" type="number" id="m_extra_days_paint" value="0">
         </div>
@@ -312,26 +322,20 @@ tr.row-done td{opacity:.5}
           <label class="label">Примечание</label>
           <textarea class="textarea" id="m_note" rows="3" placeholder="Комментарий..."></textarea>
         </div>
-        <div class="column is-12 js-tech-hide">
+        <div class="column is-12 js-extra">
           <hr>
           <div class="level">
             <div class="level-left">
               <div>
                 <div class="title is-6" style="margin-bottom:4px;">STOP / PLAY</div>
-                <div class="help">Остаток дней не уменьшается до stop_until</div>
+                <div class="help">Отсчёт дней заморожен до stop_until</div>
               </div>
             </div>
             <div class="level-right">
               <div class="field has-addons">
-                <p class="control">
-                  <input class="input" type="number" min="1" id="m_stop_days" placeholder="дней">
-                </p>
-                <p class="control">
-                  <button class="button is-danger" type="button" id="btnStop">Stop</button>
-                </p>
-                <p class="control">
-                  <button class="button is-success" type="button" id="btnPlay">Play</button>
-                </p>
+                <p class="control"><input class="input" type="number" min="1" id="m_stop_days" placeholder="дней"></p>
+                <p class="control"><button class="button is-danger" type="button" id="btnStop">Stop</button></p>
+                <p class="control"><button class="button is-success" type="button" id="btnPlay">Play</button></p>
               </div>
             </div>
           </div>
@@ -350,515 +354,425 @@ tr.row-done td{opacity:.5}
 const activeTab = "{{ active_tab|default:'' }}";
 const canEdit   = {{ can_edit_chart|yesno:"true,false" }};
 
-function escapeHtml(s) {
-  return (s || "").replace(/[&<>"']/g, m =>
-    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+/* ─── УТИЛИТЫ ─── */
+function esc(s){ return (s||"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+function daysBadge(v){
+  if(v===null||v===undefined||v==="") return "";
+  const n=Number(v); if(isNaN(n)) return "";
+  return `<span class="db ${n>=0?'db-pos':'db-neg'}">${n>=0?'+'+n:n}</span>`;
 }
 
-/* ───── СТАТУСЫ ───── */
-function renderSt(st) {
-  if (!st || st === "—") return `<span class="st st-none">—</span>`;
-  if (st.startsWith("ОТЛОЖЕН") || st === "СТОП") return `<span class="st st-stop">🔴 ${escapeHtml(st)}</span>`;
-  if (st === "ОЖИДАЕТ")        return `<span class="st st-wait">⏳ ОЖИДАЕТ</span>`;
-  if (st === "КОРРЕКТИРОВКА")  return `<span class="st st-corr">🔧 КОРРЕКТИРОВКА</span>`;
-  if (st === "ВЫДАН В ЦЕХ")   return `<span class="st st-ceh">🏭 ВЫДАН В ЦЕХ</span>`;
-  if (st === "ГОТОВО")         return `<span class="st st-done">✅ ГОТОВО</span>`;
-  if (st === "ВЫДАН")          return `<span class="st st-out">📦 ВЫДАН</span>`;
-  return `<span class="st st-none">${escapeHtml(st)}</span>`;
-}
-function renderStatus(s) { return renderSt(s); } // совместимость
-
-/* Иконка + CSS-класс для строки материала */
-function matStatusMeta(st) {
-  if (!st || st === "—") return { icon:"·", cls:"ms-none", label:"—" };
-  if (st.startsWith("ОТЛОЖЕН") || st === "СТОП")
-                           return { icon:"🔴", cls:"ms-stop",       label:st };
-  if (st === "ОЖИДАЕТ")    return { icon:"⏳", cls:"ms-waiting",    label:st };
-  if (st === "КОРРЕКТИРОВКА") return { icon:"🔧", cls:"ms-correction", label:st };
-  if (st === "ВЫДАН В ЦЕХ")  return { icon:"🏭", cls:"ms-workshop",   label:st };
-  if (st === "ГОТОВО")        return { icon:"✅", cls:"ms-ready",      label:st };
-  if (st === "ВЫДАН")         return { icon:"📦", cls:"ms-issued",     label:st };
-  return { icon:"·", cls:"ms-none", label:st };
+function fmtQty(v,isInt){
+  if(v===null||v===undefined||v===""||v==="—") return "—";
+  const n=parseFloat(v); if(isNaN(n)) return String(v);
+  return isInt?String(Math.round(n)):n.toString();
 }
 
-function daysBadge(val) {
-  if (val === null || val === undefined || val === "") return "";
-  const n = Number(val);
-  if (Number.isNaN(n)) return "";
-  if (n > 0) return `<span class="db db-pos">+${n}</span>`;
-  if (n < 0) return `<span class="db db-neg">${n}</span>`;
-  return `<span class="db db-zero">0</span>`;
-}
+function hasVal(v){ return !(v===null||v===undefined||v===""||v==="—"||v===0||v==="0"); }
 
-function isEmptyVal(v) {
-  return v === null || v === undefined || v === "" || v === "—" || v === 0 || v === "0";
-}
-function valPresent(v) { return !isEmptyVal(v); }
-
-function urgencyClass(r) {
-  const vals = [];
-  for (const k of ["ldsp_days_left","film_days_left","paint_days_left"]) {
-    const v = r[k];
-    if (v === null || v === undefined || v === "") continue;
-    const n = Number(v);
-    if (!Number.isNaN(n)) vals.push(n);
+function urgCls(r){
+  const vals=[];
+  for(const k of ["ldsp_days_left","film_days_left","paint_days_left"]){
+    const v=r[k]; if(v===null||v===undefined||v==="") continue;
+    const n=Number(v); if(!isNaN(n)) vals.push(n);
   }
-  if (!vals.length) return "";
-  const m = Math.min(...vals);
-  if (m <= 2)  return "bad";
-  if (m <= 6)  return "warn";
-  return "ok";
+  if(!vals.length) return "";
+  const m=Math.min(...vals);
+  return m<=2?"t-bad":m<=6?"t-warn":"t-ok";
 }
 
-/* ───── РЕНДЕР СТРОКИ МАТЕРИАЛА ───── */
-function fmtQty(qty, isInteger) {
-  if (qty === null || qty === undefined || qty === "" || qty === "—") return "—";
-  const n = parseFloat(qty);
-  if (isNaN(n)) return String(qty);
-  return isInteger ? String(Math.round(n)) : n.toString();
+/* ─── СТАТУС ДЛЯ ТАБЛИЦЫ ─── */
+function chipTable(st){
+  if(!st||st==="—") return "<span>—</span>";
+  let cls="s-chip ";
+  if(st.startsWith("ОТЛОЖЕН")||st==="СТОП") cls+="sc-s";
+  else if(st==="ОЖИДАЕТ")       cls+="sc-w";
+  else if(st==="КОРРЕКТИРОВКА") cls+="sc-c";
+  else if(st==="ВЫДАН В ЦЕХ")  cls+="sc-ws";
+  else if(st==="ГОТОВО")        cls+="sc-r";
+  else if(st==="ВЫДАН")         cls+="sc-i";
+  return `<span class="${cls}">${esc(st)}</span>`;
 }
 
-function renderMatRow(label, icon, qty, status, due, daysLeft, isInteger) {
-  if (!valPresent(qty)) return "";
-  const matCls = label==="ЛДСП" ? "m-ldsp" : label==="Краска" ? "m-paint" : "m-film";
-  const meta = matStatusMeta(status);
-  const n = (daysLeft !== null && daysLeft !== undefined) ? Number(daysLeft) : null;
-  const dueCls = n !== null ? (n <= 0 ? "is-overdue" : n <= 5 ? "is-soon" : "") : "";
-  const qtyStr = fmtQty(qty, isInteger);
-  const dueStr = (due && due !== "—")
-    ? `<div class="mat-date ${dueCls}">📅 ${escapeHtml(due)} ${daysBadge(daysLeft)}</div>`
-    : "";
+/* ─── СТАТУС-БЕЙДЖ ДЛЯ ПЛИТКИ ─── */
+function matBadgeMeta(st){
+  if(!st||st==="—") return {ico:"·",cls:"mb-n",lbl:"—"};
+  if(st.startsWith("ОТЛОЖЕН")||st==="СТОП") return {ico:"🔴",cls:"mb-s",lbl:st};
+  if(st==="ОЖИДАЕТ")       return {ico:"⏳",cls:"mb-w", lbl:st};
+  if(st==="КОРРЕКТИРОВКА") return {ico:"🔧",cls:"mb-c", lbl:st};
+  if(st==="ВЫДАН В ЦЕХ")  return {ico:"🏭",cls:"mb-ws",lbl:st};
+  if(st==="ГОТОВО")        return {ico:"✅",cls:"mb-r", lbl:st};
+  if(st==="ВЫДАН")         return {ico:"📦",cls:"mb-i", lbl:st};
+  return {ico:"·",cls:"mb-n",lbl:st};
+}
+
+/* ─── СТРОКА МАТЕРИАЛА ─── */
+function renderMat(label, ico, cls, qty, status, due, daysLeft, isInt){
+  if(!hasVal(qty)) return "";
+  const m  = matBadgeMeta(status);
+  const n  = (daysLeft!==null&&daysLeft!==undefined)?Number(daysLeft):null;
+  const dc = n!==null?(n<=0?"ov":n<=5?"sn":""):"";
+  const dueHtml = (due&&due!=="—")
+    ? `<div class="mat-date ${dc}">📅 ${esc(due)} ${daysBadge(daysLeft)}</div>` : "";
   return `
-    <div class="mat-row ${matCls}">
+    <div class="mat ${cls}">
       <div class="mat-top">
-        <span class="mat-icon">${icon}</span>
-        <span class="mat-label">${label}</span>
-        <span class="mat-qty">${escapeHtml(qtyStr)}</span>
+        <span class="mat-ico">${ico}</span>
+        <span class="mat-lbl">${label}</span>
+        <span class="mat-qty">${esc(fmtQty(qty,isInt))}</span>
       </div>
-      ${dueStr}
-      <div class="mat-status-line">
-        <span class="mat-status-badge ${meta.cls}">${meta.icon} ${escapeHtml(meta.label)}</span>
-      </div>
+      ${dueHtml}
+      <div><span class="mat-badge ${m.cls}">${m.ico} ${esc(m.lbl)}</span></div>
     </div>`;
 }
 
-/* ───── ПРОГРЕСС-БАР ───── */
-function renderProgress(r) {
-  const DONE = new Set(["ГОТОВО","ВЫДАН"]);
-  let total = 0, done = 0;
-  for (const [qty, st] of [[r.ldsp_qty,r.status_ldsp],[r.paint_m2,r.status_paint],[r.film_m2,r.status_film]]) {
-    if (!valPresent(qty)) continue;
+/* ─── ПРОГРЕСС ─── */
+function renderProgress(r){
+  const DONE=new Set(["ГОТОВО","ВЫДАН"]);
+  let total=0,done=0;
+  for(const [qty,st] of [[r.ldsp_qty,r.status_ldsp],[r.paint_m2,r.status_paint],[r.film_m2,r.status_film]]){
+    if(!hasVal(qty)) continue;
     total++;
-    if (DONE.has(st)) done++;
+    if(DONE.has(st)) done++;
   }
-  if (!total) return "";
-  const pct = Math.round((done / total) * 100);
-  const pfCls = pct === 100 ? "pf-full" : pct === 0 ? "pf-zero" : "pf-part";
-  return `<div class="tile-progress">
-    <div class="prog-row"><span>Готовность</span><span>${done}/${total}</span></div>
-    <div class="prog-track"><div class="prog-fill ${pfCls}" style="width:${pct}%"></div></div>
-  </div>`;
+  if(!total) return "";
+  const pct=Math.round(done/total*100);
+  const fc=pct===0?"pf-zero":pct<100?"pf-warn":"pf-ok";
+  return `
+    <div class="tile-prog">
+      <div class="prog-labels"><span>Готовность</span><span>${done} / ${total}</span></div>
+      <div class="prog-track"><div class="prog-fill ${fc}" style="width:${pct}%"></div></div>
+    </div>`;
 }
 
-/* ───── ЗАГРУЗКА ОБЩЕГО ГРАФИКА ───── */
-async function loadGeneralTable() {
-  const wrap      = document.getElementById("generalTableWrap");
-  const body      = document.getElementById("generalTableBody");
-  const canvasWrap = document.getElementById("canvasWrap");
-  wrap.style.display = "";
-  canvasWrap.style.display = "none";
-  body.innerHTML = `<tr><td colspan="14">Загрузка…</td></tr>`;
-
-  const resp = await fetch(`/orders/chart-data/?tab=general`,
-    { headers:{"X-Requested-With":"XMLHttpRequest"} });
-  if (!resp.ok) { body.innerHTML=`<tr><td colspan="14">Ошибка загрузки</td></tr>`; return; }
-  const data = await resp.json();
-  const rows = data.rows || [];
-
-  // счётчик на вкладке
-  updateBadge("general", rows.length);
-
-  body.innerHTML = "";
-  for (const r of rows) {
-    const tr = document.createElement("tr");
-    const left = (r.ldsp_days_left === null || r.ldsp_days_left === undefined)
-      ? null : Number(r.ldsp_days_left);
-    if (left !== null && !Number.isNaN(left)) {
-      tr.classList.add(left <= 2 ? "gr-bad" : left <= 6 ? "gr-warn" : "gr-ok");
-    }
-    const paint = r.paint_m2 ? r.paint_m2 : "—";
-    const film  = r.film_m2  ? r.film_m2  : "—";
-    const fmtLdsp = r.ldsp_qty && r.ldsp_qty !== "—" ? String(Math.round(parseFloat(r.ldsp_qty))) : "—";
-    tr.innerHTML = `
-      <td><a href="javascript:void(0)" class="js-order-info" data-order-id="${r.order_id}"
-             style="font-weight:800;color:#1e40af;font-size:.88rem;">№${escapeHtml(String(r.order_number ?? ""))}</a></td>
-      <td style="font-weight:600;color:#1e293b;">${escapeHtml(r.customer||"")}</td>
-      <td style="color:#94a3b8;font-size:.78rem;">${escapeHtml(r.created_at||"—")}</td>
-      <td class="has-text-centered" style="font-weight:800;color:#1e293b;">${fmtLdsp}</td>
-      <td>${escapeHtml(r.due_ldsp??"—")}${daysBadge(r.ldsp_days_left)}</td>
-      <td>${renderStatus(r.status_ldsp)}</td>
-      <td class="has-text-centered" style="font-weight:800;color:#1e293b;">${escapeHtml(String(film))}</td>
-      <td>${escapeHtml(r.due_film??"—")}${daysBadge(r.film_days_left)}</td>
-      <td>${renderStatus(r.status_film)}</td>
-      <td class="has-text-centered" style="font-weight:800;color:#1e293b;">${escapeHtml(String(paint))}</td>
-      <td>${escapeHtml(r.due_paint??"—")}${daysBadge(r.paint_days_left)}</td>
-      <td>${renderStatus(r.status_paint)}</td>
-      <td class="note-cell">
-        ${canEdit
-          ? `<textarea class="textarea is-small js-note" data-order-id="${r.order_id}"
-               rows="1" style="min-height:32px;resize:vertical;border-radius:6px;font-size:.78rem;">${escapeHtml(r.note||"")}</textarea>`
-          : `<span style="font-size:.79rem;color:#64748b;">${escapeHtml(r.note||"")}</span>`}
-      </td>
-      <td class="has-text-centered">
-        ${canEdit
-          ? `<button class="button is-small is-light js-edit-row" data-order-id="${r.order_id}"
-               style="border-radius:8px;border:1px solid #e2e8f0;padding:3px 8px;">✏️</button>` : ""}
-      </td>`;
-        body.appendChild(tr);
-  }
-  if (!rows.length) body.innerHTML = `<tr><td colspan="14">Нет заказов</td></tr>`;
+/* ─── ЦВЕТА МАТЕРИАЛОВ ─── */
+function strColor(s){
+  let h=0; for(let i=0;i<s.length;i++) h=s.charCodeAt(i)+((h<<5)-h);
+  return `hsl(${Math.abs(h)%360},50%,42%)`;
 }
-
-/* ───── ЦВЕТА МАТЕРИАЛОВ ───── */
-function strColor(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
-  return `hsl(${Math.abs(h) % 360}, 55%, 45%)`;
-}
-function renderColorRows(colors) {
-  if (!colors || !colors.length) return "";
-  const rows = colors.map(col => {
-    const dot = `<span class="color-dot" style="background:${strColor(col.name)}"></span>`;
-    const m2  = col.m2 && col.m2 !== "—" ? `<span class="color-m2">${col.m2} м²</span>` : "";
-    const fr  = col.fresa && col.fresa !== "—"
-      ? `<span class="color-fresa">✂️ ${escapeHtml(col.fresa)}</span>` : "";
-    return `<div class="color-block">
-      <div class="color-block-top">${dot}${escapeHtml(col.name)}</div>
-      <div class="color-block-meta">${m2}${fr}</div>
+function renderColors(colors){
+  if(!colors||!colors.length) return "";
+  const rows=colors.map(c=>{
+    const col=strColor(c.name);
+    const m2=c.m2&&c.m2!=="—"?`<span class="color-m2">${c.m2} м²</span>`:"";
+    const fr=c.fresa&&c.fresa!=="—"?`<span class="color-fresa">✂️ ${esc(c.fresa)}</span>`:"";
+    return `<div class="color-row">
+      <div class="color-name"><span class="color-dot" style="background:${col}"></span>${esc(c.name)}</div>
+      <div class="color-meta">${m2}${fr}</div>
     </div>`;
   }).join("");
-  return `<div class="color-blocks">${rows}</div>`;
+  return `<div class="colors-block">${rows}</div>`;
 }
 
-/* ───── ЗАГРУЗКА ПЛИТОК ───── */
-async function loadTiles(tabKey) {
-  const wrap      = document.getElementById("tilesWrap");
-  const grid      = document.getElementById("tilesGrid");
-  const tableWrap = document.getElementById("generalTableWrap");
-  const canvasWrap = document.getElementById("canvasWrap");
-  wrap.style.display = "";
-  if (tableWrap)  tableWrap.style.display = "none";
-  if (canvasWrap) canvasWrap.style.display = "none";
-  grid.innerHTML = "<div class='notification is-light'>Загрузка...</div>";
+/* ─── ЗАГРУЗКА ОБЩЕГО ГРАФИКА ─── */
+async function loadGeneral(){
+  const wrap=document.getElementById("generalTableWrap");
+  const body=document.getElementById("generalTableBody");
+  wrap.style.display=""; document.getElementById("canvasWrap").style.display="none";
+  body.innerHTML=`<tr><td colspan="14" style="text-align:center;padding:20px;color:#94a3b8">Загрузка…</td></tr>`;
 
-  const resp = await fetch(`/orders/chart-data/?tab=${encodeURIComponent(tabKey)}`,
-    { headers:{"X-Requested-With":"XMLHttpRequest"} });
-  if (!resp.ok) { grid.innerHTML="<div class='notification is-danger'>Ошибка загрузки</div>"; return; }
-  const data  = await resp.json();
-  const tiles = data.tiles || [];
-
-  updateBadge(tabKey, tiles.length);
-
-  // счётчик и заголовок
-  const countTag = document.getElementById("tilesCountTag");
-  const countEl  = document.getElementById("tilesCount");
-  if (countTag && countEl) {
-    countTag.style.display = tiles.length ? "" : "none";
-    countEl.textContent = tiles.length;
+  const resp=await fetch("/orders/chart-data/?tab=general",{headers:{"X-Requested-With":"XMLHttpRequest"}});
+  if(!resp.ok){body.innerHTML=`<tr><td colspan="14">Ошибка загрузки</td></tr>`;return;}
+  const data=await resp.json();
+  const rows=data.rows||[];
+  updateBadge("general",rows.length);
+  body.innerHTML="";
+  for(const r of rows){
+    const tr=document.createElement("tr");
+    const left=(r.ldsp_days_left===null||r.ldsp_days_left===undefined)?null:Number(r.ldsp_days_left);
+    if(left!==null&&!isNaN(left)) tr.className=left<=2?"rb":left<=6?"rw":"ro";
+    tr.innerHTML=`
+      <td><a href="javascript:void(0)" class="js-order-info" data-order-id="${r.order_id}" style="font-weight:800;color:#1d4ed8;">№${esc(String(r.order_number??""))}</a></td>
+      <td>${esc(r.customer||"")}</td>
+      <td style="color:#94a3b8;font-size:.77rem;">${esc(r.created_at||"—")}</td>
+      <td style="text-align:center;font-weight:700;">${esc(String(r.ldsp_qty??"—"))}</td>
+      <td style="white-space:nowrap;">${esc(r.due_ldsp??"—")}${daysBadge(r.ldsp_days_left)}</td>
+      <td>${chipTable(r.status_ldsp)}</td>
+      <td style="text-align:center;font-weight:700;">${hasVal(r.film_m2)?esc(String(r.film_m2)):"—"}</td>
+      <td style="white-space:nowrap;">${esc(r.due_film??"—")}${daysBadge(r.film_days_left)}</td>
+      <td>${chipTable(r.status_film)}</td>
+      <td style="text-align:center;font-weight:700;">${hasVal(r.paint_m2)?esc(String(r.paint_m2)):"—"}</td>
+      <td style="white-space:nowrap;">${esc(r.due_paint??"—")}${daysBadge(r.paint_days_left)}</td>
+      <td>${chipTable(r.status_paint)}</td>
+      <td class="note-cell">
+        ${canEdit
+          ?`<textarea class="textarea is-small js-note" data-order-id="${r.order_id}" rows="1" style="min-height:32px;resize:vertical;">${esc(r.note||"")}</textarea>`
+          :esc(r.note||"")}
+      </td>
+      <td style="text-align:center;">
+        ${canEdit?`<button class="button is-small is-light js-edit-row" data-order-id="${r.order_id}">✏️</button>`:""}
+      </td>`;
+    body.appendChild(tr);
   }
+  if(!rows.length) body.innerHTML=`<tr><td colspan="14" style="text-align:center;padding:20px;color:#94a3b8">Нет заказов</td></tr>`;
+}
 
-  if (!tiles.length) { grid.innerHTML = "<div class='notification is-light'>Нет заказов</div>"; return; }
-  grid.innerHTML = "";
+/* ─── ЗАГРУЗКА ПЛИТОК ─── */
+async function loadTiles(tab){
+  const wrap=document.getElementById("tilesWrap");
+  const grid=document.getElementById("tilesGrid");
+  document.getElementById("generalTableWrap").style.display="none";
+  document.getElementById("canvasWrap").style.display="none";
+  wrap.style.display="";
+  grid.innerHTML=`<div style="color:#94a3b8;padding:16px;">Загрузка…</div>`;
 
-  for (const r of tiles) {
-    const el = document.createElement("div");
-    el.className   = "tile-card js-tile";
-    el.dataset.orderId  = r.order_id;
-    el.dataset.hasLdsp  = valPresent(r.ldsp_qty)  ? "1" : "0";
-    el.dataset.hasFilm  = valPresent(r.film_m2)   ? "1" : "0";
-    el.dataset.hasPaint = valPresent(r.paint_m2)  ? "1" : "0";
+  const resp=await fetch(`/orders/chart-data/?tab=${encodeURIComponent(tab)}`,{headers:{"X-Requested-With":"XMLHttpRequest"}});
+  if(!resp.ok){grid.innerHTML=`<div class="notification is-danger">Ошибка загрузки</div>`;return;}
+  const data=await resp.json();
+  const tiles=data.tiles||[];
+  updateBadge(tab,tiles.length);
 
-    /* строки материалов */
-    const matHtml =
-      renderMatRow("ЛДСП",   "🪵", r.ldsp_qty,  r.status_ldsp,  r.due_ldsp,  r.ldsp_days_left,  true)  +
-      renderMatRow("Краска", "🎨", r.paint_m2,  r.status_paint, r.due_paint, r.paint_days_left, false) +
-      renderMatRow("Плёнка", "🎞️", r.film_m2,  r.status_film,  r.due_film,  r.film_days_left,  false);
+  const ct=document.getElementById("tilesCountTag");
+  const cn=document.getElementById("tilesCount");
+  if(ct&&cn){ct.style.display=tiles.length?"":"none";cn.textContent=tiles.length;}
 
-    const colorHtml = renderColorRows([...(r.paint_colors||[]), ...(r.film_colors||[])]);
-    const urg = urgencyClass(r);
+  if(!tiles.length){grid.innerHTML=`<div style="color:#94a3b8;padding:16px;">Нет заказов</div>`;return;}
+  grid.innerHTML="";
 
-    el.innerHTML = `
-      <div class="tile-header urg-${urg}">
-        <div class="tile-num">№&thinsp;${escapeHtml(String(r.order_number ?? ""))}</div>
-        <div class="tile-name">${escapeHtml(r.customer||"")}</div>
+  for(const r of tiles){
+    const el=document.createElement("div");
+    const urg=urgCls(r);
+    el.className=`tile js-tile ${urg}`;
+    el.dataset.orderId=r.order_id;
+    el.dataset.hasLdsp=hasVal(r.ldsp_qty)?"1":"0";
+    el.dataset.hasFilm=hasVal(r.film_m2)?"1":"0";
+    el.dataset.hasPaint=hasVal(r.paint_m2)?"1":"0";
+
+    const mats =
+      renderMat("ЛДСП",  "🪵","m-ldsp", r.ldsp_qty, r.status_ldsp, r.due_ldsp, r.ldsp_days_left, true)+
+      renderMat("Краска","🎨","m-paint",r.paint_m2,r.status_paint,r.due_paint,r.paint_days_left,false)+
+      renderMat("Плёнка","🎞️","m-film", r.film_m2, r.status_film, r.due_film, r.film_days_left,  false);
+
+    const colors=renderColors([...(r.paint_colors||[]),...(r.film_colors||[])]);
+    const note=r.note&&r.note.trim()
+      ?`<div class="tile-note"><span class="tile-note-ico">💬</span>${esc(r.note.trim())}</div>`:"";
+
+    el.innerHTML=`
+      <div class="tile-stripe"></div>
+      <div class="tile-head">
+        <div class="tile-num">№&thinsp;${esc(String(r.order_number??""))}</div>
+        <div class="tile-name">${esc(r.customer||"")}</div>
       </div>
-      <div class="tile-body">
-        ${matHtml}
-        ${colorHtml}
-      </div>
-        ${renderProgress(r)}
-        ${r.note && r.note.trim()
-        ? `<div class="tile-note"><span class="tile-note-ico">💬</span>${escapeHtml(r.note.trim())}</div>`
-        : ""}
-      </div>
-    `;
+      <div class="tile-mats">${mats}</div>
+      ${colors}
+      ${renderProgress(r)}
+      ${note}`;
     grid.appendChild(el);
   }
 }
 
-/* ───── ЗАГРУЗКА СПИСКА ───── */
-async function loadTilesList(tabKey) {
-  const body = document.getElementById("tilesListBody");
-  if (!body) return;
-  body.innerHTML = `<tr><td colspan="8">Загрузка…</td></tr>`;
+/* ─── ЗАГРУЗКА СПИСКА ─── */
+async function loadList(tab){
+  const body=document.getElementById("tilesListBody");
+  body.innerHTML=`<tr><td colspan="8" style="padding:16px;text-align:center;color:#94a3b8">Загрузка…</td></tr>`;
 
-  const resp = await fetch(`/orders/chart-data/?tab=${encodeURIComponent(tabKey)}`,
-    { headers:{"X-Requested-With":"XMLHttpRequest"} });
-  if (!resp.ok) { body.innerHTML=`<tr><td colspan="8">Ошибка загрузки</td></tr>`; return; }
-  const data = await resp.json();
-  const rows = data.tiles || [];
+  const resp=await fetch(`/orders/chart-data/?tab=${encodeURIComponent(tab)}`,{headers:{"X-Requested-With":"XMLHttpRequest"}});
+  if(!resp.ok){body.innerHTML=`<tr><td colspan="8">Ошибка</td></tr>`;return;}
+  const data=await resp.json();
+  const rows=data.tiles||[];
+  updateBadge(tab,rows.length);
 
-  updateBadge(tabKey, rows.length);
-
-  if (!rows.length) { body.innerHTML=`<tr><td colspan="8">Нет заказов</td></tr>`; return; }
-  body.innerHTML = "";
-
-  for (const r of rows) {
-    const tr = document.createElement("tr");
-    const urg = urgencyClass(r);
-    if (urg === "bad")  tr.classList.add("lr-bad");
-    if (urg === "warn") tr.classList.add("lr-warn");
-
-    const dueParts = [];
-    if (r.due_ldsp  && r.due_ldsp  !== "—") dueParts.push(`ЛДСП: ${r.due_ldsp}${daysBadge(r.ldsp_days_left)}`);
-    if (r.due_film  && r.due_film  !== "—") dueParts.push(`Плёнка: ${r.due_film}${daysBadge(r.film_days_left)}`);
-    if (r.due_paint && r.due_paint !== "—") dueParts.push(`Краска: ${r.due_paint}${daysBadge(r.paint_days_left)}`);
-
-    tr.innerHTML = `
-      <td>
-        <a href="javascript:void(0)" class="js-open-tile"
-           data-order-id="${r.order_id}"
-           data-has-ldsp="${valPresent(r.ldsp_qty) ?"1":"0"}"
-           data-has-film="${valPresent(r.film_m2)  ?"1":"0"}"
-           data-has-paint="${valPresent(r.paint_m2)?"1":"0"}"
-           style="font-weight:700;">
-          № ${escapeHtml(String(r.order_number))}
-        </a>
-      </td>
-      <td>${escapeHtml(r.customer||"")}</td>
-      <td>${valPresent(r.ldsp_qty)  ? escapeHtml(String(r.ldsp_qty)) +"&nbsp;л"  : "—"}</td>
-      <td>${valPresent(r.paint_m2)  ? escapeHtml(String(r.paint_m2))+"&nbsp;м²" : "—"}</td>
-      <td>${valPresent(r.film_m2)   ? escapeHtml(String(r.film_m2)) +"&nbsp;м²" : "—"}</td>
-      <td style="font-size:.83rem;">${dueParts.join("<br>") || "—"}</td>
-      <td>
-        ${renderStatus(r.status_ldsp)}<br>
-        ${renderStatus(r.status_paint)}<br>
-        ${renderStatus(r.status_film)}
-      </td>
-      <td style="font-size:.83rem;">${escapeHtml(r.note||"")}</td>`;
+  if(!rows.length){body.innerHTML=`<tr><td colspan="8" style="padding:16px;text-align:center;color:#94a3b8">Нет заказов</td></tr>`;return;}
+  body.innerHTML="";
+  for(const r of rows){
+    const tr=document.createElement("tr");
+    const urg=urgCls(r);
+    if(urg==="t-bad")  tr.className="lr-bad";
+    if(urg==="t-warn") tr.className="lr-warn";
+    const dues=[];
+    if(r.due_ldsp&&r.due_ldsp!=="—")  dues.push(`ЛДСП: ${r.due_ldsp}${daysBadge(r.ldsp_days_left)}`);
+    if(r.due_film&&r.due_film!=="—")  dues.push(`Плёнка: ${r.due_film}${daysBadge(r.film_days_left)}`);
+    if(r.due_paint&&r.due_paint!=="—")dues.push(`Краска: ${r.due_paint}${daysBadge(r.paint_days_left)}`);
+    tr.innerHTML=`
+      <td><a href="javascript:void(0)" class="js-open-tile"
+         data-order-id="${r.order_id}"
+         data-has-ldsp="${hasVal(r.ldsp_qty)?"1":"0"}"
+         data-has-film="${hasVal(r.film_m2)?"1":"0"}"
+         data-has-paint="${hasVal(r.paint_m2)?"1":"0"}"
+         style="font-weight:800;color:#1d4ed8;">№${esc(String(r.order_number))}</a></td>
+      <td>${esc(r.customer||"")}</td>
+      <td>${hasVal(r.ldsp_qty)?esc(fmtQty(r.ldsp_qty,true))+"&nbsp;л":"—"}</td>
+      <td>${hasVal(r.paint_m2)?esc(String(r.paint_m2))+"&nbsp;м²":"—"}</td>
+      <td>${hasVal(r.film_m2)?esc(String(r.film_m2))+"&nbsp;м²":"—"}</td>
+      <td style="font-size:.78rem;">${dues.join("<br>")||"—"}</td>
+      <td>${chipTable(r.status_ldsp)}<br>${chipTable(r.status_paint)}<br>${chipTable(r.status_film)}</td>
+      <td style="font-size:.78rem;font-style:italic;">${esc(r.note||"")}</td>`;
     body.appendChild(tr);
   }
 }
 
-/* ───── СЧЁТЧИКИ НА ВКЛАДКАХ ───── */
-function updateBadge(tabKey, count) {
-  const b = document.getElementById(`badge_${tabKey}`);
-  if (b) b.textContent = count || 0;
+/* ─── СЧЁТЧИКИ ─── */
+function updateBadge(tab,count){
+  const b=document.getElementById(`badge_${tab}`);
+  if(b) b.textContent=count||0;
 }
 
-/* ───── ИНИЦИАЛИЗАЦИЯ ───── */
-(async () => {
-  if (activeTab === "general") {
-    document.getElementById("viewToggleBar").style.display = "none";
-    document.getElementById("tilesListWrap").style.display = "none";
-    await loadGeneralTable();
+/* ─── ИНИЦИАЛИЗАЦИЯ ─── */
+(async()=>{
+  if(activeTab==="general"){
+    document.getElementById("viewToggleBar").style.display="none";
+    document.getElementById("tilesListWrap").style.display="none";
+    document.getElementById("tilesWrap").style.display="none";
+    await loadGeneral();
   } else {
-    await reloadTilesTab(activeTab);
+    await reloadTab(activeTab);
   }
 })();
 
-/* ───── ПЕРЕКЛЮЧАТЕЛЬ ПЛИТКИ/СПИСОК ───── */
-function isTilesTab(tab) { return ["technologist","workshop","paint","film"].includes(tab); }
-function viewKey(tab) { return `chart_view_${tab}`; }
-function getViewMode(tab) { return localStorage.getItem(viewKey(tab)) || "tiles"; }
-function setViewMode(tab, mode) { localStorage.setItem(viewKey(tab), mode); }
-function updateToggleButtons(mode) {
-  document.getElementById("btnViewTiles")?.classList.toggle("is-selected", mode==="tiles");
-  document.getElementById("btnViewList" )?.classList.toggle("is-selected", mode==="list");
+/* ─── ПЕРЕКЛЮЧАТЕЛЬ ПЛИТКИ/СПИСОК ─── */
+const TILE_TABS=new Set(["technologist","workshop","paint","film"]);
+function getMode(tab){return localStorage.getItem("cv_"+tab)||"tiles";}
+function setMode(tab,m){localStorage.setItem("cv_"+tab,m);}
+function syncToggleBtns(mode){
+  document.getElementById("btnViewTiles").classList.toggle("active",mode==="tiles");
+  document.getElementById("btnViewList" ).classList.toggle("active",mode==="list");
 }
-async function reloadTilesTab(tab) {
-  const bar      = document.getElementById("viewToggleBar");
-  const wrapTiles = document.getElementById("tilesWrap");
-  const wrapList  = document.getElementById("tilesListWrap");
-  if (!isTilesTab(tab)) { if(bar) bar.style.display="none"; if(wrapList) wrapList.style.display="none"; return; }
-  if (bar) bar.style.display = "";
-  const mode = getViewMode(tab);
-  updateToggleButtons(mode);
-  if (mode === "list") {
-    if(wrapTiles) wrapTiles.style.display = "none";
-    if(wrapList)  wrapList.style.display  = "";
-    await loadTilesList(tab);
+
+async function reloadTab(tab){
+  const bar=document.getElementById("viewToggleBar");
+  const wTiles=document.getElementById("tilesWrap");
+  const wList=document.getElementById("tilesListWrap");
+  if(!TILE_TABS.has(tab)){bar.style.display="none";return;}
+  bar.style.display="";
+  const mode=getMode(tab);
+  syncToggleBtns(mode);
+  if(mode==="list"){
+    wTiles.style.display="none"; wList.style.display="";
+    await loadList(tab);
   } else {
-    if(wrapList)  wrapList.style.display  = "none";
-    if(wrapTiles) wrapTiles.style.display = "";
+    wList.style.display="none"; wTiles.style.display="";
     await loadTiles(tab);
   }
 }
-document.getElementById("btnViewTiles")?.addEventListener("click", async () => {
-  setViewMode(activeTab,"tiles"); await reloadTilesTab(activeTab);
+
+document.getElementById("btnViewTiles")?.addEventListener("click",async()=>{
+  setMode(activeTab,"tiles"); await reloadTab(activeTab);
 });
-document.getElementById("btnViewList")?.addEventListener("click", async () => {
-  setViewMode(activeTab,"list");  await reloadTilesTab(activeTab);
+document.getElementById("btnViewList")?.addEventListener("click",async()=>{
+  setMode(activeTab,"list"); await reloadTab(activeTab);
 });
 
-/* ───── КЛИК НА ПЛИТКУ ───── */
-document.addEventListener("click", (e) => {
-  const tile = e.target.closest(".js-tile");
-  if (!tile) return;
-  currentEditFlags = {
-    has_ldsp:  tile.dataset.hasLdsp  === "1",
-    has_film:  tile.dataset.hasFilm  === "1",
-    has_paint: tile.dataset.hasPaint === "1",
-  };
+/* ─── КЛИКИ НА ПЛИТКИ ─── */
+document.addEventListener("click",(e)=>{
+  const tile=e.target.closest(".js-tile");
+  if(!tile) return;
+  currentFlags={has_ldsp:tile.dataset.hasLdsp==="1",has_film:tile.dataset.hasFilm==="1",has_paint:tile.dataset.hasPaint==="1"};
   openEditModal(tile.dataset.orderId);
 });
-document.addEventListener("click", (e) => {
-  const a = e.target.closest(".js-open-tile");
-  if (!a) return;
-  currentEditFlags = {
-    has_ldsp:  a.dataset.hasLdsp  === "1",
-    has_film:  a.dataset.hasFilm  === "1",
-    has_paint: a.dataset.hasPaint === "1",
-  };
+document.addEventListener("click",(e)=>{
+  const a=e.target.closest(".js-open-tile");
+  if(!a) return;
+  currentFlags={has_ldsp:a.dataset.hasLdsp==="1",has_film:a.dataset.hasFilm==="1",has_paint:a.dataset.hasPaint==="1"};
   openEditModal(a.dataset.orderId);
 });
-document.addEventListener("click", (e) => {
-  const btn = e.target.closest(".js-edit-row");
-  if (!btn) return;
-  currentEditFlags = { has_ldsp:true, has_film:true, has_paint:true };
-  openEditModal(btn.dataset.orderId);
+document.addEventListener("click",(e)=>{
+  const b=e.target.closest(".js-edit-row");
+  if(!b) return;
+  currentFlags={has_ldsp:true,has_film:true,has_paint:true};
+  openEditModal(b.dataset.orderId);
 });
 
-/* ───── МОДАЛКА: ИНФО ───── */
-document.addEventListener("click", async (e) => {
-  const a = e.target.closest(".js-order-info");
-  if (!a) return;
-  const body = document.getElementById("orderInfoBody");
-  body.innerHTML = "Загрузка...";
+/* ─── МОДАЛКА ИНФО ─── */
+document.addEventListener("click",async(e)=>{
+  const a=e.target.closest(".js-order-info");
+  if(!a) return;
+  const body=document.getElementById("orderInfoBody");
+  body.innerHTML="Загрузка...";
   openModal("orderInfoModal");
-  try {
-    const resp = await fetch(`/orders/info/${a.dataset.orderId}/`,
-      {headers:{"X-Requested-With":"XMLHttpRequest"}});
-    if (!resp.ok) throw new Error("HTTP "+resp.status);
-    const d = await resp.json();
-    body.innerHTML = `<div class="content">
-      <p><strong>№ заказа:</strong> ${escapeHtml(String(d.order_number??""))}</p>
-      <p><strong>Имя:</strong> ${escapeHtml(d.customer_name||"")}</p>
-      <p><strong>Фамилия:</strong> ${escapeHtml(d.last_name||"")}</p>
-      <p><strong>ИИН:</strong> ${escapeHtml(d.iin||"")}</p>
-      <p><strong>Телефон:</strong> ${escapeHtml(d.phone||"")}</p>
+  try{
+    const resp=await fetch(`/orders/info/${a.dataset.orderId}/`,{headers:{"X-Requested-With":"XMLHttpRequest"}});
+    if(!resp.ok) throw new Error();
+    const d=await resp.json();
+    body.innerHTML=`<div class="content">
+      <p><strong>№ заказа:</strong> ${esc(String(d.order_number??""))}</p>
+      <p><strong>Имя:</strong> ${esc(d.customer_name||"")}</p>
+      <p><strong>Фамилия:</strong> ${esc(d.last_name||"")}</p>
+      <p><strong>ИИН:</strong> ${esc(d.iin||"")}</p>
+      <p><strong>Телефон:</strong> ${esc(d.phone||"")}</p>
     </div>`;
-  } catch(err) {
-    body.innerHTML = `<div class="notification is-danger">Ошибка загрузки</div>`;
-  }
+  }catch{body.innerHTML=`<div class="notification is-danger">Ошибка загрузки</div>`;}
 });
-document.addEventListener("click", (e) => {
-  const modal = document.getElementById("orderInfoModal");
-  if (!modal.classList.contains("is-active")) return;
-  if (e.target.id==="orderInfoClose" || e.target.classList.contains("modal-background")
-      || e.target.classList.contains("delete")) closeModal("orderInfoModal");
+document.addEventListener("click",(e)=>{
+  const m=document.getElementById("orderInfoModal");
+  if(!m.classList.contains("is-active")) return;
+  if(e.target.id==="orderInfoClose"||e.target.classList.contains("modal-background")||e.target.classList.contains("delete"))
+    closeModal("orderInfoModal");
 });
 
-/* ───── МОДАЛКА: РЕДАКТИРОВАНИЕ ───── */
-let currentEditOrderId = null;
-let currentEditFlags = { has_ldsp:true, has_film:true, has_paint:true };
-const STATUS_OPTIONS = ["ОЖИДАЕТ","КОРРЕКТИРОВКА","СТОП","ВЫДАН В ЦЕХ","ГОТОВО","ВЫДАН"];
+/* ─── МОДАЛКА РЕДАКТИРОВАНИЯ ─── */
+let currentOrderId=null;
+let currentFlags={has_ldsp:true,has_film:true,has_paint:true};
+const STATUS_OPTS=["ОЖИДАЕТ","КОРРЕКТИРОВКА","СТОП","ВЫДАН В ЦЕХ","ГОТОВО","ВЫДАН"];
 
-function fillSelect(sel, value) {
-  sel.innerHTML = "";
-  for (const opt of STATUS_OPTIONS) {
-    const o = document.createElement("option");
-    o.value = opt; o.textContent = opt;
-    if (opt === value) o.selected = true;
-    sel.appendChild(o);
+function fillSel(sel,val){
+  sel.innerHTML="";
+  for(const o of STATUS_OPTS){
+    const opt=document.createElement("option");
+    opt.value=opt.textContent=o;
+    if(o===val) opt.selected=true;
+    sel.appendChild(opt);
   }
 }
-function openModal(id)  { document.getElementById(id).classList.add("is-active"); }
-function closeModal(id) { document.getElementById(id).classList.remove("is-active"); }
+function openModal(id){document.getElementById(id).classList.add("is-active");}
+function closeModal(id){document.getElementById(id).classList.remove("is-active");}
 
-function applyTechModalVisibility() {
-  const isWorkshop = (activeTab === "workshop");
-  const isPaint    = (activeTab === "paint");
-  const isFilm     = (activeTab === "film");
-  const isTech     = (activeTab === "technologist");
+function applyModalVisibility(){
+  const isWS=activeTab==="workshop";
+  const isPT=activeTab==="paint";
+  const isFL=activeTab==="film";
+  const isTH=activeTab==="technologist";
+  const hideExtra=isWS||isPT||isFL||isTH;
+  document.querySelectorAll(".js-extra").forEach(el=>el.classList.toggle("is-hidden",hideExtra));
 
-  // Скрываем расширенные поля (сроки, stop/play) для всех цеховых вкладок
-  const hideExtra = isTech || isWorkshop || isPaint || isFilm;
-  document.querySelectorAll(".js-tech-hide").forEach(el =>
-    el.classList.toggle("is-hidden", hideExtra));
-
-  if (isWorkshop) {
-    // ЦЕХ: только ЛДСП
-    toggleStatusBlock("ldsp",  true);
-    toggleStatusBlock("paint", false);
-    toggleStatusBlock("film",  false);
-  } else if (isPaint) {
-    // КРАСКА: только КРАСКА
-    toggleStatusBlock("ldsp",  false);
-    toggleStatusBlock("paint", true);
-    toggleStatusBlock("film",  false);
-  } else if (isFilm) {
-    // ПЛЁНКА: только ПЛЁНКА
-    toggleStatusBlock("ldsp",  false);
-    toggleStatusBlock("paint", false);
-    toggleStatusBlock("film",  true);
-  } else {
-    // ОБЩИЙ / ТЕХНОЛОГ: по наличию материала в заказе
-    toggleStatusBlock("ldsp",  currentEditFlags.has_ldsp);
-    toggleStatusBlock("film",  currentEditFlags.has_film);
-    toggleStatusBlock("paint", currentEditFlags.has_paint);
+  if(isWS){showBlock("ldsp",true);  showBlock("paint",false);showBlock("film",false);}
+  else if(isPT){showBlock("ldsp",false);showBlock("paint",true); showBlock("film",false);}
+  else if(isFL){showBlock("ldsp",false);showBlock("paint",false);showBlock("film",true);}
+  else{
+    showBlock("ldsp", currentFlags.has_ldsp);
+    showBlock("paint",currentFlags.has_paint);
+    showBlock("film", currentFlags.has_film);
   }
 }
-function toggleStatusBlock(material, show) {
-  const block = document.getElementById(`statusBlock_${material}`);
-  const sel   = document.getElementById(`m_status_${material}`);
-  if (block) block.classList.toggle("is-hidden", !show);
-  if (sel)   sel.disabled = !show;
+
+function showBlock(mat,show){
+  const b=document.getElementById(`statusBlock_${mat}`);
+  const s=document.getElementById(`m_status_${mat}`);
+  if(b) b.classList.toggle("is-hidden",!show);
+  if(s) s.disabled=!show;
 }
 
-async function openEditModal(orderId) {
-  currentEditOrderId = orderId;
-  document.getElementById("chartEditModal").dataset.tab = activeTab;
-  const resp = await fetch(`/orders/chart-row/${orderId}/`,
-    {headers:{"X-Requested-With":"XMLHttpRequest"}});
-  if (!resp.ok) { alert("Ошибка загрузки данных"); return; }
-  const d = await resp.json();
-  document.getElementById("chartEditTitle").textContent =
-    `Редактирование заказа №${d.order_number} — ${d.customer||""}`;
-  fillSelect(document.getElementById("m_status_ldsp"),  d.status_ldsp);
-  fillSelect(document.getElementById("m_status_film"),  d.status_film);
-  fillSelect(document.getElementById("m_status_paint"), d.status_paint);
-  document.getElementById("m_due_ldsp_override").value  = d.due_ldsp_override  || "";
-  document.getElementById("m_due_film_override").value  = d.due_film_override  || "";
-  document.getElementById("m_due_paint_override").value = d.due_paint_override || "";
-  document.getElementById("m_extra_days_ldsp").value    = d.extra_days_ldsp  ?? 0;
-  document.getElementById("m_extra_days_film").value    = d.extra_days_film  ?? 0;
-  document.getElementById("m_extra_days_paint").value   = d.extra_days_paint ?? 0;
-  document.getElementById("m_stop_until").textContent   = d.stop_until || "—";
-  document.getElementById("m_note").value = d.note || "";
-  applyTechModalVisibility();
+async function openEditModal(orderId){
+  currentOrderId=orderId;
+  document.getElementById("chartEditModal").dataset.tab=activeTab;
+  const resp=await fetch(`/orders/chart-row/${orderId}/`,{headers:{"X-Requested-With":"XMLHttpRequest"}});
+  if(!resp.ok){alert("Ошибка загрузки данных");return;}
+  const d=await resp.json();
+  document.getElementById("chartEditTitle").textContent=
+    `Редактирование — Заказ №${d.order_number}${d.customer?" · "+d.customer:""}`;
+  fillSel(document.getElementById("m_status_ldsp"), d.status_ldsp);
+  fillSel(document.getElementById("m_status_film"), d.status_film);
+  fillSel(document.getElementById("m_status_paint"),d.status_paint);
+  document.getElementById("m_due_ldsp_override").value =d.due_ldsp_override||"";
+  document.getElementById("m_due_film_override").value =d.due_film_override||"";
+  document.getElementById("m_due_paint_override").value=d.due_paint_override||"";
+  document.getElementById("m_extra_days_ldsp").value   =d.extra_days_ldsp??0;
+  document.getElementById("m_extra_days_film").value   =d.extra_days_film??0;
+  document.getElementById("m_extra_days_paint").value  =d.extra_days_paint??0;
+  document.getElementById("m_stop_until").textContent  =d.stop_until||"—";
+  document.getElementById("m_note").value               =d.note||"";
+  applyModalVisibility();
   openModal("chartEditModal");
 }
 
-async function postEdit(action=null) {
-  if (!currentEditOrderId) return;
-  const modal = document.getElementById("chartEditModal");
-  const tab   = modal.dataset.tab || activeTab || "general";
-  const form  = new URLSearchParams();
-  form.append("tab",                tab);
-  form.append("status_ldsp",        document.getElementById("m_status_ldsp").value);
-  form.append("status_film",        document.getElementById("m_status_film").value);
-  form.append("status_paint",       document.getElementById("m_status_paint").value);
+async function postEdit(action=null){
+  if(!currentOrderId) return;
+  const tab=document.getElementById("chartEditModal").dataset.tab||activeTab;
+  const form=new URLSearchParams();
+  form.append("tab",             tab);
+  form.append("status_ldsp",     document.getElementById("m_status_ldsp").value);
+  form.append("status_film",     document.getElementById("m_status_film").value);
+  form.append("status_paint",    document.getElementById("m_status_paint").value);
   form.append("due_ldsp_override",  document.getElementById("m_due_ldsp_override").value);
   form.append("due_film_override",  document.getElementById("m_due_film_override").value);
   form.append("due_paint_override", document.getElementById("m_due_paint_override").value);
@@ -866,69 +780,43 @@ async function postEdit(action=null) {
   form.append("extra_days_film",    document.getElementById("m_extra_days_film").value);
   form.append("extra_days_paint",   document.getElementById("m_extra_days_paint").value);
   form.append("note",               document.getElementById("m_note").value);
-  if (action) form.append("action", action);
-  if (action === "stop") form.append("stop_days", document.getElementById("m_stop_days").value);
+  if(action) form.append("action",action);
+  if(action==="stop") form.append("stop_days",document.getElementById("m_stop_days").value);
 
-  const resp = await fetch(`/orders/chart-row/${currentEditOrderId}/save/`, {
+  const resp=await fetch(`/orders/chart-row/${currentOrderId}/save/`,{
     method:"POST",
-    headers:{
-      "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
-      "X-CSRFToken":getCookie("csrftoken"),
-      "X-Requested-With":"XMLHttpRequest",
-    },
-    body:form.toString(),
+    headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRFToken":getCookie("csrftoken"),"X-Requested-With":"XMLHttpRequest"},
+    body:form.toString()
   });
-  if (!resp.ok) { alert("Ошибка сохранения"); return; }
-  if (["technologist","workshop","paint","film"].includes(activeTab)) {
-    await loadTiles(activeTab);
-  } else {
-    await loadGeneralTable();
-  }
+  if(!resp.ok){alert("Ошибка сохранения");return;}
+  if(TILE_TABS.has(activeTab)) await loadTiles(activeTab);
+  else await loadGeneral();
 }
 
-document.getElementById("btnSaveChartRow")?.addEventListener("click", async () => {
-  await postEdit(null); closeModal("chartEditModal");
-});
-document.getElementById("btnStop")?.addEventListener("click", async () => {
-  const n = Number(document.getElementById("m_stop_days").value || 0);
-  if (!n || n < 1) { alert("Укажи дни стопа"); return; }
+document.getElementById("btnSaveChartRow")?.addEventListener("click",async()=>{await postEdit();closeModal("chartEditModal");});
+document.getElementById("btnStop")?.addEventListener("click",async()=>{
+  const n=Number(document.getElementById("m_stop_days").value||0);
+  if(!n||n<1){alert("Укажи дни стопа");return;}
   await postEdit("stop"); closeModal("chartEditModal");
 });
-document.getElementById("btnPlay")?.addEventListener("click", async () => {
-  await postEdit("play"); closeModal("chartEditModal");
-});
-document.getElementById("btnCloseChartModal")?.addEventListener("click",
-  () => closeModal("chartEditModal"));
-document.querySelector("#chartEditModal .modal-background")?.addEventListener("click",
-  () => closeModal("chartEditModal"));
-document.querySelector("#chartEditModal .delete")?.addEventListener("click",
-  () => closeModal("chartEditModal"));
+document.getElementById("btnPlay")?.addEventListener("click",async()=>{await postEdit("play");closeModal("chartEditModal");});
+document.getElementById("btnCloseChartModal")?.addEventListener("click",()=>closeModal("chartEditModal"));
+document.querySelector("#chartEditModal .modal-background")?.addEventListener("click",()=>closeModal("chartEditModal"));
+document.querySelector("#chartEditModal .delete")?.addEventListener("click",()=>closeModal("chartEditModal"));
 
-/* ───── АВТОСОХРАНЕНИЕ ПРИМЕЧАНИЯ ───── */
-let noteTimer = null;
-document.addEventListener("input", (e) => {
-  const ta = e.target.closest(".js-note");
-  if (!ta) return;
-  if (noteTimer) clearTimeout(noteTimer);
-  noteTimer = setTimeout(async () => {
-    const form = new URLSearchParams();
-    form.append("order_id", ta.dataset.orderId);
-    form.append("note", ta.value);
-    await fetch("/orders/chart-note/save/", {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
-        "X-CSRFToken":getCookie("csrftoken"),
-        "X-Requested-With":"XMLHttpRequest",
-      },
-      body:form.toString(),
-    });
-  }, 500);
+/* ─── АВТОСОХРАНЕНИЕ ПРИМЕЧАНИЯ (таблица) ─── */
+let _nt=null;
+document.addEventListener("input",(e)=>{
+  const ta=e.target.closest(".js-note"); if(!ta) return;
+  if(_nt) clearTimeout(_nt);
+  _nt=setTimeout(async()=>{
+    const f=new URLSearchParams();
+    f.append("order_id",ta.dataset.orderId);
+    f.append("note",ta.value);
+    await fetch("/orders/chart-note/save/",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","X-CSRFToken":getCookie("csrftoken"),"X-Requested-With":"XMLHttpRequest"},body:f.toString()});
+  },500);
 });
 
-function getCookie(name) {
-  const v = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');
-  return v ? v.pop() : '';
-}
+function getCookie(n){const v=document.cookie.match('(^|;)\\s*'+n+'\\s*=\\s*([^;]+)');return v?v.pop():'';}
 </script>
 {% endblock %}
