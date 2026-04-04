@@ -439,6 +439,9 @@ def chart_row_get(request, order_id: int):
 
         "stop_until": sch.stop_until.isoformat() if sch.stop_until else "",
         "note": o.chart_note or "",
+        "done_at_ldsp":  sch.done_at_ldsp.strftime("%d.%m.%Y")  if sch.done_at_ldsp  else "",
+        "done_at_film":  sch.done_at_film.strftime("%d.%m.%Y")  if sch.done_at_film  else "",
+        "done_at_paint": sch.done_at_paint.strftime("%d.%m.%Y") if sch.done_at_paint else "",
     })
 @login_required
 @require_http_methods(["POST"])
@@ -502,6 +505,21 @@ def chart_row_save(request, order_id: int):
     if o.chart_note != note_val:
         o.chart_note = note_val
         o.save(update_fields=["chart_note"])
+
+    # Фиксируем дату фактической готовности при смене статуса
+    today_date = timezone.localdate()
+    for mat in ("ldsp", "film", "paint"):
+        new_status = getattr(sch, f"status_{mat}")
+        done_field = f"done_at_{mat}"
+        current_done = getattr(sch, done_field)
+        if new_status in ("ГОТОВО", "ВЫДАН"):
+            # Ставим дату если ещё не стоит
+            if not current_done:
+                setattr(sch, done_field, today_date)
+        else:
+            # Сбрасываем дату если статус убрали с ГОТОВО
+            if current_done:
+                setattr(sch, done_field, None)
 
     sch.save()
 

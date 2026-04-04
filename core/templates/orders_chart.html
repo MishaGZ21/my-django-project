@@ -171,6 +171,9 @@ tr.rb td { background:rgba(254,226,226,.6) !important; }
 tr.rw td { background:rgba(254,249,195,.6) !important; }
 tr.ro td { background:rgba(220,252,231,.4) !important; }
 
+
+/* Дата фактической готовности */
+.mat-done-date { color:#16a34a !important; font-weight:700 !important; font-size:.72rem; }
 </style>
 
 <section class="section chart-page">
@@ -442,13 +445,22 @@ function matBadgeMeta(st){
 }
 
 /* ─── СТРОКА МАТЕРИАЛА ─── */
-function renderMat(label, ico, cls, qty, status, due, daysLeft, isInt){
+function renderMat(label, ico, cls, qty, status, due, daysLeft, isInt, doneAt){
   if(!hasVal(qty)) return "";
   const m  = matBadgeMeta(status);
-  const n  = (daysLeft!==null&&daysLeft!==undefined)?Number(daysLeft):null;
-  const dc = n!==null?(n<=0?"ov":n<=5?"sn":""):"";
-  const dueHtml = (due&&due!=="—")
-    ? `<div class="mat-date ${dc}">📅 ${esc(due)} ${daysBadge(daysLeft)}</div>` : "";
+  const DONE = status==="ГОТОВО"||status==="ВЫДАН";
+
+  // Дата: если ГОТОВО/ВЫДАН и есть doneAt — показываем фактическую дату
+  let dueHtml = "";
+  if(DONE && doneAt){
+    const ico2 = status==="ВЫДАН"?"📦":"✅";
+    dueHtml = `<div class="mat-date mat-done-date">${ico2} факт: ${esc(doneAt)}</div>`;
+  } else if(due && due!=="—"){
+    const n = (daysLeft!==null&&daysLeft!==undefined)?Number(daysLeft):null;
+    const dc = n!==null?(n<=0?"ov":n<=5?"sn":""):"";
+    dueHtml = `<div class="mat-date ${dc}">📅 ${esc(due)} ${daysBadge(daysLeft)}</div>`;
+  }
+
   return `
     <div class="mat ${cls}">
       <div class="mat-top">
@@ -574,9 +586,9 @@ async function loadTiles(tab){
     el.dataset.hasPaint=hasVal(r.paint_m2)?"1":"0";
 
     const mats =
-      renderMat("ЛДСП",  "🪵","m-ldsp", r.ldsp_qty, r.status_ldsp, r.due_ldsp, r.ldsp_days_left, true)+
-      renderMat("Краска","🎨","m-paint",r.paint_m2,r.status_paint,r.due_paint,r.paint_days_left,false)+
-      renderMat("Плёнка","🎞️","m-film", r.film_m2, r.status_film, r.due_film, r.film_days_left,  false);
+      renderMat("ЛДСП",  "🪵","m-ldsp", r.ldsp_qty, r.status_ldsp, r.due_ldsp, r.ldsp_days_left, true,  r.done_at_ldsp||"")+
+      renderMat("Краска","🎨","m-paint",r.paint_m2,r.status_paint,r.due_paint,r.paint_days_left,false, r.done_at_paint||"")+
+      renderMat("Плёнка","🎞️","m-film", r.film_m2, r.status_film, r.due_film, r.film_days_left,  false, r.done_at_film||"");
 
     const colors=renderColors([...(r.paint_colors||[]),...(r.film_colors||[])]);
     const note=r.note&&r.note.trim()
