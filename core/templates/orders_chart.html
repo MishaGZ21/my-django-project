@@ -61,26 +61,26 @@ tr.rd td{opacity:.45}
 .db-neg{background:#fee2e2;color:#b91c1c}
 
 /* ── ПЛИТКИ — СЕТКА ── */
-.tiles-grid{display:grid;grid-template-columns:repeat(auto-fill,230px);gap:14px;justify-content:start}
+.tiles-grid{display:grid!important;grid-template-columns:repeat(auto-fill,230px)!important;gap:14px;justify-content:start;align-content:start}
 @media(max-width:768px){.tiles-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}}
 
 /* ── ПЛИТКА ── */
-.tile{width:230px;border-radius:14px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.08),0 0 0 1.5px rgba(0,0,0,.06);cursor:pointer;transition:transform .15s,box-shadow .15s;overflow:hidden;display:flex;flex-direction:column}
-.tile:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.14),0 0 0 1.5px rgba(0,0,0,.08)}
+.ocard{width:230px!important;border-radius:14px!important;background:#fff!important;box-shadow:0 1px 4px rgba(0,0,0,.08),0 0 0 1.5px rgba(0,0,0,.06)!important;cursor:pointer;transition:transform .15s,box-shadow .15s;overflow:hidden!important;display:flex!important;flex-direction:column!important;flex-shrink:0!important}
+.ocard:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.14),0 0 0 1.5px rgba(0,0,0,.08)}
 
 /* Цветная полоска сверху */
-.tile-stripe{height:5px;width:100%;flex-shrink:0}
-.t-ok  .tile-stripe{background:linear-gradient(90deg,#22c55e,#4ade80)}
-.t-warn .tile-stripe{background:linear-gradient(90deg,#eab308,#fbbf24)}
-.t-bad  .tile-stripe{background:linear-gradient(90deg,#ef4444,#f87171)}
+.ocard .ocard-stripe{height:5px;width:100%;flex-shrink:0}
+.t-ok  .ocard .ocard-stripe{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.t-warn .ocard .ocard-stripe{background:linear-gradient(90deg,#eab308,#fbbf24)}
+.t-bad  .ocard .ocard-stripe{background:linear-gradient(90deg,#ef4444,#f87171)}
 
 /* Шапка */
-.tile-head{padding:12px 13px 4px}
-.tile-num{font-size:1.1rem;font-weight:900;color:#0f172a;letter-spacing:-.03em;line-height:1;margin-bottom:2px}
-.tile-name{font-size:.79rem;font-weight:600;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard-head{padding:12px 13px 4px}
+.ocard-num{font-size:1.1rem;font-weight:900;color:#0f172a;letter-spacing:-.03em;line-height:1;margin-bottom:2px}
+.ocard-name{font-size:.79rem;font-weight:600;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* Материалы */
-.tile-mats{padding:8px 13px;display:flex;flex-direction:column;gap:7px;flex:1}
+.ocard-mats{padding:8px 13px;display:flex;flex-direction:column;gap:7px;flex:1}
 .mat{border-radius:9px;padding:8px 10px}
 .mat.m-ldsp {background:#eff6ff;border:1.5px solid #bfdbfe;border-left:3px solid #3b82f6}
 .mat.m-paint{background:#fff7ed;border:1.5px solid #fed7aa;border-left:3px solid #f97316}
@@ -111,7 +111,7 @@ tr.rd td{opacity:.45}
 .color-fresa{font-size:.65rem;color:#64748b;background:#e2e8f0;padding:1px 6px;border-radius:4px}
 
 /* Прогресс */
-.tile-prog{padding:8px 13px 10px;margin-top:auto}
+.ocard-prog{padding:8px 13px 10px;margin-top:auto}
 .prog-labels{display:flex;justify-content:space-between;font-size:.63rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
 .prog-track{height:5px;background:#e2e8f0;border-radius:99px;overflow:hidden}
 .prog-fill{height:100%;border-radius:99px;transition:width .4s}
@@ -120,8 +120,8 @@ tr.rd td{opacity:.45}
 .pf-zero{background:#e2e8f0}
 
 /* Примечание */
-.tile-note{margin:4px 13px 10px;padding:6px 9px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 7px 7px 0;font-size:.71rem;color:#78350f;font-style:italic;line-height:1.5;display:flex;gap:5px}
-.tile-note-ico{flex-shrink:0;font-style:normal}
+.ocard-note{margin:4px 13px 10px;padding:6px 9px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 7px 7px 0;font-size:.71rem;color:#78350f;font-style:italic;line-height:1.5;display:flex;gap:5px}
+.ocard-note-ico{flex-shrink:0;font-style:normal}
 
 /* ── СПИСОК ── */
 .list-box{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden}
@@ -440,7 +440,7 @@ function renderProgress(r){
   const pct=Math.round(done/total*100);
   const fc=pct===0?"pf-zero":pct<100?"pf-warn":"pf-ok";
   return `
-    <div class="tile-prog">
+    <div class="ocard-prog">
       <div class="prog-labels"><span>Готовность</span><span>${done} / ${total}</span></div>
       <div class="prog-track"><div class="prog-fill ${fc}" style="width:${pct}%"></div></div>
     </div>`;
@@ -533,7 +533,7 @@ async function loadTiles(tab){
   for(const r of tiles){
     const el=document.createElement("div");
     const urg=urgCls(r);
-    el.className=`tile js-tile ${urg}`;
+    el.className=`ocard js-tile ${urg}`;
     el.dataset.orderId=r.order_id;
     el.dataset.hasLdsp=hasVal(r.ldsp_qty)?"1":"0";
     el.dataset.hasFilm=hasVal(r.film_m2)?"1":"0";
@@ -546,15 +546,15 @@ async function loadTiles(tab){
 
     const colors=renderColors([...(r.paint_colors||[]),...(r.film_colors||[])]);
     const note=r.note&&r.note.trim()
-      ?`<div class="tile-note"><span class="tile-note-ico">💬</span>${esc(r.note.trim())}</div>`:"";
+      ?`<div class="ocard-note"><span class="ocard-note-ico">💬</span>${esc(r.note.trim())}</div>`:"";
 
     el.innerHTML=`
-      <div class="tile-stripe"></div>
-      <div class="tile-head">
-        <div class="tile-num">№&thinsp;${esc(String(r.order_number??""))}</div>
-        <div class="tile-name">${esc(r.customer||"")}</div>
+      <div class="ocard-stripe"></div>
+      <div class="ocard-head">
+        <div class="ocard-num">№&thinsp;${esc(String(r.order_number??""))}</div>
+        <div class="ocard-name">${esc(r.customer||"")}</div>
       </div>
-      <div class="tile-mats">${mats}</div>
+      <div class="ocard-mats">${mats}</div>
       ${colors}
       ${renderProgress(r)}
       ${note}`;
