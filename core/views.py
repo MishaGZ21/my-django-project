@@ -438,6 +438,7 @@ def chart_row_get(request, order_id: int):
         "extra_days_paint": sch.extra_days_paint,
 
         "stop_until": sch.stop_until.isoformat() if sch.stop_until else "",
+        "note": o.chart_note or "",
     })
 @login_required
 @require_http_methods(["POST"])
