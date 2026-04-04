@@ -497,6 +497,12 @@ def chart_row_save(request, order_id: int):
         if sch.status_paint == "ОТЛОЖЕН": sch.status_paint = "ОЖИДАЕТ"
 
 
+    # примечание (из модалки редактирования)
+    note_val = (request.POST.get("note") or "").strip()
+    if o.chart_note != note_val:
+        o.chart_note = note_val
+        o.save(update_fields=["chart_note"])
+
     sch.save()
 
     return JsonResponse({"ok": True})
