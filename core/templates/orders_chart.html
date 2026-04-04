@@ -412,7 +412,7 @@ function urgCls(r){
   if(!vals.length) return "";
   const m=Math.min(...vals);
   // m<0 = просрочено, 0-10 = критично, >10 = нормально
-  return m<0?"t-bad":m<=10?"t-warn":"t-ok";
+  return m<0?"t-bad":m<=4?"t-warn":"t-ok";
 }
 
 /* ─── СТАТУС ДЛЯ ТАБЛИЦЫ ─── */
