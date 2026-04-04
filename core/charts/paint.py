@@ -5,21 +5,23 @@ from core.charts._base import is_stopped, due_key
 
 
 def _get_paint_colors(order):
-    """Собирает список цветов краски из FacadeSheet (до 10 цветов)."""
-    fs = getattr(order, "facade_sheet", None)
-    if not fs:
+    """Собирает цвета краски из Contract.spec_json (mdf_paint_list по всем группам)."""
+    contract = getattr(order, "contract", None)
+    if not contract:
         return []
+    spec = contract.spec_json or []
     colors = []
-    for i in range(1, 11):
-        name  = getattr(fs, f"paint_color{i}_name",  None)
-        m2    = getattr(fs, f"paint_color{i}_m2",    None)
-        fresa = getattr(fs, f"paint_color{i}_fresa", None)
-        if name and str(name).strip():
-            colors.append({
-                "name":  str(name).strip(),
-                "m2":    str(m2) if m2 is not None else "—",
-                "fresa": str(fresa).strip() if fresa and str(fresa).strip() else "—",
-            })
+    for group in spec:
+        for item in group.get("mdf_paint_list", []):
+            color = (item.get("color") or "").strip()
+            value = (item.get("value") or "").strip()   # тип/фреза
+            area  = (item.get("area")  or "").strip().replace(",", ".")
+            if color or value:
+                colors.append({
+                    "name":  color or value,
+                    "m2":    area or "—",
+                    "fresa": value if color else "—",
+                })
     return colors
 
 
@@ -46,7 +48,7 @@ def get_data(request):
         Order.objects
         .filter(main_contract_signed=True, contract_signed_at__isnull=False)
         .order_by("-id")
-        .select_related("calculation", "facade_sheet")   # ← добавлен facade_sheet
+        .select_related("calculation", "contract")   # ← contract вместо facade_sheet
     )
 
     rows = []
@@ -57,22 +59,16 @@ def get_data(request):
 
         r = build_general_row(o, today, _cfg_general, _cfg_paint, tab_key="paint")
 
-        # показываем только если есть краска
         if r.get("paint_m2") in (None, 0, "", "—"):
             continue
-
-        # показываем только если выдано в цех покраски
         if sch.status_paint != "ВЫДАН В ЦЕХ":
             continue
 
-        # ← добавляем цвета краски и фрезы
         r["paint_colors"] = _get_paint_colors(o)
-
         rows.append(r)
 
     rows.sort(key=due_key)
 
-    # убираем служебные поля
     for r in rows:
         r.pop("_is_overdue", None)
         r.pop("_is_done",    None)
