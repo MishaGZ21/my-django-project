@@ -2,377 +2,246 @@
 {% block title %}График заказов{% endblock %}
 {% block content %}
 <style>
-@media screen and (min-width: 1408px) {
-  .container:not(.is-max-desktop):not(.is-max-widescreen) { max-width: 2200px !important; }
-}
-@media screen and (min-width: 769px) {
-  .modal-card, .modal-content { width: 750px; }
-}
-@media screen and (min-width: 1024px) {
-  .section { padding: 1rem 1rem; }
-}
-@media (max-width: 768px) {
-  .tiles-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
-}
+@media screen and (min-width:1408px){.container:not(.is-max-desktop):not(.is-max-widescreen){max-width:2200px!important}}
+@media screen and (min-width:769px){.modal-card,.modal-content{width:780px}}
+@media screen and (min-width:1024px){.section{padding:.75rem 1rem}}
+@media (max-width:768px){.tiles-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))!important}}
 
-/* ===== Статусы (общий стиль) ===== */
-.status {
-  display: inline-block; padding: 3px 9px; border-radius: 10px;
-  font-size: 0.78rem; font-weight: 700; white-space: nowrap; line-height: 1.3;
-}
-.status-waiting   { background:#ffed00; color:#000; border:1px solid #c9c9c9; }
-.status-correction{ background:#f08535; color:#fff; border:1px solid #c9c9c9; }
-.status-stop      { background:#ff0017; color:#fff; border:1px solid #c9c9c9; }
-.status-workshop  { background:#0065ff; color:#fff; border:1px solid #c9c9c9; }
-.status-ready     { background:#08eb84; color:#000; border:1px solid #c9c9c9; }
-.status-issued    { background:#fff;    color:#2aa93a; border:2px solid #2aa93a; }
+.chart-page-title{font-size:1.6rem;font-weight:800;letter-spacing:-.03em;color:#1a1a2e;text-align:center;margin-bottom:1.2rem}
 
-/* ===== Tabs ===== */
-.tabs.orders-tabs ul { flex-wrap: wrap; }
-.tabs.orders-tabs a  { padding:.75rem 1.1rem; font-size:1.05rem; position:relative; }
-@media (max-width:1024px) {
-  .tabs.orders-tabs a { padding:.9rem 1.2rem; font-size:1.1rem; }
-}
-/* счётчик на вкладке */
-.tab-badge {
-  display:inline-flex; align-items:center; justify-content:center;
-  min-width:20px; height:20px; padding:0 5px;
-  background:#363636; color:#fff; border-radius:999px;
-  font-size:.72rem; font-weight:800; margin-left:7px; vertical-align:middle;
-  line-height:1;
-}
-.is-active .tab-badge { background:#fff; color:#485fc7; }
+/* ── ВКЛАДКИ ── */
+.tabs.orders-tabs ul{flex-wrap:wrap;border-bottom:none!important;gap:6px;justify-content:center}
+.tabs.orders-tabs li a{padding:.5rem 1.2rem;font-size:.88rem;font-weight:700;border-radius:999px;border:2px solid #e2e8f0!important;background:#fff;color:#64748b;transition:all .15s;letter-spacing:.01em;line-height:1.4}
+.tabs.orders-tabs li:not(.is-active) a:hover{border-color:#94a3b8!important;background:#f8fafc;color:#334155}
+.tabs.orders-tabs li.is-active a{background:#1e40af!important;border-color:#1e40af!important;color:#fff!important;box-shadow:0 4px 14px rgba(30,64,175,.28)}
+.tab-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:rgba(0,0,0,.18);color:#fff;border-radius:999px;font-size:.68rem;font-weight:900;margin-left:6px;vertical-align:middle}
+.is-active .tab-badge{background:rgba(255,255,255,.28);color:#fff}
 
-/* ===== Общий график — таблица ===== */
-.general-table-wrap thead th {
-  position:sticky; top:0; z-index:2; background:#fbfbfb;
-  border-top:1px solid rgba(0,0,0,.06); border-bottom:2px solid rgba(0,0,0,.10);
-  box-shadow:0 2px 0 rgba(0,0,0,.04); font-weight:700; font-size:.95rem;
-  text-transform:uppercase; letter-spacing:.02em;
-}
-#generalTable thead th, #generalTable tbody td {
-  border-right:1px solid rgba(0,0,0,.06);
-}
-#generalTable thead th:last-child, #generalTable tbody td:last-child { border-right:none; }
-#generalTable thead th:nth-child(3), #generalTable tbody td:nth-child(3),
-#generalTable thead th:nth-child(6), #generalTable tbody td:nth-child(6),
-#generalTable thead th:nth-child(9), #generalTable tbody td:nth-child(9),
-#generalTable thead th:nth-child(12), #generalTable tbody td:nth-child(12) {
-  border-right:2px solid rgba(0,0,0,.10);
-}
-#generalTable td, #generalTable th { white-space:normal; }
-#generalTable td { vertical-align:top; }
-#generalTableWrap, #generalTableWrap .box,
-#generalTableWrap .table-container, .general-table-wrap { width:100%; }
-.note-cell { min-width:240px; }
-tr.row-ok   > td { background:rgba(72,199,116,.12) !important; }
-tr.row-warn > td { background:rgba(255,221,87,.18) !important; }
-tr.row-bad  > td { background:rgba(241,70,104,.14) !important; }
-tr.row-done > td { opacity:.6; }
+/* ── СТАТУС ЧИПЫ (таблица) ── */
+.status{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:.71rem;font-weight:800;white-space:nowrap;line-height:1}
+.status::before{content:"";width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.status-waiting{background:#fefce8;color:#713f12;border:1.5px solid #fde047}.status-waiting::before{background:#eab308}
+.status-correction{background:#fff7ed;color:#7c2d12;border:1.5px solid #fed7aa}.status-correction::before{background:#f97316}
+.status-stop{background:#fef2f2;color:#7f1d1d;border:1.5px solid #fca5a5}.status-stop::before{background:#ef4444}
+.status-workshop{background:#eff6ff;color:#1e3a8a;border:1.5px solid #93c5fd}.status-workshop::before{background:#3b82f6}
+.status-ready{background:#f0fdf4;color:#14532d;border:1.5px solid #86efac}.status-ready::before{background:#22c55e}
+.status-issued{background:#f0fdf4;color:#166534;border:1.5px solid #4ade80}.status-issued::before{background:#16a34a}
 
-/* ===== Дни-бейдж ===== */
-.days-left {
-  display:inline-block; margin-left:6px; padding:2px 8px;
-  border-radius:999px; font-weight:700; font-size:.85rem;
-  line-height:1.1; background:rgba(0,0,0,.04);
-}
-.days-pos { color:#1a7f37; }
-.days-neg { color:#b42318; }
+/* ── ОБЩИЙ ГРАФИК — ТАБЛИЦА ── */
+.general-table-wrap,#generalTableWrap,#generalTableWrap .box,#generalTableWrap .table-container{width:100%}
+#generalTable{border-collapse:separate;border-spacing:0;font-size:.83rem;width:100%}
 
-/* ===== Переключатель Плитки/Список ===== */
-.container.is-fluid { margin-left:0 !important; margin-right:0 !important; }
-.chart-page .container { max-width:none !important; width:100% !important; }
-.chart-page-wrap { width:100%; max-width:2200px; margin:auto; }
+#generalTable thead tr.mat-group-header th{padding:5px 10px;font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;border-bottom:1px solid rgba(0,0,0,.05)}
+#generalTable thead tr.mat-group-header th.g-ldsp{background:#eff6ff;color:#1e40af}
+#generalTable thead tr.mat-group-header th.g-film{background:#f5f3ff;color:#5b21b6}
+#generalTable thead tr.mat-group-header th.g-paint{background:#fff7ed;color:#9a3412}
+#generalTable thead tr.mat-group-header th.g-info{background:#f8fafc;color:#64748b}
 
-/* ===== ПЛИТКИ ===== */
-.tiles-grid {
-  display:grid !important;
-  grid-template-columns:repeat(auto-fill, 220px) !important;
-  gap:14px; justify-content:start; align-content:start;
-}
-.tile-card {
-  width:220px; max-width:none; border-radius:16px; padding:14px;
-  box-shadow:0 1px 3px rgba(0,0,0,.08); cursor:pointer;
-  transition:transform .1s ease, box-shadow .1s ease;
-  border:1.5px solid rgba(0,0,0,.07); background:#fff;
-  position:relative; overflow:hidden;
-}
-.tile-card:hover {
-  transform:translateY(-2px);
-  box-shadow:0 6px 20px rgba(0,0,0,.12);
-}
+#generalTable thead tr.col-header th{position:sticky;top:0;z-index:2;background:#fff;padding:8px 10px;font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;white-space:nowrap}
+#generalTable tbody td{padding:9px 10px;vertical-align:middle;border-bottom:1px solid #f1f5f9;color:#1e293b}
+#generalTable tbody tr:hover td{background:#f8fafc!important}
 
-/* Цветная полоска слева по срочности */
-.tile-card::before {
-  content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
-  border-radius:16px 0 0 16px;
-}
-.tile-ok::before   { background:#23d160; }
-.tile-warn::before { background:#ffdd57; }
-.tile-bad::before  { background:#ff3860; }
-.tile-ok   { background:#f6fef9; }
-.tile-warn { background:#fffdf0; }
-.tile-bad  { background:#fff5f7; }
+tr.row-bad td{background:rgba(254,242,242,.6)!important}
+tr.row-warn td{background:rgba(254,252,232,.6)!important}
+tr.row-ok td{background:rgba(240,253,244,.5)!important}
+tr.row-done td{opacity:.5}
+.note-cell{min-width:200px}
 
-/* Шапка плитки */
-.tile-head {
-  display:flex; justify-content:space-between; align-items:center;
-  margin-bottom:6px;
-}
-.tile-num {
-  font-weight:900; font-size:1.1rem; color:#111;
-  letter-spacing:-.01em;
-}
-.tile-name {
-  font-size:.88rem; font-weight:600; color:rgba(0,0,0,.7);
-  margin-bottom:10px; white-space:nowrap; overflow:hidden;
-  text-overflow:ellipsis;
-}
+/* ── ДНИ-БЕЙДЖ ── */
+.days-left{display:inline-flex;align-items:center;margin-left:5px;padding:1px 7px;border-radius:999px;font-weight:800;font-size:.73rem;line-height:1.4}
+.days-pos{background:#dcfce7;color:#15803d}
+.days-neg{background:#fee2e2;color:#b91c1c}
 
-/* ===== СТРОКИ МАТЕРИАЛОВ ===== */
-.mat-rows { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
+/* ── LAYOUT ── */
+.container.is-fluid{margin-left:0!important;margin-right:0!important}
+.chart-page .container{max-width:none!important;width:100%!important}
+.chart-page-wrap{width:100%;max-width:2200px;margin:auto}
 
-.mat-row {
-  border-radius:10px; background:rgba(0,0,0,.04);
-  padding:7px 10px; font-size:.82rem;
-}
+/* ── ПЛИТКИ СЕТКА ── */
+.tiles-grid{display:grid!important;grid-template-columns:repeat(auto-fill,260px)!important;gap:16px;justify-content:start;align-content:start}
 
-/* Верхняя строка: иконка + название + кол-во */
-.mat-top {
-  display:flex; align-items:center; gap:6px; margin-bottom:4px;
-}
-.mat-icon {
-  font-size:.95rem; line-height:1; flex-shrink:0;
-}
-.mat-label {
-  font-weight:800; font-size:.78rem; color:#444;
-  text-transform:uppercase; letter-spacing:.04em; flex-shrink:0;
-}
-.mat-qty  { font-size:1.1rem; color:#111; margin-left:4px; font-weight:900; letter-spacing:-.01em; }
+/* ── ПЛИТКА ── */
+.tile-card{width:260px;border-radius:14px;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.05);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;background:#fff;position:relative;overflow:hidden}
+.tile-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.13),0 0 0 1px rgba(0,0,0,.06)}
+.tile-card::before{content:"";display:block;height:5px;width:100%;position:absolute;top:0;left:0}
+.tile-ok::before{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.tile-warn::before{background:linear-gradient(90deg,#eab308,#fbbf24)}
+.tile-bad::before{background:linear-gradient(90deg,#ef4444,#f87171)}
 
-/* Дата + дни */
-.mat-date {
-  font-size:.73rem; color:#777; font-weight:500;
-  display:flex; align-items:center; gap:4px;
-  margin: 3px 0 4px;
-}
-.mat-date.is-overdue { color:#c0392b; font-weight:700; }
-.mat-date.is-soon    { color:#e67e22; font-weight:700; }
+/* Тело */
+.tile-inner{padding:18px 14px 12px}
+.tile-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px}
+.tile-num{font-size:1.15rem;font-weight:900;color:#0f172a;letter-spacing:-.03em;line-height:1}
+.tile-urgency-dot{width:8px;height:8px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.tile-ok .tile-urgency-dot{background:#22c55e}
+.tile-warn .tile-urgency-dot{background:#eab308}
+.tile-bad .tile-urgency-dot{background:#ef4444}
+.tile-name{font-size:.82rem;font-weight:600;color:#64748b;margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* Статус — отдельная строка */
-.mat-status-line { display:flex; }
-.mat-status-badge {
-  display:inline-flex; align-items:center; gap:3px;
-  padding:3px 10px; border-radius:8px; font-size:.72rem;
-  font-weight:800; white-space:nowrap; line-height:1.4;
-  width:100%; justify-content:center;
-}
+/* ── СТРОКИ МАТЕРИАЛОВ ── */
+.mat-rows{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
+.mat-row{border-radius:10px;padding:9px 11px;background:#f8fafc;border:1px solid #e2e8f0}
+.mat-row.m-ldsp{border-left:3px solid #3b82f6;background:#f0f7ff;border-color:#dbeafe}
+.mat-row.m-paint{border-left:3px solid #f97316;background:#fff8f0;border-color:#fed7aa}
+.mat-row.m-film{border-left:3px solid #8b5cf6;background:#faf5ff;border-color:#e9d5ff}
+.mat-top{display:flex;align-items:center;gap:5px;margin-bottom:5px}
+.mat-icon{font-size:.88rem;line-height:1;flex-shrink:0}
+.mat-label{font-weight:800;font-size:.68rem;color:#475569;text-transform:uppercase;letter-spacing:.07em;flex-shrink:0}
+.mat-qty{font-size:1.2rem;font-weight:900;color:#0f172a;margin-left:3px;letter-spacing:-.02em;line-height:1}
+.mat-date{font-size:.71rem;color:#94a3b8;font-weight:600;display:flex;align-items:center;gap:4px;margin:4px 0}
+.mat-date.is-overdue{color:#dc2626;font-weight:700}
+.mat-date.is-soon{color:#d97706;font-weight:700}
+.mat-status-line{display:flex}
+.mat-status-badge{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:4px 10px;border-radius:8px;font-size:.7rem;font-weight:800;white-space:nowrap;width:100%}
+.ms-waiting{background:#fefce8;color:#713f12;border:1.5px solid #fde047}
+.ms-correction{background:#fff7ed;color:#7c2d12;border:1.5px solid #fed7aa}
+.ms-stop{background:#fef2f2;color:#7f1d1d;border:1.5px solid #fca5a5}
+.ms-workshop{background:#eff6ff;color:#1e3a8a;border:1.5px solid #bfdbfe}
+.ms-ready{background:#f0fdf4;color:#14532d;border:1.5px solid #bbf7d0}
+.ms-issued{background:#f0fdf4;color:#166534;border:1.5px solid #4ade80}
+.ms-none{background:#f8fafc;color:#94a3b8;border:1.5px solid #e2e8f0}
 
-/* Цвета статусов */
-.ms-waiting    { background:#fff9c4; color:#7a6800; border:1px solid #ffe566; }
-.ms-correction { background:#fff0e6; color:#b84000; border:1px solid #ffc89a; }
-.ms-stop       { background:#ffe0e3; color:#9b0010; border:1px solid #ffaab2; }
-.ms-workshop   { background:#e6eeff; color:#0038ad; border:1px solid #aabfff; }
-.ms-ready      { background:#e6faf0; color:#006b35; border:1px solid #7de0a8; }
-.ms-issued     { background:#f5fff8; color:#2aa93a; border:2px solid #2aa93a; }
-.ms-none       { background:#f0f0f0; color:#999;    border:1px solid #ddd; }
+/* ── ЦВЕТА МАТЕРИАЛОВ ── */
+.color-rows{display:flex;flex-direction:column;gap:5px;margin-top:10px;padding-top:10px;border-top:1.5px dashed #e2e8f0}
+.color-row{background:#f8fafc;border-radius:8px;padding:7px 10px;border:1px solid #e2e8f0}
+.color-name{font-size:.79rem;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.color-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block}
+.color-meta{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.color-m2{font-size:.75rem;color:#334155;font-weight:700}
+.color-fresa{font-size:.68rem;color:#64748b;background:#e2e8f0;padding:2px 7px;border-radius:4px;white-space:nowrap}
 
-/* ===== ЦВЕТА МАТЕРИАЛОВ ===== */
-.color-rows {
-  display:flex; flex-direction:column; gap:4px;
-  margin-top:8px; padding-top:8px;
-  border-top:1px solid rgba(0,0,0,.07);
-}
-.color-row {
-  background:rgba(0,0,0,.03); border-radius:8px;
-  padding:6px 9px;
-}
-.color-name {
-  font-size:.82rem; font-weight:700; color:#222;
-  display:flex; align-items:center; gap:5px;
-  margin-bottom:2px;
-}
-.color-dot {
-  width:10px; height:10px; border-radius:50%;
-  background:currentColor; flex-shrink:0;
-  display:inline-block;
-}
-.color-meta {
-  display:flex; justify-content:space-between; align-items:center;
-  gap:6px; font-size:.75rem;
-}
-.color-m2   { color:#444; font-weight:700; }
-.color-fresa {
-  color:#666; font-size:.7rem;
-  background:rgba(0,0,0,.06); padding:1px 6px;
-  border-radius:5px; white-space:nowrap;
-}
+/* ── ПРИМЕЧАНИЕ ── */
+.tile-note{margin:8px 0 2px;padding:7px 10px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;font-size:.74rem;color:#78350f;font-style:italic;line-height:1.5;display:flex;gap:5px;align-items:flex-start}
+.tile-note-icon{flex-shrink:0;font-style:normal}
 
-/* ===== ПРИМЕЧАНИЕ НА ПЛИТКЕ ===== */
-.tile-note {
-  margin-top:8px; padding:6px 10px;
-  background:rgba(255,200,0,.12);
-  border-left:3px solid #f0b800;
-  border-radius:0 8px 8px 0;
-  font-size:.76rem; color:#555;
-  font-style:italic; line-height:1.4;
-  display:flex; gap:5px; align-items:flex-start;
-}
-.tile-note-icon { flex-shrink:0; font-style:normal; }
+/* ── ПРОГРЕСС ── */
+.tile-progress{margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9}
+.progress-label{display:flex;justify-content:space-between;font-size:.67rem;color:#94a3b8;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.progress-track{height:6px;background:#e2e8f0;border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;transition:width .4s ease;background:linear-gradient(90deg,#22c55e,#4ade80)}
+.progress-fill.pf-warn{background:linear-gradient(90deg,#eab308,#fbbf24)}
+.progress-fill.pf-zero{background:#e2e8f0}
 
-/* ===== ПРОГРЕСС-БАР ===== */
-.tile-progress {
-  margin-top:8px; padding-top:8px;
-  border-top:1px solid rgba(0,0,0,.06);
-}
-.progress-label {
-  display:flex; justify-content:space-between;
-  font-size:.72rem; color:#888; margin-bottom:4px; font-weight:600;
-}
-.progress-track {
-  height:5px; background:rgba(0,0,0,.08); border-radius:99px; overflow:hidden;
-}
-.progress-fill {
-  height:100%; border-radius:99px; transition:width .3s ease;
-  background:linear-gradient(90deg, #23d160, #00c4a7);
-}
-.progress-fill.pf-warn { background:linear-gradient(90deg, #ffdd57, #f08535); }
-.progress-fill.pf-zero { background:#eee; }
+/* ── СПИСОК ── */
+#tilesListWrap .table td{vertical-align:middle}
 
-/* ===== СПИСОК (альтернативный вид) ===== */
-#tilesListWrap .table td { vertical-align:middle; }
-
-/* Layout */
-.chart-page-wrap { width:100%; max-width:2200px; margin:auto; }
+/* ── ПЕРЕКЛЮЧАТЕЛЬ ПЛИТКИ/СПИСОК ── */
+#viewToggleBar .buttons.has-addons .button{border-radius:8px!important;font-size:.78rem;font-weight:700;border:1.5px solid #e2e8f0!important;padding:.4rem .8rem}
+#viewToggleBar .button.is-selected{background:#1e40af!important;color:#fff!important;border-color:#1e40af!important}
 </style>
 
 <section class="section chart-page">
 <div class="container is-fluid">
 <div class="chart-page-wrap">
 
-  <h1 class="title has-text-centered">График заказов</h1>
+  <div class="chart-page-title">График заказов</div>
 
   {% if restricted and restricted_text %}
-  <div class="notification is-warning">{{ restricted_text }}</div>
+  <div class="notification is-warning" style="margin-bottom:12px;">{{ restricted_text }}</div>
   {% endif %}
 
   <!-- Вкладки -->
-  <div class="tabs orders-tabs is-centered is-toggle is-toggle-rounded is-medium">
-    <ul>
-      {% for t in tabs %}
-      {% if t.allowed %}
-      <li class="{% if t.key == active_tab %}is-active{% endif %}">
-        <a href="?tab={{ t.key }}">
-          <span>{{ t.title }}</span>
-          <span class="tab-badge" id="badge_{{ t.key }}">—</span>
-        </a>
-      </li>
-      {% else %}
-      <li class="is-disabled">
-        <a href="javascript:void(0)" tabindex="-1" aria-disabled="true"
-           style="opacity:.45;cursor:not-allowed;">
-          <span>{{ t.title }}</span>
-        </a>
-      </li>
-      {% endif %}
-      {% endfor %}
-    </ul>
+  <div style="display:flex;justify-content:center;margin-bottom:16px;">
+  <div class="orders-tabs-wrap">
+    {% for t in tabs %}
+    {% if t.allowed %}
+    <a href="?tab={{ t.key }}"
+       class="tab-btn {% if t.key == active_tab %}is-active{% endif %}">
+      <span>{{ t.title }}</span>
+      <span class="tab-count" id="badge_{{ t.key }}">—</span>
+    </a>
+    {% else %}
+    <span class="tab-btn is-disabled">{{ t.title }}</span>
+    {% endif %}
+    {% endfor %}
+  </div>
   </div>
 
-  <div style="margin-top:12px;">
-
-    <!-- Общий график (таблица) -->
-    <div id="generalTableWrap" style="display:none;">
-      <div class="box" style="padding:12px;">
-        <div class="level" style="margin-bottom:10px;">
-          <div class="level-left">
-            <div>
-              <div class="title is-6" style="margin-bottom:2px;">Общий график</div>
-              <div class="help" style="margin-top:0;">Просроченные — вверху, готовые — внизу</div>
-            </div>
-          </div>
-        </div>
-        <div class="table-container general-table-wrap">
-          <table class="table is-fullwidth is-hoverable is-narrow" id="generalTable">
-            <thead>
-              <tr>
-                <th style="width:75px;">№</th>
-                <th>Имя</th>
-                <th style="width:100px;">Дата оформ.</th>
-                <th style="width:85px;" class="has-text-centered">ЛДСП листы</th>
-                <th style="width:85px;" class="has-text-centered">Краска м²</th>
-                <th style="width:85px;" class="has-text-centered">Плёнка м²</th>
-                <th style="min-width:150px;">Срок ЛДСП</th>
-                <th style="min-width:150px;">Срок Плёнка</th>
-                <th style="min-width:150px;">Срок Краска</th>
-                <th style="min-width:130px;">Статус ЛДСП</th>
-                <th style="min-width:130px;">Статус Плёнка</th>
-                <th style="min-width:130px;">Статус Краска</th>
-                <th>Примечание</th>
-                <th style="width:40px;" class="has-text-centered">✏️</th>
-              </tr>
-            </thead>
-            <tbody id="generalTableBody"></tbody>
-          </table>
+  <!-- Общий график (таблица) -->
+  <div id="generalTableWrap" style="display:none;">
+    <div class="gen-wrap">
+      <div class="gen-header">
+        <div>
+          <div class="gen-header-title">Общий график</div>
+          <div class="gen-header-sub">Просроченные — вверху · Готовые — внизу</div>
         </div>
       </div>
-    </div>
-
-    <!-- Переключатель Плитки/Список -->
-    <div id="viewToggleBar" class="is-flex is-justify-content-flex-end is-align-items-center"
-         style="gap:10px;margin:8px 0;display:none;">
-      <div class="buttons has-addons">
-        <button id="btnViewTiles" class="button is-small is-link is-light is-selected" type="button">
-          🟦 Плитки
-        </button>
-        <button id="btnViewList" class="button is-small is-link is-light" type="button">
-          📋 Список
-        </button>
+      <div class="gen-table-scroll">
+        <table class="gen-table" id="generalTable">
+          <thead>
+            <tr class="mat-group-header">
+              <th colspan="3" class="g-info" style="text-align:left;">Заказ</th>
+              <th colspan="3" class="g-ldsp">🪵 ЛДСП</th>
+              <th colspan="3" class="g-film">🎞️ Плёнка</th>
+              <th colspan="3" class="g-paint">🎨 Краска</th>
+              <th colspan="2" class="g-info">Прочее</th>
+            </tr>
+            <tr class="col-header">
+              <th style="width:70px;">№</th>
+              <th>Имя</th>
+              <th style="width:90px;">Дата</th>
+              <th style="width:65px;" class="has-text-centered">Листов</th>
+              <th style="min-width:115px;">Срок</th>
+              <th style="min-width:105px;">Статус</th>
+              <th style="width:60px;" class="has-text-centered">м²</th>
+              <th style="min-width:115px;">Срок</th>
+              <th style="min-width:105px;">Статус</th>
+              <th style="width:60px;" class="has-text-centered">м²</th>
+              <th style="min-width:115px;">Срок</th>
+              <th style="min-width:105px;">Статус</th>
+              <th>Примечание</th>
+              <th style="width:36px;"></th>
+            </tr>
+          </thead>
+          <tbody id="generalTableBody"></tbody>
+        </table>
       </div>
     </div>
-
-    <!-- Список -->
-    <div id="tilesListWrap" style="display:none;">
-      <div class="box" style="padding:10px;">
-        <div class="table-container">
-          <table class="table is-fullwidth is-striped is-hoverable is-narrow">
-            <thead>
-              <tr>
-                <th style="width:90px;">№</th>
-                <th>Имя</th>
-                <th style="width:120px;">ЛДСП</th>
-                <th style="width:120px;">Краска</th>
-                <th style="width:120px;">Плёнка</th>
-                <th style="width:210px;">Сроки</th>
-                <th style="width:170px;">Статусы</th>
-                <th>Примечание</th>
-              </tr>
-            </thead>
-            <tbody id="tilesListBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Плитки -->
-    <div id="tilesWrap" style="display:none;">
-      <div class="box" style="padding:14px;">
-        <div class="level" style="margin-bottom:10px;">
-          <div class="level-left">
-            <div class="title is-6" style="margin-bottom:0;" id="tilesTitle">Рабочие графики</div>
-          </div>
-          <div class="level-right">
-            <span class="tag is-light is-medium" id="tilesCountTag" style="display:none;">
-              Заказов: <strong id="tilesCount" style="margin-left:4px;">0</strong>
-            </span>
-          </div>
-        </div>
-        <div class="tiles-grid" id="tilesGrid"></div>
-      </div>
-    </div>
-
-    <div id="canvasWrap"><canvas id="ordersChartCanvas"></canvas></div>
   </div>
+
+  <!-- Переключатель Плитки/Список -->
+  <div id="viewToggleBar" class="view-toggle-bar" style="display:none;">
+    <button id="btnViewTiles" class="view-btn is-selected" type="button">⬜ Плитки</button>
+    <button id="btnViewList"  class="view-btn" type="button">☰ Список</button>
+  </div>
+
+  <!-- Список -->
+  <div id="tilesListWrap" style="display:none;">
+    <div class="list-wrap">
+      <div class="gen-table-scroll">
+        <table class="list-table">
+          <thead>
+            <tr>
+              <th style="width:80px;">№</th>
+              <th>Клиент</th>
+              <th style="width:110px;">ЛДСП</th>
+              <th style="width:110px;">Краска</th>
+              <th style="width:110px;">Плёнка</th>
+              <th style="width:200px;">Сроки</th>
+              <th style="width:160px;">Статусы</th>
+              <th>Примечание</th>
+            </tr>
+          </thead>
+          <tbody id="tilesListBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Плитки -->
+  <div id="tilesWrap" style="display:none;">
+    <div class="tiles-outer">
+      <div class="tiles-top-bar">
+        <div class="tiles-section-title">Задания в работе</div>
+        <div class="tiles-counter" id="tilesCountTag" style="display:none;">
+          Заказов: <span id="tilesCount">0</span>
+        </div>
+      </div>
+      <div class="tiles-grid" id="tilesGrid"></div>
+    </div>
+  </div>
+
+  <div id="canvasWrap"><canvas id="ordersChartCanvas"></canvas></div>
 </div>
 </div>
 </section>
@@ -487,17 +356,17 @@ function escapeHtml(s) {
 }
 
 /* ───── СТАТУСЫ ───── */
-function renderStatus(statusText) {
-  if (!statusText || statusText === "—") return "<span>—</span>";
-  let cls = "status ";
-  if (statusText.startsWith("ОТЛОЖЕН") || statusText === "СТОП") cls += "status-stop";
-  else if (statusText === "ОЖИДАЕТ")        cls += "status-waiting";
-  else if (statusText === "КОРРЕКТИРОВКА")  cls += "status-correction";
-  else if (statusText === "ВЫДАН В ЦЕХ")   cls += "status-workshop";
-  else if (statusText === "ГОТОВО")         cls += "status-ready";
-  else if (statusText === "ВЫДАН")          cls += "status-issued";
-  return `<span class="${cls}">${statusText}</span>`;
+function renderSt(st) {
+  if (!st || st === "—") return `<span class="st st-none">—</span>`;
+  if (st.startsWith("ОТЛОЖЕН") || st === "СТОП") return `<span class="st st-stop">🔴 ${escapeHtml(st)}</span>`;
+  if (st === "ОЖИДАЕТ")        return `<span class="st st-wait">⏳ ОЖИДАЕТ</span>`;
+  if (st === "КОРРЕКТИРОВКА")  return `<span class="st st-corr">🔧 КОРРЕКТИРОВКА</span>`;
+  if (st === "ВЫДАН В ЦЕХ")   return `<span class="st st-ceh">🏭 ВЫДАН В ЦЕХ</span>`;
+  if (st === "ГОТОВО")         return `<span class="st st-done">✅ ГОТОВО</span>`;
+  if (st === "ВЫДАН")          return `<span class="st st-out">📦 ВЫДАН</span>`;
+  return `<span class="st st-none">${escapeHtml(st)}</span>`;
 }
+function renderStatus(s) { return renderSt(s); } // совместимость
 
 /* Иконка + CSS-класс для строки материала */
 function matStatusMeta(st) {
@@ -516,8 +385,9 @@ function daysBadge(val) {
   if (val === null || val === undefined || val === "") return "";
   const n = Number(val);
   if (Number.isNaN(n)) return "";
-  const cls = (n > 0) ? "days-left days-pos" : "days-left days-neg";
-  return `<span class="${cls}">${n > 0 ? "+"+n : String(n)}</span>`;
+  if (n > 0) return `<span class="db db-pos">+${n}</span>`;
+  if (n < 0) return `<span class="db db-neg">${n}</span>`;
+  return `<span class="db db-zero">0</span>`;
 }
 
 function isEmptyVal(v) {
@@ -535,9 +405,9 @@ function urgencyClass(r) {
   }
   if (!vals.length) return "";
   const m = Math.min(...vals);
-  if (m <= 2)  return "tile-bad";
-  if (m <= 6)  return "tile-warn";
-  return "tile-ok";
+  if (m <= 2)  return "bad";
+  if (m <= 6)  return "warn";
+  return "ok";
 }
 
 /* ───── РЕНДЕР СТРОКИ МАТЕРИАЛА ───── */
@@ -549,7 +419,8 @@ function fmtQty(qty, isInteger) {
 }
 
 function renderMatRow(label, icon, qty, status, due, daysLeft, isInteger) {
-  if (!valPresent(qty)) return "";   // материала нет — не показываем строку
+  if (!valPresent(qty)) return "";
+  const matCls = label==="ЛДСП" ? "m-ldsp" : label==="Краска" ? "m-paint" : "m-film";
   const meta = matStatusMeta(status);
   const n = (daysLeft !== null && daysLeft !== undefined) ? Number(daysLeft) : null;
   const dueCls = n !== null ? (n <= 0 ? "is-overdue" : n <= 5 ? "is-soon" : "") : "";
@@ -557,9 +428,8 @@ function renderMatRow(label, icon, qty, status, due, daysLeft, isInteger) {
   const dueStr = (due && due !== "—")
     ? `<div class="mat-date ${dueCls}">📅 ${escapeHtml(due)} ${daysBadge(daysLeft)}</div>`
     : "";
-
   return `
-    <div class="mat-row">
+    <div class="mat-row ${matCls}">
       <div class="mat-top">
         <span class="mat-icon">${icon}</span>
         <span class="mat-label">${label}</span>
@@ -576,29 +446,18 @@ function renderMatRow(label, icon, qty, status, due, daysLeft, isInteger) {
 function renderProgress(r) {
   const DONE = new Set(["ГОТОВО","ВЫДАН"]);
   let total = 0, done = 0;
-  const pairs = [
-    [r.ldsp_qty, r.status_ldsp],
-    [r.paint_m2, r.status_paint],
-    [r.film_m2,  r.status_film],
-  ];
-  for (const [qty, st] of pairs) {
+  for (const [qty, st] of [[r.ldsp_qty,r.status_ldsp],[r.paint_m2,r.status_paint],[r.film_m2,r.status_film]]) {
     if (!valPresent(qty)) continue;
     total++;
     if (DONE.has(st)) done++;
   }
   if (!total) return "";
   const pct = Math.round((done / total) * 100);
-  const fillCls = pct === 0 ? "pf-zero" : pct < 100 ? "pf-warn" : "";
-  return `
-    <div class="tile-progress">
-      <div class="progress-label">
-        <span>Готовность</span>
-        <span>${done}/${total} материалов</span>
-      </div>
-      <div class="progress-track">
-        <div class="progress-fill ${fillCls}" style="width:${pct}%"></div>
-      </div>
-    </div>`;
+  const pfCls = pct === 100 ? "pf-full" : pct === 0 ? "pf-zero" : "pf-part";
+  return `<div class="tile-progress">
+    <div class="prog-row"><span>Готовность</span><span>${done}/${total}</span></div>
+    <div class="prog-track"><div class="prog-fill ${pfCls}" style="width:${pct}%"></div></div>
+  </div>`;
 }
 
 /* ───── ЗАГРУЗКА ОБЩЕГО ГРАФИКА ───── */
@@ -625,68 +484,60 @@ async function loadGeneralTable() {
     const left = (r.ldsp_days_left === null || r.ldsp_days_left === undefined)
       ? null : Number(r.ldsp_days_left);
     if (left !== null && !Number.isNaN(left)) {
-      tr.classList.add(left <= 2 ? "row-bad" : left <= 6 ? "row-warn" : "row-ok");
+      tr.classList.add(left <= 2 ? "gr-bad" : left <= 6 ? "gr-warn" : "gr-ok");
     }
     const paint = r.paint_m2 ? r.paint_m2 : "—";
     const film  = r.film_m2  ? r.film_m2  : "—";
+    const fmtLdsp = r.ldsp_qty && r.ldsp_qty !== "—" ? String(Math.round(parseFloat(r.ldsp_qty))) : "—";
     tr.innerHTML = `
       <td><a href="javascript:void(0)" class="js-order-info" data-order-id="${r.order_id}"
-             style="font-weight:700;">${escapeHtml(String(r.order_number ?? ""))}</a></td>
-      <td>${escapeHtml(r.customer||"")}</td>
-      <td>${escapeHtml(r.created_at||"—")}</td>
-      <td class="has-text-centered">${escapeHtml(String(r.ldsp_qty??"—"))}</td>
-      <td class="has-text-centered">${escapeHtml(String(paint))}</td>
-      <td class="has-text-centered">${escapeHtml(String(film))}</td>
+             style="font-weight:800;color:#1e40af;font-size:.88rem;">№${escapeHtml(String(r.order_number ?? ""))}</a></td>
+      <td style="font-weight:600;color:#1e293b;">${escapeHtml(r.customer||"")}</td>
+      <td style="color:#94a3b8;font-size:.78rem;">${escapeHtml(r.created_at||"—")}</td>
+      <td class="has-text-centered" style="font-weight:800;color:#1e293b;">${fmtLdsp}</td>
       <td>${escapeHtml(r.due_ldsp??"—")}${daysBadge(r.ldsp_days_left)}</td>
-      <td>${escapeHtml(r.due_film??"—")}${daysBadge(r.film_days_left)}</td>
-      <td>${escapeHtml(r.due_paint??"—")}${daysBadge(r.paint_days_left)}</td>
       <td>${renderStatus(r.status_ldsp)}</td>
+      <td class="has-text-centered" style="font-weight:800;color:#1e293b;">${escapeHtml(String(film))}</td>
+      <td>${escapeHtml(r.due_film??"—")}${daysBadge(r.film_days_left)}</td>
       <td>${renderStatus(r.status_film)}</td>
+      <td class="has-text-centered" style="font-weight:800;color:#1e293b;">${escapeHtml(String(paint))}</td>
+      <td>${escapeHtml(r.due_paint??"—")}${daysBadge(r.paint_days_left)}</td>
       <td>${renderStatus(r.status_paint)}</td>
       <td class="note-cell">
         ${canEdit
           ? `<textarea class="textarea is-small js-note" data-order-id="${r.order_id}"
-               rows="1" style="min-height:34px;resize:vertical;">${escapeHtml(r.note||"")}</textarea>`
-          : escapeHtml(r.note||"")}
+               rows="1" style="min-height:32px;resize:vertical;border-radius:6px;font-size:.78rem;">${escapeHtml(r.note||"")}</textarea>`
+          : `<span style="font-size:.79rem;color:#64748b;">${escapeHtml(r.note||"")}</span>`}
       </td>
       <td class="has-text-centered">
         ${canEdit
-          ? `<button class="button is-small is-light js-edit-row"
-               data-order-id="${r.order_id}">✏️</button>` : ""}
+          ? `<button class="button is-small is-light js-edit-row" data-order-id="${r.order_id}"
+               style="border-radius:8px;border:1px solid #e2e8f0;padding:3px 8px;">✏️</button>` : ""}
       </td>`;
-    body.appendChild(tr);
+        body.appendChild(tr);
   }
   if (!rows.length) body.innerHTML = `<tr><td colspan="14">Нет заказов</td></tr>`;
 }
 
 /* ───── ЦВЕТА МАТЕРИАЛОВ ───── */
-// Генерирует случайный но стабильный цвет по строке
 function strColor(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
-  return `hsl(${Math.abs(h) % 360}, 50%, 45%)`;
+  return `hsl(${Math.abs(h) % 360}, 55%, 45%)`;
 }
-
-function renderColorRows(colors, iconChar) {
+function renderColorRows(colors) {
   if (!colors || !colors.length) return "";
-  const rows = colors.map(c => {
-    const col = strColor(c.name);
-    const m2  = c.m2 && c.m2 !== "—" ? `${c.m2} м²` : "";
-    const fresa = c.fresa && c.fresa !== "—"
-      ? `<span class="color-fresa">✂️ ${escapeHtml(c.fresa)}</span>` : "";
-    return `
-      <div class="color-row">
-        <div class="color-name">
-          <span class="color-dot" style="background:${col};"></span>
-          ${iconChar} ${escapeHtml(c.name)}
-        </div>
-        <div class="color-meta">
-          <span class="color-m2">${m2}</span>
-          ${fresa}
-        </div>
-      </div>`;
+  const rows = colors.map(col => {
+    const dot = `<span class="color-dot" style="background:${strColor(col.name)}"></span>`;
+    const m2  = col.m2 && col.m2 !== "—" ? `<span class="color-m2">${col.m2} м²</span>` : "";
+    const fr  = col.fresa && col.fresa !== "—"
+      ? `<span class="color-fresa">✂️ ${escapeHtml(col.fresa)}</span>` : "";
+    return `<div class="color-block">
+      <div class="color-block-top">${dot}${escapeHtml(col.name)}</div>
+      <div class="color-block-meta">${m2}${fr}</div>
+    </div>`;
   }).join("");
-  return `<div class="color-rows">${rows}</div>`;
+  return `<div class="color-blocks">${rows}</div>`;
 }
 
 /* ───── ЗАГРУЗКА ПЛИТОК ───── */
@@ -721,7 +572,7 @@ async function loadTiles(tabKey) {
 
   for (const r of tiles) {
     const el = document.createElement("div");
-    el.className   = "tile-card js-tile " + urgencyClass(r);
+    el.className   = "tile-card js-tile";
     el.dataset.orderId  = r.order_id;
     el.dataset.hasLdsp  = valPresent(r.ldsp_qty)  ? "1" : "0";
     el.dataset.hasFilm  = valPresent(r.film_m2)   ? "1" : "0";
@@ -733,23 +584,23 @@ async function loadTiles(tabKey) {
       renderMatRow("Краска", "🎨", r.paint_m2,  r.status_paint, r.due_paint, r.paint_days_left, false) +
       renderMatRow("Плёнка", "🎞️", r.film_m2,  r.status_film,  r.due_film,  r.film_days_left,  false);
 
-    // цвета краски или плёнки
-    const paintColors = renderColorRows(r.paint_colors || [], "🎨");
-    const filmColors  = renderColorRows(r.film_colors  || [], "🎞️");
+    const colorHtml = renderColorRows([...(r.paint_colors||[]), ...(r.film_colors||[])]);
+    const urg = urgencyClass(r);
 
     el.innerHTML = `
-      <div class="tile-head">
-        <div class="tile-num">№ ${escapeHtml(String(r.order_number ?? ""))}</div>
+      <div class="tile-header urg-${urg}">
+        <div class="tile-num">№&thinsp;${escapeHtml(String(r.order_number ?? ""))}</div>
+        <div class="tile-name">${escapeHtml(r.customer||"")}</div>
       </div>
-      <div class="tile-name" title="${escapeHtml(r.customer||"")}">
-        ${escapeHtml(r.customer||"")}
+      <div class="tile-body">
+        ${matHtml}
+        ${colorHtml}
       </div>
-      <div class="mat-rows">${matHtml}</div>
-      ${paintColors}${filmColors}
-      ${renderProgress(r)}
-      ${r.note && r.note.trim()
-        ? `<div class="tile-note"><span class="tile-note-icon">💬</span>${escapeHtml(r.note.trim())}</div>`
+        ${renderProgress(r)}
+        ${r.note && r.note.trim()
+        ? `<div class="tile-note"><span class="tile-note-ico">💬</span>${escapeHtml(r.note.trim())}</div>`
         : ""}
+      </div>
     `;
     grid.appendChild(el);
   }
@@ -775,8 +626,8 @@ async function loadTilesList(tabKey) {
   for (const r of rows) {
     const tr = document.createElement("tr");
     const urg = urgencyClass(r);
-    if (urg === "tile-bad")  tr.style.background = "rgba(241,70,104,.08)";
-    if (urg === "tile-warn") tr.style.background = "rgba(255,221,87,.15)";
+    if (urg === "bad")  tr.classList.add("lr-bad");
+    if (urg === "warn") tr.classList.add("lr-warn");
 
     const dueParts = [];
     if (r.due_ldsp  && r.due_ldsp  !== "—") dueParts.push(`ЛДСП: ${r.due_ldsp}${daysBadge(r.ldsp_days_left)}`);
