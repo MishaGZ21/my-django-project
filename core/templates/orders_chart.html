@@ -139,6 +139,38 @@ tr.rd td{opacity:.45}
 .tiles-counter{font-size:.78rem;font-weight:700;color:#64748b;background:#f1f5f9;padding:4px 12px;border-radius:999px}
 
 @media screen and (min-width:769px){.modal-card,.modal-content{width:780px}}
+
+/* ── ЦВЕТНЫЕ ФОНЫ ПЛИТОК ── */
+.ocard.t-ok   { background: linear-gradient(160deg,#f0fdf4,#dcfce7) !important; border-color:#86efac !important; }
+.ocard.t-warn { background: linear-gradient(160deg,#fffbeb,#fef3c7) !important; border-color:#fcd34d !important; }
+.ocard.t-bad  { background: linear-gradient(160deg,#fff1f2,#ffe4e6) !important; border-color:#fca5a5 !important; }
+.ocard.t-ok   .ocard-num { color:#15803d !important; }
+.ocard.t-warn .ocard-num { color:#b45309 !important; }
+.ocard.t-bad  .ocard-num { color:#b91c1c !important; }
+.ocard.t-ok  .ocard-stripe { background:linear-gradient(90deg,#16a34a,#22c55e) !important; height:6px !important; }
+.ocard.t-warn .ocard-stripe{ background:linear-gradient(90deg,#d97706,#f59e0b) !important; height:6px !important; }
+.ocard.t-bad  .ocard-stripe{ background:linear-gradient(90deg,#dc2626,#ef4444) !important; height:6px !important; }
+.ocard .mat { background:rgba(255,255,255,.72) !important; }
+
+/* ── РАЗДЕЛИТЕЛИ В ТАБЛИЦЕ ── */
+/* Жирная вертикальная граница между группами ЛДСП/ПЛЁНКА/КРАСКА */
+.gen-table thead tr.gh th.h-ldsp  { border-left:3px solid #bfdbfe !important; }
+.gen-table thead tr.gh th.h-film  { border-left:3px solid #ddd6fe !important; }
+.gen-table thead tr.gh th.h-paint { border-left:3px solid #fed7aa !important; }
+
+/* Вертикальные разделители в строках данных — 3-я, 6-я, 9-я колонки */
+.gen-table tbody td:nth-child(4)  { border-left:3px solid #bfdbfe !important; }
+.gen-table tbody td:nth-child(7)  { border-left:3px solid #ddd6fe !important; }
+.gen-table tbody td:nth-child(10) { border-left:3px solid #fed7aa !important; }
+.gen-table thead tr.ch th:nth-child(4)  { border-left:3px solid #bfdbfe !important; }
+.gen-table thead tr.ch th:nth-child(7)  { border-left:3px solid #ddd6fe !important; }
+.gen-table thead tr.ch th:nth-child(10) { border-left:3px solid #fed7aa !important; }
+
+/* Цвет строк по просрочке — ярче */
+tr.rb td { background:rgba(254,226,226,.6) !important; }
+tr.rw td { background:rgba(254,249,195,.6) !important; }
+tr.ro td { background:rgba(220,252,231,.4) !important; }
+
 </style>
 
 <section class="section chart-page">
@@ -379,7 +411,8 @@ function urgCls(r){
   }
   if(!vals.length) return "";
   const m=Math.min(...vals);
-  return m<=2?"t-bad":m<=6?"t-warn":"t-ok";
+  // m<0 = просрочено, 0-10 = критично, >10 = нормально
+  return m<0?"t-bad":m<=10?"t-warn":"t-ok";
 }
 
 /* ─── СТАТУС ДЛЯ ТАБЛИЦЫ ─── */
