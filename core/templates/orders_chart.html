@@ -177,6 +177,37 @@ tr.row-done > td { opacity:.6; }
 .ms-issued     { background:#f5fff8; color:#2aa93a; border:2px solid #2aa93a; }
 .ms-none       { background:#f0f0f0; color:#999;    border:1px solid #ddd; }
 
+/* ===== ЦВЕТА МАТЕРИАЛОВ ===== */
+.color-rows {
+  display:flex; flex-direction:column; gap:4px;
+  margin-top:8px; padding-top:8px;
+  border-top:1px solid rgba(0,0,0,.07);
+}
+.color-row {
+  background:rgba(0,0,0,.03); border-radius:8px;
+  padding:6px 9px;
+}
+.color-name {
+  font-size:.82rem; font-weight:700; color:#222;
+  display:flex; align-items:center; gap:5px;
+  margin-bottom:2px;
+}
+.color-dot {
+  width:10px; height:10px; border-radius:50%;
+  background:currentColor; flex-shrink:0;
+  display:inline-block;
+}
+.color-meta {
+  display:flex; justify-content:space-between; align-items:center;
+  gap:6px; font-size:.75rem;
+}
+.color-m2   { color:#444; font-weight:700; }
+.color-fresa {
+  color:#666; font-size:.7rem;
+  background:rgba(0,0,0,.06); padding:1px 6px;
+  border-radius:5px; white-space:nowrap;
+}
+
 /* ===== ПРОГРЕСС-БАР ===== */
 .tile-progress {
   margin-top:8px; padding-top:8px;
@@ -616,6 +647,36 @@ async function loadGeneralTable() {
   if (!rows.length) body.innerHTML = `<tr><td colspan="14">Нет заказов</td></tr>`;
 }
 
+/* ───── ЦВЕТА МАТЕРИАЛОВ ───── */
+// Генерирует случайный но стабильный цвет по строке
+function strColor(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
+  return `hsl(${Math.abs(h) % 360}, 50%, 45%)`;
+}
+
+function renderColorRows(colors, iconChar) {
+  if (!colors || !colors.length) return "";
+  const rows = colors.map(c => {
+    const col = strColor(c.name);
+    const m2  = c.m2 && c.m2 !== "—" ? `${c.m2} м²` : "";
+    const fresa = c.fresa && c.fresa !== "—"
+      ? `<span class="color-fresa">✂️ ${escapeHtml(c.fresa)}</span>` : "";
+    return `
+      <div class="color-row">
+        <div class="color-name">
+          <span class="color-dot" style="background:${col};"></span>
+          ${iconChar} ${escapeHtml(c.name)}
+        </div>
+        <div class="color-meta">
+          <span class="color-m2">${m2}</span>
+          ${fresa}
+        </div>
+      </div>`;
+  }).join("");
+  return `<div class="color-rows">${rows}</div>`;
+}
+
 /* ───── ЗАГРУЗКА ПЛИТОК ───── */
 async function loadTiles(tabKey) {
   const wrap      = document.getElementById("tilesWrap");
@@ -660,6 +721,10 @@ async function loadTiles(tabKey) {
       renderMatRow("Краска", "🎨", r.paint_m2,  r.status_paint, r.due_paint, r.paint_days_left, false) +
       renderMatRow("Плёнка", "🎞️", r.film_m2,  r.status_film,  r.due_film,  r.film_days_left,  false);
 
+    // цвета краски или плёнки
+    const paintColors = renderColorRows(r.paint_colors || [], "🎨");
+    const filmColors  = renderColorRows(r.film_colors  || [], "🎞️");
+
     el.innerHTML = `
       <div class="tile-head">
         <div class="tile-num">№ ${escapeHtml(String(r.order_number ?? ""))}</div>
@@ -668,6 +733,7 @@ async function loadTiles(tabKey) {
         ${escapeHtml(r.customer||"")}
       </div>
       <div class="mat-rows">${matHtml}</div>
+      ${paintColors}${filmColors}
       ${renderProgress(r)}
     `;
     grid.appendChild(el);
