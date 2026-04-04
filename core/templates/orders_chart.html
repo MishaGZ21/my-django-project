@@ -403,12 +403,18 @@ function fmtQty(v,isInt){
 
 function hasVal(v){ return !(v===null||v===undefined||v===""||v==="—"||v===0||v==="0"); }
 
-function urgCls(r){
-  const vals=[];
-  for(const k of ["ldsp_days_left","film_days_left","paint_days_left"]){
-    const v=r[k]; if(v===null||v===undefined||v==="") continue;
-    const n=Number(v); if(!isNaN(n)) vals.push(n);
-  }
+function urgCls(r, tab){
+  // Выбираем материал по вкладке
+  let key;
+  if(tab==="paint")     key="paint_days_left";
+  else if(tab==="film") key="film_days_left";
+  else                  key="ldsp_days_left";  // general, technologist, workshop
+
+  const v=r[key];
+  if(v===null||v===undefined||v==="") return "";
+  const n=Number(v); if(isNaN(n)) return "";
+  return n<0?"t-bad":n<=4?"t-warn":"t-ok";
+}
   if(!vals.length) return "";
   const m=Math.min(...vals);
   // m<0 = просрочено, 0-10 = критично, >10 = нормально
@@ -565,7 +571,7 @@ async function loadTiles(tab){
 
   for(const r of tiles){
     const el=document.createElement("div");
-    const urg=urgCls(r);
+    const urg=urgCls(r,tab);
     el.className=`ocard js-tile ${urg}`;
     el.dataset.orderId=r.order_id;
     el.dataset.hasLdsp=hasVal(r.ldsp_qty)?"1":"0";
@@ -610,7 +616,7 @@ async function loadList(tab){
   body.innerHTML="";
   for(const r of rows){
     const tr=document.createElement("tr");
-    const urg=urgCls(r);
+    const urg=urgCls(r,tab);
     if(urg==="t-bad")  tr.className="lr-bad";
     if(urg==="t-warn") tr.className="lr-warn";
     const dues=[];
