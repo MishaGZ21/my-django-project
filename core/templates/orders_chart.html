@@ -208,6 +208,18 @@ tr.row-done > td { opacity:.6; }
   border-radius:5px; white-space:nowrap;
 }
 
+/* ===== ПРИМЕЧАНИЕ НА ПЛИТКЕ ===== */
+.tile-note {
+  margin-top:8px; padding:6px 10px;
+  background:rgba(255,200,0,.12);
+  border-left:3px solid #f0b800;
+  border-radius:0 8px 8px 0;
+  font-size:.76rem; color:#555;
+  font-style:italic; line-height:1.4;
+  display:flex; gap:5px; align-items:flex-start;
+}
+.tile-note-icon { flex-shrink:0; font-style:normal; }
+
 /* ===== ПРОГРЕСС-БАР ===== */
 .tile-progress {
   margin-top:8px; padding-top:8px;
@@ -735,6 +747,9 @@ async function loadTiles(tabKey) {
       <div class="mat-rows">${matHtml}</div>
       ${paintColors}${filmColors}
       ${renderProgress(r)}
+      ${r.note && r.note.trim()
+        ? `<div class="tile-note"><span class="tile-note-icon">💬</span>${escapeHtml(r.note.trim())}</div>`
+        : ""}
     `;
     grid.appendChild(el);
   }
@@ -921,12 +936,37 @@ function openModal(id)  { document.getElementById(id).classList.add("is-active")
 function closeModal(id) { document.getElementById(id).classList.remove("is-active"); }
 
 function applyTechModalVisibility() {
-  const isTech = (activeTab === "technologist");
+  const isWorkshop = (activeTab === "workshop");
+  const isPaint    = (activeTab === "paint");
+  const isFilm     = (activeTab === "film");
+  const isTech     = (activeTab === "technologist");
+
+  // Скрываем расширенные поля (сроки, stop/play) для всех цеховых вкладок
+  const hideExtra = isTech || isWorkshop || isPaint || isFilm;
   document.querySelectorAll(".js-tech-hide").forEach(el =>
-    el.classList.toggle("is-hidden", isTech));
-  toggleStatusBlock("ldsp",  currentEditFlags.has_ldsp);
-  toggleStatusBlock("film",  currentEditFlags.has_film);
-  toggleStatusBlock("paint", currentEditFlags.has_paint);
+    el.classList.toggle("is-hidden", hideExtra));
+
+  if (isWorkshop) {
+    // ЦЕХ: только ЛДСП
+    toggleStatusBlock("ldsp",  true);
+    toggleStatusBlock("paint", false);
+    toggleStatusBlock("film",  false);
+  } else if (isPaint) {
+    // КРАСКА: только КРАСКА
+    toggleStatusBlock("ldsp",  false);
+    toggleStatusBlock("paint", true);
+    toggleStatusBlock("film",  false);
+  } else if (isFilm) {
+    // ПЛЁНКА: только ПЛЁНКА
+    toggleStatusBlock("ldsp",  false);
+    toggleStatusBlock("paint", false);
+    toggleStatusBlock("film",  true);
+  } else {
+    // ОБЩИЙ / ТЕХНОЛОГ: по наличию материала в заказе
+    toggleStatusBlock("ldsp",  currentEditFlags.has_ldsp);
+    toggleStatusBlock("film",  currentEditFlags.has_film);
+    toggleStatusBlock("paint", currentEditFlags.has_paint);
+  }
 }
 function toggleStatusBlock(material, show) {
   const block = document.getElementById(`statusBlock_${material}`);
