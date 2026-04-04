@@ -415,11 +415,6 @@ function urgCls(r, tab){
   const n=Number(v); if(isNaN(n)) return "";
   return n<0?"t-bad":n<=4?"t-warn":"t-ok";
 }
-  if(!vals.length) return "";
-  const m=Math.min(...vals);
-  // m<0 = просрочено, 0-10 = критично, >10 = нормально
-  return m<0?"t-bad":m<=4?"t-warn":"t-ok";
-}
 
 /* ─── СТАТУС ДЛЯ ТАБЛИЦЫ ─── */
 function chipTable(st){
