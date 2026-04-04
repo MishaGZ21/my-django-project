@@ -870,6 +870,11 @@ class OrderSchedule(models.Model):
     extra_days_film = models.IntegerField(default=0)
     extra_days_paint = models.IntegerField(default=0)
 
+    # Фактические даты готовности (фиксируются при статусе ГОТОВО/ВЫДАН)
+    done_at_ldsp  = models.DateField("Дата готовности ЛДСП",   null=True, blank=True)
+    done_at_film  = models.DateField("Дата готовности Плёнка", null=True, blank=True)
+    done_at_paint = models.DateField("Дата готовности Краска", null=True, blank=True)
+
     # STOP (общий для заказа)
     stop_until = models.DateField(null=True, blank=True)  # если today < stop_until — “заморозка”
 
